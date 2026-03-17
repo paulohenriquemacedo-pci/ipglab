@@ -1,6 +1,6 @@
 import {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-  WidthType, AlignmentType, BorderStyle, HeadingLevel,
+  WidthType, AlignmentType, BorderStyle,
 } from "docx";
 import { saveAs } from "file-saver";
 
@@ -12,6 +12,7 @@ export interface ProfileData {
   nome_fantasia?: string | null;
   cpf?: string | null;
   cnpj?: string | null;
+  cnpj_mei?: string | null;
   rg?: string | null;
   rg_orgao?: string | null;
   data_nascimento?: string | null;
@@ -27,6 +28,7 @@ export interface ProfileData {
   banco?: string | null;
   agencia?: string | null;
   conta_bancaria?: string | null;
+  tipo_conta_bancaria?: string | null;
   categoria_inscricao?: string | null;
   concorre_cotas?: boolean | null;
   cota_tipo?: string | null;
@@ -49,6 +51,7 @@ export interface ProfileData {
   acessibilidade_arquitetonica?: string[] | null;
   acessibilidade_comunicacional?: string[] | null;
   acessibilidade_atitudinal?: string[] | null;
+  acessibilidade_descricao?: string | null;
   locais_execucao?: string | null;
   membros_coletivo?: any[] | null;
   trajetoria_acoes?: string | null;
@@ -99,18 +102,6 @@ function field(label: string, value: string) {
   return p(`${label}: ${value}`, { spacing: { after: 80 } });
 }
 
-const CATEGORIAS: Record<string, string> = {
-  grupos_coletivos: "Grupos e coletivos culturais",
-  festas_populares: "Festas Populares",
-  blocos_carnaval: "Blocos de Carnaval",
-};
-
-const COTAS: Record<string, string> = {
-  negra: "Pessoa negra",
-  indigena: "Pessoa indígena",
-  pcd: "Pessoa com deficiência",
-};
-
 export async function generateAnexoII(profile: ProfileData) {
   const isPJ = profile.person_type === "PJ";
   const enderecoCompleto = [
@@ -124,7 +115,7 @@ export async function generateAnexoII(profile: ProfileData) {
   children.push(
     p("EDITAL DE CHAMAMENTO PÚBLICO N° 02, DE 06 DE MARÇO DE 2026.", { bold: true, size: 24, align: AlignmentType.CENTER, spacing: { after: 100 } }),
     p('EDITAL MARIA ABADIA PEREIRA DA SILVA "BADIINHA"', { bold: true, size: 22, align: AlignmentType.CENTER, spacing: { after: 100 } }),
-    p("PREMIAÇÃO PARA GRUPOS E ESPAÇOS ARTÍSTICO-CULTURAIS COM RECURSOS DA PNAB", { size: 18, align: AlignmentType.CENTER, spacing: { after: 100 } }),
+    p("PREMIAÇÃO PARA GRUPOS E ESPAÇOS ARTÍSTICO-CULTURAIS COM RECURSOS DA PNAB (LEI Nº 14.399/2022)", { size: 18, align: AlignmentType.CENTER, spacing: { after: 100 } }),
     p("ANEXO II – FORMULÁRIO DE INSCRIÇÃO", { bold: true, size: 28, align: AlignmentType.CENTER, spacing: { after: 300 } }),
   );
 
@@ -140,6 +131,7 @@ export async function generateAnexoII(profile: ProfileData) {
     p("DADOS BANCÁRIOS PARA RECEBIMENTO DO PRÊMIO", { bold: true, spacing: { after: 100 } }),
     field("Banco", val(profile.banco)),
     field("Agência", val(profile.agencia)),
+    field("Tipo", profile.tipo_conta_bancaria === "corrente" ? "Conta Corrente" : profile.tipo_conta_bancaria === "poupanca" ? "Conta Poupança" : "_______________"),
     field("Conta", val(profile.conta_bancaria)),
   );
 
@@ -150,6 +142,7 @@ export async function generateAnexoII(profile: ProfileData) {
   );
   if (profile.concorre_cotas) {
     children.push(
+      p("Se sim. Qual?", { bold: true }),
       checkbox("Pessoa negra", profile.cota_tipo === "negra"),
       checkbox("Pessoa indígena", profile.cota_tipo === "indigena"),
       checkbox("Pessoa com deficiência", profile.cota_tipo === "pcd"),
@@ -161,8 +154,8 @@ export async function generateAnexoII(profile: ProfileData) {
     p("", { spacing: { before: 150 } }),
     p("Escolha a categoria a que vai concorrer:", { bold: true }),
     checkbox("Grupos e coletivos culturais", profile.categoria_inscricao === "grupos_coletivos"),
-    checkbox("Festas Populares", profile.categoria_inscricao === "festas_populares"),
-    checkbox("Blocos de Carnaval", profile.categoria_inscricao === "blocos_carnaval"),
+    checkbox("Festas populares", profile.categoria_inscricao === "festas_populares"),
+    checkbox("Blocos de carnaval", profile.categoria_inscricao === "blocos_carnaval"),
   );
 
   // Section: Inscrição PF ou PJ
@@ -185,17 +178,22 @@ export async function generateAnexoII(profile: ProfileData) {
     children.push(sectionHeader("INSCRIÇÃO PARA PESSOA FÍSICA"));
     children.push(
       field("Nome Completo", val(profile.full_name)),
-      field("Nome social ou artístico", val(profile.nome_social)),
+      field("Nome artístico ou nome social", val(profile.nome_social)),
       field("CPF", val(profile.cpf)),
+    );
+    if (profile.cnpj_mei) {
+      children.push(field("CNPJ (MEI)", val(profile.cnpj_mei)));
+    }
+    children.push(
       field("RG", val(profile.rg)),
       field("Órgão expedidor", val(profile.rg_orgao)),
       field("Data de nascimento", val(profile.data_nascimento)),
       field("E-mail", val(profile.email_contato)),
-      field("Telefone", val(profile.telefone)),
+      field("Telefone/Whatsapp/Telegram", val(profile.telefone)),
       field("Endereço completo", enderecoCompleto || "_______________"),
       field("CEP", val(profile.cep)),
       field("Cidade", val(profile.city)),
-      field("UF", val(profile.state)),
+      field("Estado", val(profile.state)),
     );
   }
 
@@ -203,31 +201,45 @@ export async function generateAnexoII(profile: ProfileData) {
   children.push(
     p("", { spacing: { before: 200 } }),
     p("Mini Currículo:", { bold: true }),
+    p("(Escreva aqui um resumo do seu currículo destacando as principais atuações culturais realizadas. Você deve encaminhar o currículo/portfólio em anexo).", { size: 18 }),
     p(val(profile.bio)),
   );
 
   // Comunidade tradicional
   const comunidades = [
-    "Não pertenço a comunidade tradicional", "Povos Ciganos", "Comunidades Extrativistas",
-    "Pescadores(as) Artesanais", "Comunidades Ribeirinhas", "Povos de Terreiro",
-    "Comunidades Rurais", "Quilombolas", "Área periférica", "Indígenas",
+    "Não pertenço a comunidade tradicional",
+    "Comunidades Extrativistas", "Comunidades Ribeirinhas",
+    "Comunidades Rurais", "Área periférica", "Indígenas",
+    "Povos Ciganos", "Pescadores(as) Artesanais",
+    "Povos de Terreiro", "Quilombolas",
   ];
   children.push(
     p("", { spacing: { before: 150 } }),
     p("Pertence a alguma comunidade tradicional?", { bold: true }),
     ...comunidades.map(c => checkbox(c, profile.comunidade_tradicional === c)),
   );
+  if (profile.comunidade_tradicional && !comunidades.includes(profile.comunidade_tradicional)) {
+    children.push(checkbox(`Outro: ${profile.comunidade_tradicional}`, true));
+  }
 
   // Gênero
-  const generos = ["Mulher cisgênero", "Homem cisgênero", "Homem Transgênero", "Mulher Transgênero", "Pessoa não binária", "Não informar"];
+  const generos = ["Mulher Cisgênero", "Homem Cisgênero", "Mulher Transgênero", "Homem Transgênero", "Pessoa Não Binária", "Não informar"];
   children.push(
     p("", { spacing: { before: 150 } }),
     p("Gênero:", { bold: true }),
     ...generos.map(g => checkbox(g, profile.genero === g)),
   );
+  if (profile.genero && !generos.includes(profile.genero)) {
+    children.push(checkbox(`Outro: ${profile.genero}`, true));
+  }
 
   // LGBTQIAPN+
-  const lgbtOpcoes = ["Lésbica", "Gay", "Bissexual", "Transexual", "Queer", "Intersexo", "Assexual", "Pansexual", "Não binário", "+ outras identidades", "Não se aplica"];
+  const lgbtOpcoes = [
+    "Lésbica", "Gay", "Bissexual", "Transexual", "Queer",
+    "Intersexo", "Assexual", "Pansexual", "Não binário",
+    '"+" outras identidades e orientações sexuais não mencionadas na sigla.',
+    "Não se aplica.",
+  ];
   children.push(
     p("", { spacing: { before: 150 } }),
     p("Pessoa LGBTQIAPN+?", { bold: true }),
@@ -238,36 +250,42 @@ export async function generateAnexoII(profile: ProfileData) {
   const racas = ["Branca", "Preta", "Parda", "Indígena", "Amarela"];
   children.push(
     p("", { spacing: { before: 150 } }),
-    p("Raça/cor/etnia:", { bold: true }),
+    p("Raça, cor ou etnia:", { bold: true }),
     ...racas.map(r => checkbox(r, profile.raca_cor_etnia === r)),
   );
 
   // PcD
-  const pcdTipos = ["Auditiva", "Física", "Intelectual", "Visual", "Múltipla"];
+  const pcdTipos = ["Auditiva", "Física", "Intelectual", "Múltipla", "Visual"];
   children.push(
     p("", { spacing: { before: 150 } }),
-    p(`Você é Pessoa com Deficiência – PcD? ${profile.pcd ? "(X) Sim  ( ) Não" : "( ) Sim  (X) Não"}`, { bold: true }),
+    p(`Você é uma Pessoa com Deficiência – PcD? ${profile.pcd ? "(X) Sim  ( ) Não" : "( ) Sim  (X) Não"}`, { bold: true }),
   );
   if (profile.pcd) {
     children.push(
-      p("Qual tipo de deficiência?", { bold: true }),
+      p("Caso tenha marcado \"sim\", qual tipo de deficiência?", { bold: true }),
       ...pcdTipos.map(t => checkbox(t, profile.pcd_tipo === t)),
     );
+    if (profile.pcd_tipo && !pcdTipos.includes(profile.pcd_tipo)) {
+      children.push(checkbox(`Outro: ${profile.pcd_tipo}`, true));
+    }
   }
 
   // Função
   const funcoes = [
-    "Artista, Artesão(a), Brincante, Criador(a) e afins",
-    "Instrutor(a), oficineiro(a), educador(a) artístico(a)-cultural e afins",
-    "Curador(a), Programador(a) e afins",
-    "Produtor(a)", "Técnico(a)",
-    "Consultor(a), Pesquisador(a) e afins", "Festeiro",
+    "Artista, Artesão(a), Brincante, Criador(a) e afins.",
+    "Instrutor(a), oficineiro(a), educador(a) artístico(a)-cultural e afins.",
+    "Curador(a), Programador(a) e afins.",
+    "Produtor(a)", "Gestor(a)", "Técnico(a)",
+    "Consultor(a), Pesquisador(a) e afins.", "Festeiro",
   ];
   children.push(
     p("", { spacing: { before: 150 } }),
     p("Qual a sua principal função/profissão no campo artístico e cultural?", { bold: true }),
     ...funcoes.map(f => checkbox(f, profile.funcao_profissao === f)),
   );
+  if (profile.funcao_profissao && !funcoes.includes(profile.funcao_profissao)) {
+    children.push(checkbox(`Outro: ${profile.funcao_profissao}`, true));
+  }
 
   // Coletivo
   children.push(
@@ -278,7 +296,7 @@ export async function generateAnexoII(profile: ProfileData) {
     children.push(
       field("Nome do coletivo", val(profile.nome_grupo)),
       field("Ano de Criação", val(profile.ano_criacao_coletivo)),
-      field("Quantas pessoas fazem parte", val(profile.qtd_pessoas_coletivo)),
+      field("Quantas pessoas fazem parte do coletivo", val(profile.qtd_pessoas_coletivo)),
     );
   }
 
@@ -292,36 +310,39 @@ export async function generateAnexoII(profile: ProfileData) {
   // Ação cultural - público alvo
   const publicoAlvo = [
     "Pessoas vítimas de violência", "Pessoas em situação de pobreza",
-    "Pessoas em situação de rua", "Pessoas em restrição/privação de liberdade",
+    "Pessoas em situação de rua (moradores de rua)",
+    "Pessoas em situação de restrição e privação de liberdade (população carcerária)",
     "Pessoas com deficiência", "Pessoas em sofrimento físico e/ou psíquico",
     "Mulheres", "LGBTQIAPN+", "Povos e comunidades tradicionais",
     "Negros e/ou negras", "Ciganos", "Indígenas",
-    "Não é voltada especificamente para um perfil", "Área periférica",
+    "Não é voltada especificamente para um perfil, é aberta para todos",
+    "Área periférica",
   ];
   children.push(
     p("", { spacing: { before: 150 } }),
-    p("Sua ação cultural é voltada prioritariamente para:", { bold: true }),
+    p("Sua ação cultural é voltada prioritariamente para algum destes perfis de público?", { bold: true }),
     ...publicoAlvo.map(pa => checkbox(pa, (profile.acao_cultural_publico || []).includes(pa))),
   );
 
   // Acessibilidade
   const acessArq = [
-    "Rotas acessíveis com espaço de manobra para cadeira de rodas",
-    "Piso tátil", "Rampas", "Elevadores adequados para PcD",
-    "Corrimãos e guarda-corpos", "Banheiros adaptados para PcD",
-    "Vagas de estacionamento para PcD", "Assentos para pessoas obesas",
-    "Iluminação adequada",
+    "rotas acessíveis, com espaço de manobra para cadeira de rodas",
+    "piso tátil", "rampas", "elevadores adequados para pessoas com deficiência",
+    "corrimãos e guarda-corpos",
+    "banheiros femininos e masculinos adaptados para pessoas com deficiência",
+    "vagas de estacionamento para pessoas com deficiência",
+    "assentos para pessoas obesas", "iluminação adequada",
   ];
   const acessCom = [
-    "Língua Brasileira de Sinais - Libras", "Sistema Braille",
-    "Sinalização ou comunicação tátil", "Audiodescrição",
-    "Legendas", "Linguagem simples", "Textos adaptados para leitores de tela",
+    "a Língua Brasileira de Sinais - Libras", "o sistema Braille",
+    "o sistema de sinalização ou comunicação tátil", "a audiodescrição",
+    "as legendas", "a linguagem simples", "textos adaptados para leitores de tela",
   ];
   const acessAti = [
-    "Capacitação de equipes atuantes nos projetos culturais",
-    "Contratação de profissionais com deficiência e especializados em acessibilidade",
-    "Formação e sensibilização de agentes culturais e envolvidos",
-    "Outras medidas de eliminação de atitudes capacitistas",
+    "capacitação de equipes atuantes nos projetos culturais",
+    "contratação de profissionais com deficiência e profissionais especializados em acessibilidade cultural",
+    "formação e sensibilização de agentes culturais, público e todos os envolvidos na cadeia produtiva cultural",
+    "outras medidas que visem a eliminação de atitudes capacitistas",
   ];
 
   children.push(
@@ -334,6 +355,15 @@ export async function generateAnexoII(profile: ProfileData) {
     p("Acessibilidade atitudinal:", { bold: true, spacing: { before: 100 } }),
     ...acessAti.map(a => checkbox(a, (profile.acessibilidade_atitudinal || []).includes(a))),
   );
+
+  // Descrição das medidas de acessibilidade
+  if (profile.acessibilidade_descricao) {
+    children.push(
+      p("", { spacing: { before: 150 } }),
+      p("Informe como essas medidas de acessibilidade foram implementadas:", { bold: true }),
+      p(profile.acessibilidade_descricao),
+    );
+  }
 
   // Locais
   children.push(
@@ -355,19 +385,23 @@ export async function generateAnexoII(profile: ProfileData) {
   children.push(
     sectionHeader("2. INFORMAÇÕES SOBRE TRAJETÓRIA CULTURAL"),
     p("2.1 Quais são as suas principais ações e atividades culturais realizadas?", { bold: true, spacing: { before: 150 } }),
+    p("(Aqui, conte, o mais detalhadamente possível, sobre as ações culturais que você realiza, informando em que área ou segmento cultural atua, em que local realiza suas atividades, entre outras informações.)", { size: 18 }),
     p(val(profile.trajetoria_acoes)),
     p("2.2 Como começou a sua trajetória cultural?", { bold: true, spacing: { before: 150 } }),
+    p("(Descreva como e quando começou a sua trajetória na cultura, informando onde seus projetos foram iniciados, indicando há quanto tempo você os desenvolve.)", { size: 18 }),
     p(val(profile.trajetoria_inicio)),
-    p("2.3 Como as ações que você desenvolve transformam a realidade da sua comunidade?", { bold: true, spacing: { before: 150 } }),
+    p("2.3 Como as ações que você desenvolve transformam a realidade do seu entorno/sua comunidade?", { bold: true, spacing: { before: 150 } }),
+    p("(Responda quem são as pessoas beneficiadas direta ou indiretamente pelas suas atividades, e como suas ações impactam e beneficiam as pessoas ao redor. Destaque se a sua comunidade participou enquanto público ou também trabalhou nos projetos que você desenvolveu.)", { size: 18 }),
     p(val(profile.trajetoria_impacto)),
-    p("2.4 Você desenvolveu ações com outras esferas de conhecimento (educação, saúde, etc)?", { bold: true, spacing: { before: 150 } }),
+    p("2.4 Na sua trajetória cultural, você desenvolveu ações e projetos com outras esferas de conhecimento, tais como educação, saúde, etc?", { bold: true, spacing: { before: 150 } }),
+    p("(Descreva se as suas ações e atividades possuem relação com outras áreas além da cultura, tais como área de educação, saúde, esporte, assistência social, entre outras.)", { size: 18 }),
     p(val(profile.trajetoria_outras_areas)),
   );
 
   // Documentação obrigatória
   children.push(
     sectionHeader("3. DOCUMENTAÇÃO OBRIGATÓRIA"),
-    p("Junte documentos que comprovem a sua atuação cultural, tais como cartazes, folders, reportagens, certificados, premiações, entre outros."),
+    p("Junte documentos que comprovem a sua atuação cultural, tais como cartazes, folders, reportagens de revistas, certificados, premiações, entre outros documentos."),
   );
 
   const doc = new Document({

@@ -20,63 +20,68 @@ const STATES = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT"
 
 const COMUNIDADES = [
   "Não pertenço a comunidade tradicional",
-  "Povos Ciganos", "Comunidades Extrativistas", "Pescadores(as) Artesanais",
-  "Comunidades Ribeirinhas", "Povos de Terreiro", "Comunidades Rurais",
-  "Quilombolas", "Área periférica", "Indígenas",
+  "Comunidades Extrativistas", "Comunidades Ribeirinhas",
+  "Comunidades Rurais", "Área periférica", "Indígenas",
+  "Povos Ciganos", "Pescadores(as) Artesanais",
+  "Povos de Terreiro", "Quilombolas",
 ];
 
 const GENEROS = [
-  "Mulher cisgênero", "Homem cisgênero", "Homem Transgênero",
-  "Mulher Transgênero", "Pessoa não binária", "Não informar",
+  "Mulher Cisgênero", "Homem Cisgênero", "Mulher Transgênero",
+  "Homem Transgênero", "Pessoa Não Binária", "Não informar",
 ];
 
 const LGBTQIAPN_OPCOES = [
   "Lésbica", "Gay", "Bissexual", "Transexual", "Queer",
   "Intersexo", "Assexual", "Pansexual", "Não binário",
-  "+ outras identidades", "Não se aplica",
+  '"+" outras identidades e orientações sexuais não mencionadas na sigla.',
+  "Não se aplica.",
 ];
 
 const RACAS = ["Branca", "Preta", "Parda", "Indígena", "Amarela"];
 
-const PCD_TIPOS = ["Auditiva", "Física", "Intelectual", "Visual", "Múltipla"];
+const PCD_TIPOS = ["Auditiva", "Física", "Intelectual", "Múltipla", "Visual"];
 
 const FUNCOES = [
-  "Artista, Artesão(a), Brincante, Criador(a) e afins",
-  "Instrutor(a), oficineiro(a), educador(a) artístico(a)-cultural e afins",
-  "Curador(a), Programador(a) e afins",
-  "Produtor(a)", "Técnico(a)",
-  "Consultor(a), Pesquisador(a) e afins",
+  "Artista, Artesão(a), Brincante, Criador(a) e afins.",
+  "Instrutor(a), oficineiro(a), educador(a) artístico(a)-cultural e afins.",
+  "Curador(a), Programador(a) e afins.",
+  "Produtor(a)", "Gestor(a)", "Técnico(a)",
+  "Consultor(a), Pesquisador(a) e afins.",
   "Festeiro",
 ];
 
 const PUBLICO_ALVO = [
   "Pessoas vítimas de violência", "Pessoas em situação de pobreza",
-  "Pessoas em situação de rua", "Pessoas em restrição/privação de liberdade",
+  "Pessoas em situação de rua (moradores de rua)",
+  "Pessoas em situação de restrição e privação de liberdade (população carcerária)",
   "Pessoas com deficiência", "Pessoas em sofrimento físico e/ou psíquico",
   "Mulheres", "LGBTQIAPN+", "Povos e comunidades tradicionais",
   "Negros e/ou negras", "Ciganos", "Indígenas",
-  "Não é voltada especificamente para um perfil", "Área periférica",
+  "Não é voltada especificamente para um perfil, é aberta para todos",
+  "Área periférica",
 ];
 
 const ACESS_ARQ = [
-  "Rotas acessíveis com espaço de manobra para cadeira de rodas",
-  "Piso tátil", "Rampas", "Elevadores adequados para PcD",
-  "Corrimãos e guarda-corpos", "Banheiros adaptados para PcD",
-  "Vagas de estacionamento para PcD", "Assentos para pessoas obesas",
-  "Iluminação adequada",
+  "rotas acessíveis, com espaço de manobra para cadeira de rodas",
+  "piso tátil", "rampas", "elevadores adequados para pessoas com deficiência",
+  "corrimãos e guarda-corpos",
+  "banheiros femininos e masculinos adaptados para pessoas com deficiência",
+  "vagas de estacionamento para pessoas com deficiência",
+  "assentos para pessoas obesas", "iluminação adequada",
 ];
 
 const ACESS_COM = [
-  "Língua Brasileira de Sinais - Libras", "Sistema Braille",
-  "Sinalização ou comunicação tátil", "Audiodescrição",
-  "Legendas", "Linguagem simples", "Textos adaptados para leitores de tela",
+  "a Língua Brasileira de Sinais - Libras", "o sistema Braille",
+  "o sistema de sinalização ou comunicação tátil", "a audiodescrição",
+  "as legendas", "a linguagem simples", "textos adaptados para leitores de tela",
 ];
 
 const ACESS_ATI = [
-  "Capacitação de equipes atuantes nos projetos culturais",
-  "Contratação de profissionais com deficiência e especializados em acessibilidade",
-  "Formação e sensibilização de agentes culturais e envolvidos",
-  "Outras medidas de eliminação de atitudes capacitistas",
+  "capacitação de equipes atuantes nos projetos culturais",
+  "contratação de profissionais com deficiência e profissionais especializados em acessibilidade cultural",
+  "formação e sensibilização de agentes culturais, público e todos os envolvidos na cadeia produtiva cultural",
+  "outras medidas que visem a eliminação de atitudes capacitistas",
 ];
 
 interface Membro { nome: string; cpf: string; }
@@ -89,26 +94,26 @@ const Onboarding = () => {
     email_contato: "", telefone: "",
     endereco: "", numero: "", complemento: "", bairro: "", cep: "",
     city: "", state: "",
-    banco: "", agencia: "", conta_bancaria: "",
+    banco: "", agencia: "", conta_bancaria: "", tipo_conta_bancaria: "",
+    cnpj_mei: "",
     categoria_inscricao: "",
     concorre_cotas: false, cota_tipo: "",
     comunidade_tradicional: "", comunidade_tradicional_outro: "",
-    genero: "",
+    genero: "", genero_outro: "",
     lgbtqiapn_tipo: "",
     raca_cor_etnia: "",
-    pcd: false, pcd_tipo: "",
+    pcd: false, pcd_tipo: "", pcd_tipo_outro: "",
     funcao_profissao: "", funcao_profissao_outro: "",
     bio: "",
     representa_coletivo: false,
     nome_grupo: "", ano_criacao_coletivo: "", qtd_pessoas_coletivo: "",
     perfil_publico: "",
-    acao_cultural_publico: [] as string[],
-    acessibilidade_arquitetonica: [] as string[],
-    acessibilidade_comunicacional: [] as string[],
+    acao_cultural_publico: [] as string[], acao_cultural_publico_outro: "",
+    acessibilidade_arquitetonica: [] as string[], acessibilidade_arq_outro: "",
+    acessibilidade_comunicacional: [] as string[], acessibilidade_com_outro: "",
     acessibilidade_atitudinal: [] as string[],
+    acessibilidade_descricao: "",
     locais_execucao: "",
-    trajetoria_acoes: "", trajetoria_inicio: "",
-    trajetoria_impacto: "", trajetoria_outras_areas: "",
     // PJ fields
     razao_social: "", nome_fantasia: "", cnpj: "",
     num_representantes_legais: "",
@@ -116,17 +121,14 @@ const Onboarding = () => {
     tempo_residencia_municipio: "",
     testemunha_nome: "", testemunha_cpf: "", testemunha_rg: "",
     testemunha_telefone: "", testemunha_endereco: "",
-    // Group
     funcao_no_grupo: "",
-    experience_level: "", artistic_language: "",
   });
   const [membros, setMembros] = useState<Membro[]>([{ nome: "", cpf: "" }]);
-  const [referenceText, setReferenceText] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const totalSteps = 9;
+  const totalSteps = 8;
   const progress = ((step + 1) / totalSteps) * 100;
 
   const update = (key: string, val: string | boolean | string[]) => setForm(prev => ({ ...prev, [key]: val }));
@@ -147,6 +149,9 @@ const Onboarding = () => {
       const funcao = form.funcao_profissao === "Outro"
         ? form.funcao_profissao_outro
         : form.funcao_profissao;
+      const genero = form.genero === "Outro"
+        ? form.genero_outro
+        : form.genero;
 
       const profileData: Record<string, any> = {
         full_name: form.full_name,
@@ -159,16 +164,20 @@ const Onboarding = () => {
         complemento: form.complemento || null,
         bairro: form.bairro, cep: form.cep,
         city: form.city, state: form.state,
-        banco: form.banco, agencia: form.agencia, conta_bancaria: form.conta_bancaria,
+        banco: form.banco, agencia: form.agencia,
+        conta_bancaria: form.conta_bancaria,
+        tipo_conta_bancaria: form.tipo_conta_bancaria || null,
+        cnpj_mei: form.cnpj_mei || null,
         categoria_inscricao: form.categoria_inscricao,
         concorre_cotas: form.concorre_cotas,
         cota_tipo: form.concorre_cotas ? form.cota_tipo : null,
         comunidade_tradicional: comunidade || null,
-        genero: form.genero,
-        lgbtqiapn: form.lgbtqiapn_tipo !== "Não se aplica" && form.lgbtqiapn_tipo !== "",
+        genero: genero,
+        lgbtqiapn: form.lgbtqiapn_tipo !== "Não se aplica." && form.lgbtqiapn_tipo !== "",
         lgbtqiapn_tipo: form.lgbtqiapn_tipo || null,
         raca_cor_etnia: form.raca_cor_etnia,
-        pcd: form.pcd, pcd_tipo: form.pcd ? form.pcd_tipo : null,
+        pcd: form.pcd,
+        pcd_tipo: form.pcd ? (form.pcd_tipo === "Outro" ? form.pcd_tipo_outro : form.pcd_tipo) : null,
         funcao_profissao: funcao,
         bio: form.bio,
         representa_coletivo: form.representa_coletivo,
@@ -181,20 +190,15 @@ const Onboarding = () => {
         acessibilidade_arquitetonica: form.acessibilidade_arquitetonica.length > 0 ? form.acessibilidade_arquitetonica : null,
         acessibilidade_comunicacional: form.acessibilidade_comunicacional.length > 0 ? form.acessibilidade_comunicacional : null,
         acessibilidade_atitudinal: form.acessibilidade_atitudinal.length > 0 ? form.acessibilidade_atitudinal : null,
+        acessibilidade_descricao: form.acessibilidade_descricao || null,
         locais_execucao: form.locais_execucao || null,
         membros_coletivo: form.representa_coletivo ? membros.filter(m => m.nome) : null,
-        trajetoria_acoes: form.trajetoria_acoes || null,
-        trajetoria_inicio: form.trajetoria_inicio || null,
-        trajetoria_impacto: form.trajetoria_impacto || null,
-        trajetoria_outras_areas: form.trajetoria_outras_areas || null,
         tempo_residencia_municipio: form.tempo_residencia_municipio || null,
         testemunha_nome: form.testemunha_nome || null,
         testemunha_cpf: form.testemunha_cpf || null,
         testemunha_rg: form.testemunha_rg || null,
         testemunha_telefone: form.testemunha_telefone || null,
         testemunha_endereco: form.testemunha_endereco || null,
-        artistic_language: form.artistic_language || null,
-        experience_level: form.experience_level || null,
         onboarding_completed: true,
       };
 
@@ -207,13 +211,6 @@ const Onboarding = () => {
 
       const { error } = await supabase.from("profiles").update(profileData as any).eq("user_id", user.id);
       if (error) throw error;
-
-      if (referenceText.trim().length > 0) {
-        await supabase.from("reference_texts").insert({
-          user_id: user.id, title: "Texto de referência inicial",
-          content: referenceText, word_count: referenceText.split(/\s+/).length,
-        });
-      }
 
       toast.success("Perfil completo!");
       navigate("/dashboard");
@@ -251,7 +248,7 @@ const Onboarding = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="font-sans text-xl">Informações do Agente Cultural</CardTitle>
-                  <CardDescription>Dados iniciais conforme Anexo II do edital</CardDescription>
+                  <CardDescription>Dados iniciais conforme formulário de inscrição do edital</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -262,24 +259,28 @@ const Onboarding = () => {
                     </RadioGroup>
                   </div>
                   <div className="space-y-2">
-                    <Label>Categoria a que vai concorrer *</Label>
+                    <Label>Escolha a categoria a que vai concorrer *</Label>
                     <RadioGroup value={form.categoria_inscricao} onValueChange={v => update("categoria_inscricao", v)}>
                       <div className="flex items-center gap-2"><RadioGroupItem value="grupos_coletivos" id="cat1" /><Label htmlFor="cat1">Grupos e coletivos culturais</Label></div>
-                      <div className="flex items-center gap-2"><RadioGroupItem value="festas_populares" id="cat2" /><Label htmlFor="cat2">Festas Populares</Label></div>
-                      <div className="flex items-center gap-2"><RadioGroupItem value="blocos_carnaval" id="cat3" /><Label htmlFor="cat3">Blocos de Carnaval</Label></div>
+                      <div className="flex items-center gap-2"><RadioGroupItem value="festas_populares" id="cat2" /><Label htmlFor="cat2">Festas populares</Label></div>
+                      <div className="flex items-center gap-2"><RadioGroupItem value="blocos_carnaval" id="cat3" /><Label htmlFor="cat3">Blocos de carnaval</Label></div>
                     </RadioGroup>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <Checkbox checked={form.concorre_cotas} onCheckedChange={v => update("concorre_cotas", !!v)} id="cotas" />
-                      <Label htmlFor="cotas" className="cursor-pointer">Vai concorrer às cotas?</Label>
-                    </div>
+                    <Label>Vai concorrer às cotas? *</Label>
+                    <RadioGroup value={form.concorre_cotas ? "sim" : "nao"} onValueChange={v => update("concorre_cotas", v === "sim")} className="flex gap-6">
+                      <div className="flex items-center gap-2"><RadioGroupItem value="sim" id="cotas-s" /><Label htmlFor="cotas-s">Sim</Label></div>
+                      <div className="flex items-center gap-2"><RadioGroupItem value="nao" id="cotas-n" /><Label htmlFor="cotas-n">Não</Label></div>
+                    </RadioGroup>
                     {form.concorre_cotas && (
-                      <RadioGroup value={form.cota_tipo} onValueChange={v => update("cota_tipo", v)} className="ml-6 space-y-1">
-                        <div className="flex items-center gap-2"><RadioGroupItem value="negra" id="cota1" /><Label htmlFor="cota1">Pessoa negra</Label></div>
-                        <div className="flex items-center gap-2"><RadioGroupItem value="indigena" id="cota2" /><Label htmlFor="cota2">Pessoa indígena</Label></div>
-                        <div className="flex items-center gap-2"><RadioGroupItem value="pcd" id="cota3" /><Label htmlFor="cota3">Pessoa com deficiência</Label></div>
-                      </RadioGroup>
+                      <div className="space-y-2 ml-6">
+                        <Label>Se sim. Qual?</Label>
+                        <RadioGroup value={form.cota_tipo} onValueChange={v => update("cota_tipo", v)} className="space-y-1">
+                          <div className="flex items-center gap-2"><RadioGroupItem value="negra" id="cota1" /><Label htmlFor="cota1">Pessoa negra</Label></div>
+                          <div className="flex items-center gap-2"><RadioGroupItem value="indigena" id="cota2" /><Label htmlFor="cota2">Pessoa indígena</Label></div>
+                          <div className="flex items-center gap-2"><RadioGroupItem value="pcd" id="cota3" /><Label htmlFor="cota3">Pessoa com deficiência</Label></div>
+                        </RadioGroup>
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -291,9 +292,9 @@ const Onboarding = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="font-sans text-xl">
-                    {form.person_type === "PJ" ? "Inscrição para Pessoa Jurídica" : "Inscrição para Pessoa Física"}
+                    {form.person_type === "PJ" ? "Inscrição para Pessoa Jurídica" : "Inscrição para Pessoa Física, MEI ou Grupo/Coletivo sem CNPJ"}
                   </CardTitle>
-                  <CardDescription>Dados pessoais conforme formulário do edital</CardDescription>
+                  <CardDescription>Dados pessoais conforme formulário de inscrição</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {form.person_type === "PJ" && (
@@ -301,38 +302,53 @@ const Onboarding = () => {
                       <div className="space-y-2"><Label>Razão Social *</Label><Input value={form.razao_social} onChange={e => update("razao_social", e.target.value)} /></div>
                       <div className="space-y-2"><Label>Nome Fantasia</Label><Input value={form.nome_fantasia} onChange={e => update("nome_fantasia", e.target.value)} /></div>
                       <div className="space-y-2"><Label>CNPJ *</Label><Input placeholder="00.000.000/0001-00" value={form.cnpj} onChange={e => update("cnpj", e.target.value)} /></div>
-                      <div className="space-y-2"><Label>Nº de representantes legais</Label><Input value={form.num_representantes_legais} onChange={e => update("num_representantes_legais", e.target.value)} /></div>
+                      <div className="space-y-2"><Label>Endereço da sede *</Label><Input value={form.endereco} onChange={e => update("endereco", e.target.value)} /></div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2"><Label>Cidade *</Label><Input value={form.city} onChange={e => update("city", e.target.value)} /></div>
+                        <div className="space-y-2">
+                          <Label>Estado *</Label>
+                          <Select value={form.state} onValueChange={v => update("state", v)}>
+                            <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                            <SelectContent>{STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-2"><Label>Número de representantes legais</Label><Input value={form.num_representantes_legais} onChange={e => update("num_representantes_legais", e.target.value)} /></div>
+                      <hr className="my-2" />
+                      <p className="text-sm font-semibold text-muted-foreground">Dados do Representante Legal</p>
                     </>
                   )}
                   <div className="space-y-2"><Label>Nome Completo *</Label><Input value={form.full_name} onChange={e => update("full_name", e.target.value)} /></div>
-                  <div className="space-y-2"><Label>Nome social ou artístico (se houver)</Label><Input value={form.nome_social} onChange={e => update("nome_social", e.target.value)} /></div>
+                  <div className="space-y-2"><Label>Nome artístico ou nome social (se houver)</Label><Input value={form.nome_social} onChange={e => update("nome_social", e.target.value)} /></div>
                   <div className="space-y-2"><Label>CPF *</Label><Input placeholder="000.000.000-00" value={form.cpf} onChange={e => update("cpf", e.target.value)} /></div>
+                  {form.person_type === "PF" && (
+                    <div className="space-y-2"><Label>CNPJ (Se a inscrição for realizada em nome do MEI)</Label><Input placeholder="00.000.000/0001-00" value={form.cnpj_mei} onChange={e => update("cnpj_mei", e.target.value)} /></div>
+                  )}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><Label>RG</Label><Input value={form.rg} onChange={e => update("rg", e.target.value)} /></div>
+                    <div className="space-y-2"><Label>RG *</Label><Input value={form.rg} onChange={e => update("rg", e.target.value)} /></div>
                     <div className="space-y-2"><Label>Órgão expedidor</Label><Input placeholder="SSP/GO" value={form.rg_orgao} onChange={e => update("rg_orgao", e.target.value)} /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><Label>Data de nascimento</Label><Input type="date" value={form.data_nascimento} onChange={e => update("data_nascimento", e.target.value)} /></div>
-                    <div className="space-y-2"><Label>Telefone</Label><Input placeholder="(62) 99999-0000" value={form.telefone} onChange={e => update("telefone", e.target.value)} /></div>
+                    <div className="space-y-2"><Label>Data de nascimento *</Label><Input type="date" value={form.data_nascimento} onChange={e => update("data_nascimento", e.target.value)} /></div>
+                    <div className="space-y-2"><Label>Telefone/Whatsapp/Telegram *</Label><Input placeholder="(62) 99999-0000" value={form.telefone} onChange={e => update("telefone", e.target.value)} /></div>
                   </div>
-                  <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={form.email_contato} onChange={e => update("email_contato", e.target.value)} /></div>
-                  <div className="space-y-2"><Label>Endereço completo</Label><Input value={form.endereco} onChange={e => update("endereco", e.target.value)} /></div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2"><Label>Nº</Label><Input value={form.numero} onChange={e => update("numero", e.target.value)} /></div>
-                    <div className="space-y-2"><Label>Complemento</Label><Input value={form.complemento} onChange={e => update("complemento", e.target.value)} /></div>
-                    <div className="space-y-2"><Label>Bairro</Label><Input value={form.bairro} onChange={e => update("bairro", e.target.value)} /></div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2"><Label>CEP</Label><Input placeholder="00000-000" value={form.cep} onChange={e => update("cep", e.target.value)} /></div>
-                    <div className="space-y-2"><Label>Cidade</Label><Input value={form.city} onChange={e => update("city", e.target.value)} /></div>
-                    <div className="space-y-2">
-                      <Label>UF</Label>
-                      <Select value={form.state} onValueChange={v => update("state", v)}>
-                        <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
-                        <SelectContent>{STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  <div className="space-y-2"><Label>E-mail *</Label><Input type="email" value={form.email_contato} onChange={e => update("email_contato", e.target.value)} /></div>
+                  {form.person_type === "PF" && (
+                    <>
+                      <div className="space-y-2"><Label>Endereço completo *</Label><Input value={form.endereco} onChange={e => update("endereco", e.target.value)} /></div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2"><Label>CEP *</Label><Input placeholder="00000-000" value={form.cep} onChange={e => update("cep", e.target.value)} /></div>
+                        <div className="space-y-2"><Label>Cidade *</Label><Input value={form.city} onChange={e => update("city", e.target.value)} /></div>
+                        <div className="space-y-2">
+                          <Label>Estado *</Label>
+                          <Select value={form.state} onValueChange={v => update("state", v)}>
+                            <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                            <SelectContent>{STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -341,33 +357,39 @@ const Onboarding = () => {
             {step === 2 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-sans text-xl">Dados Bancários para Recebimento do Prêmio</CardTitle>
+                  <CardTitle className="font-sans text-xl">Dados Bancários</CardTitle>
                   <CardDescription>Conta que receberá os recursos da premiação</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2"><Label>Banco</Label><Input value={form.banco} onChange={e => update("banco", e.target.value)} /></div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><Label>Agência</Label><Input value={form.agencia} onChange={e => update("agencia", e.target.value)} /></div>
-                    <div className="space-y-2"><Label>Conta</Label><Input value={form.conta_bancaria} onChange={e => update("conta_bancaria", e.target.value)} /></div>
+                  <div className="space-y-2"><Label>Banco *</Label><Input value={form.banco} onChange={e => update("banco", e.target.value)} /></div>
+                  <div className="space-y-2"><Label>Agência *</Label><Input value={form.agencia} onChange={e => update("agencia", e.target.value)} /></div>
+                  <div className="space-y-2">
+                    <Label>Tipo *</Label>
+                    <RadioGroup value={form.tipo_conta_bancaria} onValueChange={v => update("tipo_conta_bancaria", v)} className="flex gap-6">
+                      <div className="flex items-center gap-2"><RadioGroupItem value="corrente" id="cc" /><Label htmlFor="cc">Conta Corrente</Label></div>
+                      <div className="flex items-center gap-2"><RadioGroupItem value="poupanca" id="cp" /><Label htmlFor="cp">Conta Poupança</Label></div>
+                    </RadioGroup>
                   </div>
+                  <div className="space-y-2"><Label>Conta *</Label><Input value={form.conta_bancaria} onChange={e => update("conta_bancaria", e.target.value)} /></div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Step 3: Mini Currículo + Autodeclarações */}
+            {/* Step 3: Mini Currículo + Comunidade + Gênero */}
             {step === 3 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-sans text-xl">Mini Currículo e Autodeclarações</CardTitle>
+                  <CardTitle className="font-sans text-xl">Mini Currículo e Perfil</CardTitle>
                   <CardDescription>Informações exigidas pelo formulário de inscrição</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="space-y-2">
-                    <Label>Mini Currículo</Label>
-                    <Textarea placeholder="Escreva um resumo do seu currículo destacando as principais atuações culturais realizadas..." value={form.bio} onChange={e => update("bio", e.target.value)} rows={4} />
+                    <Label>Mini Currículo *</Label>
+                    <p className="text-xs text-muted-foreground">Escreva aqui um resumo do seu currículo destacando as principais atuações culturais realizadas. Você deve encaminhar o currículo/portfólio em anexo.</p>
+                    <Textarea placeholder="Descreva suas principais atuações culturais..." value={form.bio} onChange={e => update("bio", e.target.value)} rows={5} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Pertence a alguma comunidade tradicional?</Label>
+                    <Label>Pertence a alguma comunidade tradicional? *</Label>
                     <RadioGroup value={form.comunidade_tradicional} onValueChange={v => update("comunidade_tradicional", v)} className="space-y-1">
                       {COMUNIDADES.map(c => (
                         <div key={c} className="flex items-center gap-2">
@@ -383,14 +405,20 @@ const Onboarding = () => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Gênero</Label>
+                    <Label>Gênero *</Label>
                     <RadioGroup value={form.genero} onValueChange={v => update("genero", v)} className="grid grid-cols-2 gap-1">
                       {GENEROS.map(g => (
                         <div key={g} className="flex items-center gap-2">
                           <RadioGroupItem value={g} id={`gen-${g}`} /><Label htmlFor={`gen-${g}`} className="font-normal">{g}</Label>
                         </div>
                       ))}
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="Outro" id="gen-outro" /><Label htmlFor="gen-outro" className="font-normal">Outro</Label>
+                      </div>
                     </RadioGroup>
+                    {form.genero === "Outro" && (
+                      <Input placeholder="Especifique..." value={form.genero_outro} onChange={e => update("genero_outro", e.target.value)} className="mt-2" />
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -400,22 +428,22 @@ const Onboarding = () => {
             {step === 4 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-sans text-xl">Autodeclarações (continuação)</CardTitle>
-                  <CardDescription>Campos obrigatórios do Anexo II</CardDescription>
+                  <CardTitle className="font-sans text-xl">Autodeclarações</CardTitle>
+                  <CardDescription>Campos obrigatórios do formulário de inscrição</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="space-y-2">
-                    <Label>Pessoa LGBTQIAPN+?</Label>
+                    <Label>Pessoa LGBTQIAPN+? *</Label>
                     <RadioGroup value={form.lgbtqiapn_tipo} onValueChange={v => update("lgbtqiapn_tipo", v)} className="grid grid-cols-2 gap-1">
                       {LGBTQIAPN_OPCOES.map(o => (
                         <div key={o} className="flex items-center gap-2">
-                          <RadioGroupItem value={o} id={`lgb-${o}`} /><Label htmlFor={`lgb-${o}`} className="font-normal">{o}</Label>
+                          <RadioGroupItem value={o} id={`lgb-${o}`} /><Label htmlFor={`lgb-${o}`} className="font-normal text-sm">{o}</Label>
                         </div>
                       ))}
                     </RadioGroup>
                   </div>
                   <div className="space-y-2">
-                    <Label>Raça/cor/etnia</Label>
+                    <Label>Raça, cor ou etnia *</Label>
                     <RadioGroup value={form.raca_cor_etnia} onValueChange={v => update("raca_cor_etnia", v)} className="flex flex-wrap gap-4">
                       {RACAS.map(r => (
                         <div key={r} className="flex items-center gap-2">
@@ -425,23 +453,32 @@ const Onboarding = () => {
                     </RadioGroup>
                   </div>
                   <div className="space-y-2">
-                    <Label>Você é Pessoa com Deficiência – PcD?</Label>
+                    <Label>Você é uma Pessoa com Deficiência – PcD? *</Label>
                     <RadioGroup value={form.pcd ? "sim" : "nao"} onValueChange={v => update("pcd", v === "sim")} className="flex gap-6">
                       <div className="flex items-center gap-2"><RadioGroupItem value="sim" id="pcd-s" /><Label htmlFor="pcd-s">Sim</Label></div>
                       <div className="flex items-center gap-2"><RadioGroupItem value="nao" id="pcd-n" /><Label htmlFor="pcd-n">Não</Label></div>
                     </RadioGroup>
                     {form.pcd && (
-                      <RadioGroup value={form.pcd_tipo} onValueChange={v => update("pcd_tipo", v)} className="ml-6 space-y-1 mt-2">
-                        {PCD_TIPOS.map(t => (
-                          <div key={t} className="flex items-center gap-2">
-                            <RadioGroupItem value={t} id={`pcdt-${t}`} /><Label htmlFor={`pcdt-${t}`} className="font-normal">{t}</Label>
+                      <div className="space-y-2 ml-6">
+                        <Label>Caso tenha marcado "sim", qual tipo de deficiência?</Label>
+                        <RadioGroup value={form.pcd_tipo} onValueChange={v => update("pcd_tipo", v)} className="space-y-1">
+                          {PCD_TIPOS.map(t => (
+                            <div key={t} className="flex items-center gap-2">
+                              <RadioGroupItem value={t} id={`pcdt-${t}`} /><Label htmlFor={`pcdt-${t}`} className="font-normal">{t}</Label>
+                            </div>
+                          ))}
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value="Outro" id="pcdt-outro" /><Label htmlFor="pcdt-outro" className="font-normal">Outro</Label>
                           </div>
-                        ))}
-                      </RadioGroup>
+                        </RadioGroup>
+                        {form.pcd_tipo === "Outro" && (
+                          <Input placeholder="Especifique..." value={form.pcd_tipo_outro} onChange={e => update("pcd_tipo_outro", e.target.value)} className="mt-2" />
+                        )}
+                      </div>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Principal função/profissão no campo artístico e cultural</Label>
+                    <Label>Qual a sua principal função/profissão no campo artístico e cultural? *</Label>
                     <RadioGroup value={form.funcao_profissao} onValueChange={v => update("funcao_profissao", v)} className="space-y-1">
                       {FUNCOES.map(f => (
                         <div key={f} className="flex items-center gap-2">
@@ -465,11 +502,11 @@ const Onboarding = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="font-sans text-xl">Coletivo e Público-Alvo</CardTitle>
-                  <CardDescription>Informações sobre representação de grupo e público</CardDescription>
+                  <CardDescription>Informações sobre representação de grupo e público atingido</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="space-y-2">
-                    <Label>Você está representando um coletivo (sem CNPJ)?</Label>
+                    <Label>Você está representando um coletivo (sem CNPJ)? *</Label>
                     <RadioGroup value={form.representa_coletivo ? "sim" : "nao"} onValueChange={v => update("representa_coletivo", v === "sim")} className="flex gap-6">
                       <div className="flex items-center gap-2"><RadioGroupItem value="sim" id="col-s" /><Label htmlFor="col-s">Sim</Label></div>
                       <div className="flex items-center gap-2"><RadioGroupItem value="nao" id="col-n" /><Label htmlFor="col-n">Não</Label></div>
@@ -479,15 +516,14 @@ const Onboarding = () => {
                     <>
                       <div className="space-y-2"><Label>Nome do coletivo</Label><Input value={form.nome_grupo} onChange={e => update("nome_grupo", e.target.value)} /></div>
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2"><Label>Ano de criação</Label><Input value={form.ano_criacao_coletivo} onChange={e => update("ano_criacao_coletivo", e.target.value)} /></div>
-                        <div className="space-y-2"><Label>Nº de pessoas</Label><Input value={form.qtd_pessoas_coletivo} onChange={e => update("qtd_pessoas_coletivo", e.target.value)} /></div>
+                        <div className="space-y-2"><Label>Ano de Criação</Label><Input value={form.ano_criacao_coletivo} onChange={e => update("ano_criacao_coletivo", e.target.value)} /></div>
+                        <div className="space-y-2"><Label>Quantas pessoas fazem parte do coletivo?</Label><Input value={form.qtd_pessoas_coletivo} onChange={e => update("qtd_pessoas_coletivo", e.target.value)} /></div>
                       </div>
-                      <div className="space-y-2"><Label>Sua função no grupo</Label><Input value={form.funcao_no_grupo} onChange={e => update("funcao_no_grupo", e.target.value)} /></div>
                       <div className="space-y-2">
-                        <Label>Membros do coletivo (Nome e CPF)</Label>
+                        <Label>Nome completo e CPF das pessoas que compõem o coletivo</Label>
                         {membros.map((m, i) => (
                           <div key={i} className="flex gap-2 items-center">
-                            <Input placeholder="Nome" value={m.nome} onChange={e => updateMembro(i, "nome", e.target.value)} className="flex-1" />
+                            <Input placeholder="Nome completo" value={m.nome} onChange={e => updateMembro(i, "nome", e.target.value)} className="flex-1" />
                             <Input placeholder="CPF" value={m.cpf} onChange={e => updateMembro(i, "cpf", e.target.value)} className="w-40" />
                             {membros.length > 1 && <Button variant="ghost" size="icon" onClick={() => removeMembro(i)}><Trash2 className="h-4 w-4" /></Button>}
                           </div>
@@ -497,11 +533,12 @@ const Onboarding = () => {
                     </>
                   )}
                   <div className="space-y-2">
-                    <Label>Perfil do público atingido pelos projetos executados</Label>
-                    <Textarea placeholder="Quem é o público dos seus projetos? Crianças, adultas, idosas? Fazem parte de alguma comunidade?" value={form.perfil_publico} onChange={e => update("perfil_publico", e.target.value)} rows={3} />
+                    <Label>Perfil do público que é atingido pelos projetos executados *</Label>
+                    <p className="text-xs text-muted-foreground">Preencha aqui informações sobre as pessoas que foram beneficiadas ou participam dos seus projetos. Quem é o público? Crianças, adultas, idosas? Fazem parte de alguma comunidade? Qual a escolaridade? Moram em qual local, bairro e/ou região?</p>
+                    <Textarea placeholder="Descreva o perfil do público..." value={form.perfil_publico} onChange={e => update("perfil_publico", e.target.value)} rows={4} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Ação cultural voltada prioritariamente para:</Label>
+                    <Label>Sua ação cultural é voltada prioritariamente para algum destes perfis de público? *</Label>
                     <div className="grid grid-cols-1 gap-1">
                       {PUBLICO_ALVO.map(p => (
                         <div key={p} className="flex items-center gap-2">
@@ -509,6 +546,13 @@ const Onboarding = () => {
                           <Label htmlFor={`pub-${p}`} className="font-normal text-sm cursor-pointer">{p}</Label>
                         </div>
                       ))}
+                      <div className="flex items-center gap-2">
+                        <Checkbox checked={form.acao_cultural_publico_outro !== ""} onCheckedChange={(c) => update("acao_cultural_publico_outro", c ? " " : "")} id="pub-outro" />
+                        <Label htmlFor="pub-outro" className="font-normal text-sm cursor-pointer">Outro</Label>
+                      </div>
+                      {form.acao_cultural_publico_outro !== "" && (
+                        <Input placeholder="Especifique..." value={form.acao_cultural_publico_outro} onChange={e => update("acao_cultural_publico_outro", e.target.value)} className="mt-1" />
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -520,29 +564,45 @@ const Onboarding = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="font-sans text-xl">Acessibilidade e Locais</CardTitle>
-                  <CardDescription>Medidas de acessibilidade nos projetos executados</CardDescription>
+                  <CardDescription>Medidas de acessibilidade empregadas nos projetos executados</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
+                  <p className="text-xs text-muted-foreground">Marque quais medidas de acessibilidade foram implementadas ou estão disponíveis em seus projetos para a participação de Pessoas com deficiência – PcDs, tais como, intérprete de libras, audiodescrição, entre outras medidas de acessibilidade a pessoas com deficiência, idosos e mobilidade reduzida, conforme Instrução Normativa MINC nº 10/2023.</p>
+                  
                   <div className="space-y-2">
-                    <Label className="font-semibold">Acessibilidade arquitetônica</Label>
+                    <Label className="font-semibold">Acessibilidade arquitetônica:</Label>
                     {ACESS_ARQ.map(a => (
                       <div key={a} className="flex items-center gap-2">
                         <Checkbox checked={form.acessibilidade_arquitetonica.includes(a)} onCheckedChange={() => toggleArray("acessibilidade_arquitetonica", a)} id={`aarq-${a}`} />
                         <Label htmlFor={`aarq-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
                       </div>
                     ))}
+                    <div className="flex items-center gap-2">
+                      <Checkbox checked={form.acessibilidade_arq_outro !== ""} onCheckedChange={(c) => update("acessibilidade_arq_outro", c ? " " : "")} id="aarq-outro" />
+                      <Label htmlFor="aarq-outro" className="font-normal text-sm cursor-pointer">Outro</Label>
+                    </div>
+                    {form.acessibilidade_arq_outro !== "" && (
+                      <Input placeholder="Especifique..." value={form.acessibilidade_arq_outro} onChange={e => update("acessibilidade_arq_outro", e.target.value)} />
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-semibold">Acessibilidade comunicacional</Label>
+                    <Label className="font-semibold">Acessibilidade comunicacional:</Label>
                     {ACESS_COM.map(a => (
                       <div key={a} className="flex items-center gap-2">
                         <Checkbox checked={form.acessibilidade_comunicacional.includes(a)} onCheckedChange={() => toggleArray("acessibilidade_comunicacional", a)} id={`acom-${a}`} />
                         <Label htmlFor={`acom-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
                       </div>
                     ))}
+                    <div className="flex items-center gap-2">
+                      <Checkbox checked={form.acessibilidade_com_outro !== ""} onCheckedChange={(c) => update("acessibilidade_com_outro", c ? " " : "")} id="acom-outro" />
+                      <Label htmlFor="acom-outro" className="font-normal text-sm cursor-pointer">Outro</Label>
+                    </div>
+                    {form.acessibilidade_com_outro !== "" && (
+                      <Input placeholder="Especifique..." value={form.acessibilidade_com_outro} onChange={e => update("acessibilidade_com_outro", e.target.value)} />
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-semibold">Acessibilidade atitudinal</Label>
+                    <Label className="font-semibold">Acessibilidade atitudinal:</Label>
                     {ACESS_ATI.map(a => (
                       <div key={a} className="flex items-center gap-2">
                         <Checkbox checked={form.acessibilidade_atitudinal.includes(a)} onCheckedChange={() => toggleArray("acessibilidade_atitudinal", a)} id={`aati-${a}`} />
@@ -551,53 +611,30 @@ const Onboarding = () => {
                     ))}
                   </div>
                   <div className="space-y-2">
-                    <Label>Locais onde os projetos foram executados</Label>
-                    <Textarea placeholder="Informe os espaços culturais e outros ambientes no município de Goiás..." value={form.locais_execucao} onChange={e => update("locais_execucao", e.target.value)} rows={3} />
+                    <Label>Informe como essas medidas de acessibilidade foram implementadas ou disponibilizadas *</Label>
+                    <Textarea placeholder="Descreva como as medidas foram implementadas de acordo com os projetos executados..." value={form.acessibilidade_descricao} onChange={e => update("acessibilidade_descricao", e.target.value)} rows={3} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Tempo de residência no município de Goiás (anos)</Label>
-                    <Input placeholder="Ex: 5" value={form.tempo_residencia_municipio} onChange={e => update("tempo_residencia_municipio", e.target.value)} />
+                    <Label>Locais onde os projetos foram executados *</Label>
+                    <p className="text-xs text-muted-foreground">Informe os espaços culturais e outros ambientes, localizados no município de Goiás onde as suas propostas são realizadas.</p>
+                    <Textarea placeholder="Informe os espaços culturais..." value={form.locais_execucao} onChange={e => update("locais_execucao", e.target.value)} rows={3} />
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Step 7: Trajetória Cultural */}
+            {/* Step 7: Testemunha + Finalização */}
             {step === 7 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-sans text-xl">Informações sobre Trajetória Cultural</CardTitle>
-                  <CardDescription>Seção obrigatória do formulário de inscrição</CardDescription>
+                  <CardTitle className="font-sans text-xl">Dados Complementares</CardTitle>
+                  <CardDescription>Testemunha para Declaração de Residência (Anexo VII)</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="space-y-2">
-                    <Label>2.1 Quais são as suas principais ações e atividades culturais realizadas?</Label>
-                    <Textarea placeholder="Conte detalhadamente sobre as ações culturais que realiza, área ou segmento cultural, local das atividades..." value={form.trajetoria_acoes} onChange={e => update("trajetoria_acoes", e.target.value)} rows={4} />
+                    <Label>Tempo de residência no município de Goiás</Label>
+                    <Input placeholder="Ex: 5 anos" value={form.tempo_residencia_municipio} onChange={e => update("tempo_residencia_municipio", e.target.value)} />
                   </div>
-                  <div className="space-y-2">
-                    <Label>2.2 Como começou a sua trajetória cultural?</Label>
-                    <Textarea placeholder="Descreva como e quando começou sua trajetória na cultura, onde iniciou seus projetos, há quanto tempo os desenvolve..." value={form.trajetoria_inicio} onChange={e => update("trajetoria_inicio", e.target.value)} rows={4} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>2.3 Como as ações que você desenvolve transformam a realidade da sua comunidade?</Label>
-                    <Textarea placeholder="Quem são as pessoas beneficiadas? Como suas ações impactam as pessoas ao redor? A comunidade participou como público ou trabalhou nos projetos?" value={form.trajetoria_impacto} onChange={e => update("trajetoria_impacto", e.target.value)} rows={4} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>2.4 Você desenvolveu ações com outras esferas de conhecimento (educação, saúde, etc)?</Label>
-                    <Textarea placeholder="Descreva se suas ações possuem relação com outras áreas além da cultura..." value={form.trajetoria_outras_areas} onChange={e => update("trajetoria_outras_areas", e.target.value)} rows={4} />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 8: Testemunha (Anexo VII) + Texto referência */}
-            {step === 8 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-sans text-xl">Dados complementares</CardTitle>
-                  <CardDescription>Testemunha para Declaração de Residência (Anexo VII) e texto de referência</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-5">
                   <div className="border rounded-lg p-4 space-y-3">
                     <Label className="font-semibold">Testemunha (Anexo VII – Declaração de Residência)</Label>
                     <div className="space-y-2"><Label>Nome da testemunha</Label><Input value={form.testemunha_nome} onChange={e => update("testemunha_nome", e.target.value)} /></div>
@@ -607,11 +644,6 @@ const Onboarding = () => {
                     </div>
                     <div className="space-y-2"><Label>Telefone</Label><Input value={form.testemunha_telefone} onChange={e => update("testemunha_telefone", e.target.value)} /></div>
                     <div className="space-y-2"><Label>Endereço</Label><Input value={form.testemunha_endereco} onChange={e => update("testemunha_endereco", e.target.value)} /></div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Texto de referência (sua voz artística)</Label>
-                    <Textarea placeholder="Cole aqui textos de sua autoria para que a IA preserve seu estilo. Mínimo 500 palavras recomendado." value={referenceText} onChange={e => setReferenceText(e.target.value)} rows={5} />
-                    {referenceText && <p className="text-xs text-muted-foreground">{referenceText.split(/\s+/).filter(Boolean).length} palavras</p>}
                   </div>
                 </CardContent>
               </Card>

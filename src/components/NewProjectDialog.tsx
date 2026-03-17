@@ -33,13 +33,12 @@ interface NewProjectDialogProps {
 const EDITAL_STEPS: Record<string, { step_number: number; step_name: string }[]> = {
   // Badiinha edital - steps based on the actual form fields
   premiacao: [
-    { step_number: 1, step_name: "Dados do Agente Cultural" },
-    { step_number: 2, step_name: "Categoria e Cotas" },
-    { step_number: 3, step_name: "Mini Currículo e Atuação" },
-    { step_number: 4, step_name: "Público e Comunidade" },
-    { step_number: 5, step_name: "Acessibilidade" },
-    { step_number: 6, step_name: "Portfólio e Comprovações" },
-    { step_number: 7, step_name: "Revisão e Declarações" },
+    { step_number: 1, step_name: "Principais ações culturais" },
+    { step_number: 2, step_name: "Início da trajetória" },
+    { step_number: 3, step_name: "Impacto na comunidade" },
+    { step_number: 4, step_name: "Ações interdisciplinares" },
+    { step_number: 5, step_name: "Upload de documentos" },
+    { step_number: 6, step_name: "Revisão e Declarações" },
   ],
   // Default steps for other editals
   default: [
@@ -63,32 +62,28 @@ export function getStepsForEdital(instrumentType: string | null): { step_number:
 // Step prompts for the AI assistant per edital type
 export const STEP_PROMPTS_PREMIACAO: Record<number, { name: string; prompt: string }> = {
   1: {
-    name: "Dados do Agente Cultural",
-    prompt: "Ajude o agente cultural a preencher seus dados pessoais ou jurídicos. Pergunte se é pessoa física ou jurídica, colete nome, CPF/CNPJ, endereço, dados bancários e informações de contato.",
+    name: "Principais ações culturais",
+    prompt: "Ajude o agente cultural a descrever suas principais ações e atividades culturais realizadas. Pergunte em que área ou segmento cultural atua, em que local realiza suas atividades. Este é o critério A de seleção (20 pontos - Relevância da trajetória do agente cultural).",
   },
   2: {
-    name: "Categoria e Cotas",
-    prompt: "Ajude a escolher a categoria de inscrição (Grupos e coletivos culturais, Festas Populares ou Blocos de Carnaval) e se deseja concorrer às cotas (pessoa negra, indígena ou PcD). Explique as vagas e valores de cada categoria.",
+    name: "Início da trajetória",
+    prompt: "Ajude a descrever como e quando começou a trajetória cultural do agente, informando onde seus projetos foram iniciados e há quanto tempo os desenvolve. Este é o critério A de seleção (20 pontos).",
   },
   3: {
-    name: "Mini Currículo e Atuação",
-    prompt: "Ajude a elaborar o mini currículo do agente cultural, destacando as principais atuações culturais realizadas nos últimos 2 anos. Este é um critério importante de seleção (Critério A - 20 pontos).",
+    name: "Impacto na comunidade",
+    prompt: "Ajude a descrever quem são as pessoas beneficiadas direta ou indiretamente pelas atividades, e como as ações impactam e beneficiam as pessoas ao redor. Destaque se a comunidade participou enquanto público ou também trabalhou nos projetos. Critérios: Contribuição a populações vulneráveis (15pts), Contribuição à comunidade (15pts).",
   },
   4: {
-    name: "Público e Comunidade",
-    prompt: "Ajude a descrever o perfil do público atingido pelos projetos e a contribuição do agente à comunidade. Estes são critérios de seleção importantes: integração com outras áreas (30pts), contribuição a populações vulneráveis (15pts) e contribuição à comunidade (15pts).",
+    name: "Ações interdisciplinares",
+    prompt: "Ajude a descrever se as ações e atividades possuem relação com outras áreas além da cultura, tais como educação, saúde, esporte, assistência social. Este é o Critério B de seleção (30 pontos - Integração do projeto com outras esferas da vida social).",
   },
   5: {
-    name: "Acessibilidade",
-    prompt: "Ajude a descrever as medidas de acessibilidade empregadas nos projetos (arquitetônica, comunicacional e atitudinal). Este é o Critério F de seleção (10 pontos). Inclua medidas como Libras, audiodescrição, rampas, etc.",
+    name: "Upload de documentos",
+    prompt: "Nesta etapa, o agente deve fazer upload dos documentos comprobatórios: currículo/portfólio, comprovante de endereço, declaração de residência (Anexo VII), e opcionalmente: declaração étnico-racial (Anexo V), declaração PcD (Anexo VI), declaração de representação de grupo (Anexo IV).",
   },
   6: {
-    name: "Portfólio e Comprovações",
-    prompt: "Ajude a organizar o portfólio com registros que comprovem os últimos 2 anos de atuação: fotos, vídeos, material gráfico, postagens em redes sociais, relatórios. Descreva também o diálogo com o patrimônio cultural (Critério E - 10pts).",
-  },
-  7: {
     name: "Revisão e Declarações",
-    prompt: "Ajude a revisar toda a inscrição e verificar se todas as declarações necessárias foram preenchidas: declaração étnico-racial (se for concorrer a cotas), declaração de representação de grupo (se coletivo sem CNPJ), declaração de residência e declaração PcD (se aplicável).",
+    prompt: "Ajude a revisar toda a inscrição e verificar se todas as declarações necessárias foram preenchidas. Verifique a consistência dos dados e se todos os documentos obrigatórios foram anexados.",
   },
 };
 
