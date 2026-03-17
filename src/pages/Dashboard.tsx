@@ -95,8 +95,8 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  const handleDownloadAnexoII = async () => {
-    if (!user) return;
+  const getProfile = async () => {
+    if (!user) return null;
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -104,11 +104,17 @@ const Dashboard = () => {
       .single();
     if (error || !data) {
       toast.error("Erro ao carregar perfil. Complete seu cadastro primeiro.");
-      return;
+      return null;
     }
+    return data as any;
+  };
+
+  const handleDownloadAnexo = async (generator: (p: any) => Promise<void>, label: string) => {
+    const profile = await getProfile();
+    if (!profile) return;
     try {
-      await generateAnexoII(data as any);
-      toast.success("Anexo II gerado com sucesso!");
+      await generator(profile);
+      toast.success(`${label} gerado com sucesso!`);
     } catch {
       toast.error("Erro ao gerar documento");
     }
