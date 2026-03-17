@@ -109,6 +109,7 @@ export type Database = {
           acessibilidade_arquitetonica: string[] | null
           acessibilidade_atitudinal: string[] | null
           acessibilidade_comunicacional: string[] | null
+          acessibilidade_descricao: string | null
           agencia: string | null
           ano_criacao_coletivo: string | null
           artistic_language: string | null
@@ -120,6 +121,7 @@ export type Database = {
           cep: string | null
           city: string | null
           cnpj: string | null
+          cnpj_mei: string | null
           complemento: string | null
           comunidade_tradicional: string | null
           concorre_cotas: boolean | null
@@ -164,6 +166,7 @@ export type Database = {
           testemunha_nome: string | null
           testemunha_rg: string | null
           testemunha_telefone: string | null
+          tipo_conta_bancaria: string | null
           trajetoria_acoes: string | null
           trajetoria_impacto: string | null
           trajetoria_inicio: string | null
@@ -176,6 +179,7 @@ export type Database = {
           acessibilidade_arquitetonica?: string[] | null
           acessibilidade_atitudinal?: string[] | null
           acessibilidade_comunicacional?: string[] | null
+          acessibilidade_descricao?: string | null
           agencia?: string | null
           ano_criacao_coletivo?: string | null
           artistic_language?: string | null
@@ -187,6 +191,7 @@ export type Database = {
           cep?: string | null
           city?: string | null
           cnpj?: string | null
+          cnpj_mei?: string | null
           complemento?: string | null
           comunidade_tradicional?: string | null
           concorre_cotas?: boolean | null
@@ -231,6 +236,7 @@ export type Database = {
           testemunha_nome?: string | null
           testemunha_rg?: string | null
           testemunha_telefone?: string | null
+          tipo_conta_bancaria?: string | null
           trajetoria_acoes?: string | null
           trajetoria_impacto?: string | null
           trajetoria_inicio?: string | null
@@ -243,6 +249,7 @@ export type Database = {
           acessibilidade_arquitetonica?: string[] | null
           acessibilidade_atitudinal?: string[] | null
           acessibilidade_comunicacional?: string[] | null
+          acessibilidade_descricao?: string | null
           agencia?: string | null
           ano_criacao_coletivo?: string | null
           artistic_language?: string | null
@@ -254,6 +261,7 @@ export type Database = {
           cep?: string | null
           city?: string | null
           cnpj?: string | null
+          cnpj_mei?: string | null
           complemento?: string | null
           comunidade_tradicional?: string | null
           concorre_cotas?: boolean | null
@@ -298,6 +306,7 @@ export type Database = {
           testemunha_nome?: string | null
           testemunha_rg?: string | null
           testemunha_telefone?: string | null
+          tipo_conta_bancaria?: string | null
           trajetoria_acoes?: string | null
           trajetoria_impacto?: string | null
           trajetoria_inicio?: string | null
