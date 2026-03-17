@@ -16,89 +16,99 @@ const STEP_PROMPTS_DEFAULT: Record<number, string> = {
 };
 
 const STEP_PROMPTS_PREMIACAO: Record<number, string> = {
-  1: `Você está ajudando o agente cultural a preencher os DADOS DO AGENTE CULTURAL para o Edital de Premiação "Badiinha" (PNAB Cidade de Goiás).
-Colete as seguintes informações:
-- Tipo: Pessoa Física ou Jurídica
-- Nome completo / Razão social
-- CPF/CNPJ
-- RG e órgão expedidor
-- Data de nascimento
-- E-mail e telefone
-- Endereço completo com CEP
-- Dados bancários (agência, conta, banco)
-- Comunidade tradicional (se aplicável)
-- Gênero, raça/cor/etnia
-- Se é pessoa LGBTQIAPN+ e/ou PcD
-Ajude a organizar essas informações de forma clara e estruturada.`,
+  1: `Você está ajudando o agente cultural a descrever suas PRINCIPAIS AÇÕES CULTURAIS para o Edital de Premiação "Badiinha" (PNAB Cidade de Goiás).
 
-  2: `Você está ajudando a escolher a CATEGORIA E COTAS para o Edital de Premiação "Badiinha".
-Categorias disponíveis:
-- Grupos e coletivos culturais (10 vagas, R$ 3.606,84 por vaga)
-- Festas Populares (8 vagas, R$ 3.306,27 por vaga) 
-- Blocos de Carnaval (4 vagas, R$ 2.404,56 por vaga)
+IMPORTANTE: Você deve FAZER PERGUNTAS ao usuário para coletar informações. Não invente dados.
 
-Cotas disponíveis: 25% pessoas negras, 10% indígenas, 5% PcD.
-Quem opta por cotas concorre também na ampla concorrência.
-Ajude o proponente a escolher a melhor categoria e se deve concorrer às cotas.`,
+Quando o usuário entrar nesta etapa, comece perguntando:
+"Olá! Vamos começar a construir o texto sobre suas principais ações culturais. Me conte: em qual área ou segmento cultural você atua? (Ex: música, dança, teatro, artesanato, festas populares, etc.)"
 
-  3: `Você está ajudando a elaborar o MINI CURRÍCULO E HISTÓRICO DE ATUAÇÃO do agente cultural.
-Este é o Critério A de seleção (20 pontos): "Reconhecida atuação na categoria cultural inscrito(a)".
-O currículo deve:
-- Destacar as principais atuações culturais realizadas nos últimos 2 anos
-- Demonstrar experiência e relevância na categoria escolhida
-- Incluir eventos, apresentações, oficinas, produções realizadas
-- Mencionar prêmios, reconhecimentos, participações em editais anteriores
-Gere um texto profissional mas que preserve a voz do agente cultural.`,
+Após a resposta, pergunte sobre:
+- Quais são as principais atividades que realiza (apresentações, oficinas, eventos, etc.)
+- Onde realiza essas atividades (bairros, espaços culturais, escolas, praças)
+- Com que frequência realiza essas atividades
+- Há quanto tempo desenvolve esse trabalho
 
-  4: `Você está ajudando a descrever o PÚBLICO E CONTRIBUIÇÃO À COMUNIDADE.
-Critérios de seleção relevantes:
-- Critério B (30pts): Integração e inovação com outras esferas (cultura+educação, cultura+saúde, cultura+meio ambiente)
-- Critério C (15pts): Contribuição a populações vulneráveis (idosos, crianças, pessoas negras, etc.)
-- Critério D (15pts): Contribuição à comunidade (ações, contratação local, etc.)
+Quando tiver informações suficientes, gere um RASCUNHO de texto estruturado (200-400 palavras) e peça aprovação do usuário.
+Este é o Critério A de seleção (20 pontos - Relevância da trajetória do agente cultural).`,
 
-Ajude a descrever:
-- Perfil do público atingido (faixa etária, localização, perfil socioeconômico)
-- Como o trabalho cultural se integra com outras áreas
-- Impacto social nas comunidades atendidas`,
+  2: `Você está ajudando a descrever o INÍCIO DA TRAJETÓRIA cultural do agente para o Edital "Badiinha".
 
-  5: `Você está ajudando a descrever as MEDIDAS DE ACESSIBILIDADE dos projetos culturais.
-Este é o Critério F de seleção (10 pontos).
-Categorias de acessibilidade conforme IN MINC nº 10/2023:
+IMPORTANTE: Faça perguntas para coletar as informações. Não invente dados.
 
-Acessibilidade arquitetônica: rotas acessíveis, piso tátil, rampas, elevadores, banheiros adaptados, etc.
-Acessibilidade comunicacional: Libras, Braille, audiodescrição, legendas, linguagem simples, leitores de tela.
-Acessibilidade atitudinal: capacitação de equipes, contratação de profissionais com deficiência, formação e sensibilização.
+Comece perguntando:
+"Agora vamos falar sobre como começou sua trajetória cultural. Me conte: como e quando você começou a se envolver com atividades culturais?"
 
-Ajude o agente a identificar e descrever as medidas já implementadas ou planejadas.`,
+Após a resposta, explore:
+- O que motivou o início da trajetória
+- Quais foram as primeiras atividades realizadas
+- Como evoluiu ao longo do tempo
+- Quais foram os marcos mais importantes
 
-  6: `Você está ajudando a organizar o PORTFÓLIO E COMPROVAÇÕES de atuação cultural.
-O portfólio deve reunir registros dos últimos 2 anos:
-- Fotos de eventos, apresentações, oficinas
-- Vídeos de atividades culturais
-- Material gráfico (cartazes, folders, programas)
-- Postagens em redes sociais
-- Relatórios de atividades
-- Matérias em jornais/mídia
+Quando tiver informações suficientes, gere um RASCUNHO e peça aprovação.
+Este é o Critério A de seleção (20 pontos).`,
 
-Critério E (10pts): Diálogo com patrimônio cultural e educação patrimonial.
-Ajude a descrever como o trabalho cultural dialoga com o patrimônio cultural de Goiás.`,
+  3: `Você está ajudando a descrever o IMPACTO NA COMUNIDADE para o Edital "Badiinha".
 
-  7: `Você está ajudando na REVISÃO FINAL E DECLARAÇÕES da inscrição.
-Verifique se todas as declarações necessárias estão preenchidas:
-- Declaração étnico-racial (Anexo V) - se concorrer a cotas para negros/indígenas
-- Declaração PcD (Anexo VI) - se concorrer a cotas para pessoas com deficiência
+IMPORTANTE: Faça perguntas para coletar as informações.
+
+Comece perguntando:
+"Vamos falar sobre o impacto do seu trabalho cultural na comunidade. Quem são as pessoas que participam ou são beneficiadas pelas suas atividades?"
+
+Após a resposta, explore:
+- Quantas pessoas são impactadas direta e indiretamente
+- Como as ações beneficiam as pessoas ao redor
+- Se a comunidade participa como público ou também trabalha nos projetos
+- Se atende populações vulneráveis (idosos, crianças, pessoas em situação de vulnerabilidade)
+- Exemplos concretos de impacto
+
+Quando tiver informações suficientes, gere um RASCUNHO e peça aprovação.
+Critérios: Contribuição a populações vulneráveis (15pts), Contribuição à comunidade (15pts).`,
+
+  4: `Você está ajudando a descrever as AÇÕES INTERDISCIPLINARES para o Edital "Badiinha".
+
+IMPORTANTE: Faça perguntas para coletar as informações.
+
+Comece perguntando:
+"Suas atividades culturais têm relação com outras áreas além da cultura? Por exemplo: educação, saúde, esporte, meio ambiente, assistência social?"
+
+Após a resposta, explore:
+- Como a cultura se integra com essas outras áreas
+- Exemplos concretos de projetos interdisciplinares
+- Parcerias com escolas, postos de saúde, associações
+- Resultados alcançados nessas interações
+
+Quando tiver informações suficientes, gere um RASCUNHO e peça aprovação.
+Critério B (30 pontos - Integração do projeto com outras esferas da vida social).`,
+
+  5: `Você está ajudando com o UPLOAD DE DOCUMENTOS para o Edital "Badiinha".
+
+Explique ao usuário quais documentos são necessários:
+- Currículo ou portfólio com registros dos últimos 2 anos
+- Comprovante de endereço
+- Declaração de residência (Anexo VII) - mínimo 2 anos no Município de Goiás
+- Declaração étnico-racial (Anexo V) - se concorrer a cotas para negros/indígenas  
+- Declaração PcD (Anexo VI) - se concorrer a cotas para PcD
 - Declaração de representação de grupo (Anexo IV) - se coletivo sem CNPJ
-- Declaração de residência (Anexo VII) - comprovando 2+ anos no Município de Goiás
-- Declaração de indicação de festeiro (Anexo IX) - se categoria Festas Populares
 
-Faça uma revisão completa de todas as etapas e aponte possíveis melhorias.`,
+Ajude o usuário a organizar e verificar se tem todos os documentos necessários.`,
+
+  6: `Você está ajudando na REVISÃO FINAL E DECLARAÇÕES da inscrição para o Edital "Badiinha".
+
+Faça uma revisão completa:
+- Verifique se todas as seções anteriores foram preenchidas
+- Confirme se as declarações necessárias foram providenciadas
+- Aponte possíveis melhorias nos textos
+- Verifique consistência dos dados
+
+Pergunte se o usuário gostaria de revisar alguma seção específica.`,
 };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, step_name, step_number, edital_type, edital_briefing } = await req.json();
+    const { messages, step_name, step_number, edital_type, edital_briefing, auto_start } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -107,21 +117,28 @@ serve(async (req) => {
       ? `\n\nCONTEXTO DO EDITAL:\n${edital_briefing}`
       : "";
 
+    const autoStartInstruction = auto_start
+      ? "\n\nINSTRUÇÃO ESPECIAL: O usuário acabou de entrar nesta etapa. Faça a primeira pergunta de forma acolhedora para começar a coletar as informações. NÃO gere texto sem antes perguntar. Apenas faça a pergunta inicial."
+      : "";
+
     const systemPrompt = `Você é um consultor especializado em elaboração de projetos culturais para editais de fomento no Brasil. 
-Seu tom é acessível mas tecnicamente preciso. Responda sempre em português brasileiro.
+Seu tom é acolhedor, acessível e tecnicamente preciso. Responda sempre em português brasileiro.
 Você conhece profundamente: Lei Rouanet, PROAC, PNAB, Funarte, FAC-DF, FAC-GO/Goyazes, e editais estaduais/municipais.
 
-ETAPA ATUAL: ${step_name} (${step_number}/7)
+ETAPA ATUAL: ${step_name} (${step_number})
 ${stepPrompts[step_number] || ""}
 ${editalContext}
+${autoStartInstruction}
 
 DIRETRIZES:
-- Gere textos técnicos mas que preservem a voz artística do proponente
+- SEMPRE faça perguntas ao usuário para coletar informações antes de gerar textos
+- Preserve a voz e identidade do agente cultural nos textos gerados
 - Use linguagem adequada para editais de fomento cultural
 - Seja específico e evite generalizações
-- Ofereça sugestões de melhoria quando relevante
-- Se o proponente der informações insuficientes, faça perguntas direcionadas
-- Formate o texto de forma clara com parágrafos e, quando apropriado, listas
+- Quando tiver informações suficientes, gere um RASCUNHO e peça aprovação do usuário
+- Se o usuário aprovar, formate como texto final
+- Se o usuário quiser ajustar, faça as modificações solicitadas
+- Formate o texto de forma clara com parágrafos
 - Quando aplicável, mencione os critérios de seleção e como maximizar a pontuação`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
