@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import NewProjectDialog, { getStepsForEdital } from "@/components/NewProjectDialog";
+import { generateAnexoII } from "@/lib/generateAnexoII";
 
 interface Project {
   id: string;
