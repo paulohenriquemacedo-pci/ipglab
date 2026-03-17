@@ -584,14 +584,8 @@ const ProjectWizard = () => {
                 </div>
               )}
 
-              {currentSection?.ai_draft && !currentSection?.is_completed && (
-                <div className="px-6 py-3 border-t border-border bg-muted/30 flex items-center gap-3">
-                  <Button size="sm" onClick={acceptDraft}>
-                    <Edit3 className="h-4 w-4 mr-2" /> Revisar e Editar Rascunho
-                  </Button>
-                  <span className="text-xs text-muted-foreground">Revise o rascunho gerado pela IA antes de salvar</span>
-                </div>
-              )}
+
+
 
               <div className="border-t border-border p-4">
                 <div className="flex gap-3">
