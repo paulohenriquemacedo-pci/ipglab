@@ -519,6 +519,16 @@ const ProjectWizard = () => {
                           </div>
                         )}
                         <div className="whitespace-pre-wrap">{msg.content}</div>
+                        {msg.role === "assistant" && currentStep >= 1 && currentStep <= 4 && !currentSection?.is_completed && !isStreaming && i === chatMessages.length - 1 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-3 gap-2 text-xs border-green-500/50 text-green-700 hover:bg-green-50 hover:text-green-800"
+                            onClick={() => approveAiResponse(msg.content)}
+                          >
+                            <ThumbsUp className="h-3.5 w-3.5" /> Aprovar resposta e salvar no formulário
+                          </Button>
+                        )}
                       </div>
                     </motion.div>
                   ))}

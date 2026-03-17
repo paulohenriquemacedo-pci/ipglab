@@ -189,6 +189,10 @@ const Dashboard = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleDownloadAll} className="font-semibold">
+                  <Download className="h-4 w-4 mr-2" /> Baixar todos os anexos
+                </DropdownMenuItem>
+                <div className="h-px bg-border my-1" />
                 <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoII, "Anexo II")}>
                   <FileText className="h-4 w-4 mr-2" /> Anexo II – Formulário de Inscrição
                 </DropdownMenuItem>
