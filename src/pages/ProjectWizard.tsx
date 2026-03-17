@@ -525,14 +525,18 @@ const ProjectWizard = () => {
                           </div>
                         )}
                         <div className="whitespace-pre-wrap">{msg.content}</div>
-                        {msg.role === "assistant" && currentStep >= 1 && currentStep <= 4 && !currentSection?.is_completed && !isStreaming && i === chatMessages.length - 1 && (
+                        {msg.role === "assistant" && currentStep >= 1 && currentStep <= 4 && !isStreaming && i === chatMessages.length - 1 && (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="mt-3 gap-2 text-xs border-green-500/50 text-green-700 hover:bg-green-50 hover:text-green-800"
-                            onClick={() => approveAiResponse(msg.content)}
+                            className="mt-3 gap-2 text-xs"
+                            onClick={() => {
+                              navigator.clipboard.writeText(msg.content);
+                              setFinalResponse(msg.content);
+                              toast.success("Resposta copiada para o campo de resposta final!");
+                            }}
                           >
-                            <ThumbsUp className="h-3.5 w-3.5" /> Aprovar resposta e salvar no formulário
+                            <ClipboardCopy className="h-3.5 w-3.5" /> Copiar para resposta final
                           </Button>
                         )}
                       </div>
@@ -546,6 +550,39 @@ const ProjectWizard = () => {
                 )}
                 <div ref={chatEndRef} />
               </div>
+
+              {/* Resposta Final Field */}
+              {currentStep >= 1 && currentStep <= 4 && !currentSection?.is_completed && (
+                <div className="px-6 py-4 border-t border-border bg-accent/30">
+                  <div className="flex items-start gap-2 mb-2">
+                    <AlertCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      <strong className="text-foreground">Importante:</strong> Copie a resposta da IA que deseja utilizar no campo abaixo. Você pode editá-la antes de aprovar. <strong>Somente o texto deste campo será incluído no formulário de inscrição (Anexo II).</strong>
+                    </p>
+                  </div>
+                  <Textarea
+                    value={finalResponse}
+                    onChange={e => setFinalResponse(e.target.value)}
+                    placeholder="Cole aqui a resposta final que deseja incluir no formulário de inscrição..."
+                    rows={4}
+                    className="resize-none text-sm mb-3"
+                  />
+                  <Button
+                    onClick={approveFinalResponse}
+                    disabled={!finalResponse.trim()}
+                    className="gap-2"
+                  >
+                    <ThumbsUp className="h-4 w-4" /> Aprovar resposta final e salvar no formulário
+                  </Button>
+                </div>
+              )}
+
+              {currentSection?.is_completed && (
+                <div className="px-6 py-3 border-t border-border bg-accent/20 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-muted-foreground">Etapa aprovada e salva no formulário.</span>
+                </div>
+              )}
 
               {currentSection?.ai_draft && !currentSection?.is_completed && (
                 <div className="px-6 py-3 border-t border-border bg-muted/30 flex items-center gap-3">
