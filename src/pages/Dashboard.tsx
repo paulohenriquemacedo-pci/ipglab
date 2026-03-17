@@ -233,11 +233,6 @@ const Dashboard = () => {
           </a>
         </div>
       </footer>
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSelectEdital={createProject}
-        loading={creating}
-      />
     </div>
   );
 };
