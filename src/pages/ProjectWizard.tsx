@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Send, CheckCircle, Loader2, Edit3, Bot } from "lucide-react";
+import { ArrowLeft, ArrowRight, Send, CheckCircle, Loader2, Edit3, Bot, User } from "lucide-react";
 import logoIpg from "@/assets/logo-ipg.jpeg";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import {
   STEP_PROMPTS_PREMIACAO,
   STEP_PROMPTS_DEFAULT,
 } from "@/components/NewProjectDialog";
+import ProfileFormSteps from "@/components/ProfileFormSteps";
 
 interface Section {
   id: string;
@@ -35,29 +36,26 @@ const ProjectWizard = () => {
   const [project, setProject] = useState<any>(null);
   const [edital, setEdital] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0); // Start at 0 for profile
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
   const [userInput, setUserInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [projectTitle, setProjectTitle] = useState("");
+  const [profileCompleted, setProfileCompleted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const currentSection = sections.find(s => s.step_number === currentStep);
-  const totalSteps = sections.length || 7;
-  const completedSteps = sections.filter(s => s.is_completed).length;
+  const totalSteps = sections.length + 1; // +1 for profile step
+  const completedSteps = sections.filter(s => s.is_completed).length + (profileCompleted ? 1 : 0);
   const progress = (completedSteps / totalSteps) * 100;
 
-  // Determine step prompts based on edital type
   const getStepInfo = (stepNum: number) => {
+    if (stepNum === 0) return { name: "Dados Cadastrais", prompt: "Preencha seus dados pessoais, bancários e perfil socioidentitário conforme o formulário de inscrição." };
     const instrumentType = edital?.instrument_type;
-    if (instrumentType === "premiacao" && STEP_PROMPTS_PREMIACAO[stepNum]) {
-      return STEP_PROMPTS_PREMIACAO[stepNum];
-    }
-    if (STEP_PROMPTS_DEFAULT[stepNum]) {
-      return STEP_PROMPTS_DEFAULT[stepNum];
-    }
+    if (instrumentType === "premiacao" && STEP_PROMPTS_PREMIACAO[stepNum]) return STEP_PROMPTS_PREMIACAO[stepNum];
+    if (STEP_PROMPTS_DEFAULT[stepNum]) return STEP_PROMPTS_DEFAULT[stepNum];
     const section = sections.find(s => s.step_number === stepNum);
     return { name: section?.step_name || `Etapa ${stepNum}`, prompt: "" };
   };
@@ -69,7 +67,6 @@ const ProjectWizard = () => {
       setProject(proj);
       setProjectTitle(proj.title);
 
-      // Load edital info
       if (proj.edital_id) {
         const { data: ed } = await supabase.from("editais").select("*").eq("id", proj.edital_id).single();
         if (ed) setEdital(ed);
@@ -78,13 +75,21 @@ const ProjectWizard = () => {
       const { data: secs } = await supabase.from("project_sections").select("*").eq("project_id", id).order("step_number");
       if (secs) setSections(secs);
 
-      const { data: msgs } = await supabase.from("chat_messages").select("*").eq("project_id", id).eq("step_number", 1).order("created_at");
-      if (msgs) setChatMessages(msgs.map(m => ({ role: m.role as "user" | "assistant", content: m.content })));
+      // Check if profile is already completed
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("onboarding_completed").eq("user_id", user.id).single();
+        if (profile?.onboarding_completed) {
+          setProfileCompleted(true);
+          setCurrentStep(1); // Skip to first project step if profile done
+        }
+      }
     };
     load();
   }, [id]);
 
   useEffect(() => {
+    if (currentStep === 0) return;
     const loadChat = async () => {
       const { data: msgs } = await supabase.from("chat_messages").select("*").eq("project_id", id).eq("step_number", currentStep).order("created_at");
       if (msgs) setChatMessages(msgs.map(m => ({ role: m.role as "user" | "assistant", content: m.content })));
@@ -134,7 +139,7 @@ const ProjectWizard = () => {
 
       if (!resp.ok) {
         if (resp.status === 429) { toast.error("Limite de requisições excedido. Tente novamente em instantes."); setIsStreaming(false); return; }
-        if (resp.status === 402) { toast.error("Créditos insuficientes. Adicione créditos para continuar."); setIsStreaming(false); return; }
+        if (resp.status === 402) { toast.error("Créditos insuficientes."); setIsStreaming(false); return; }
         throw new Error("Erro na resposta da IA");
       }
 
@@ -212,7 +217,13 @@ const ProjectWizard = () => {
     await supabase.from("projects").update({ title: projectTitle }).eq("id", id);
   };
 
+  const handleProfileComplete = () => {
+    setProfileCompleted(true);
+    setCurrentStep(1);
+  };
+
   const stepInfo = getStepInfo(currentStep);
+  const maxProjectStep = sections.length > 0 ? Math.max(...sections.map(s => s.step_number)) : 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -248,6 +259,22 @@ const ProjectWizard = () => {
           )}
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Etapas</h3>
           <nav className="space-y-1">
+            {/* Step 0: Profile */}
+            <button
+              onClick={() => { setCurrentStep(0); setEditMode(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors text-left ${
+                currentStep === 0 ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"
+              }`}
+            >
+              {profileCompleted ? (
+                <CheckCircle className="h-4 w-4 text-success flex-shrink-0" />
+              ) : (
+                <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              )}
+              <span className="truncate">Dados Cadastrais</span>
+            </button>
+
+            {/* Project steps */}
             {sections.map(s => {
               const isCurrent = currentStep === s.step_number;
               const isCompleted = s.is_completed;
@@ -278,14 +305,22 @@ const ProjectWizard = () => {
           {/* Step header */}
           <div className="border-b border-border px-6 py-4">
             <div className="flex items-center gap-2 mb-1">
-              <Badge variant="outline" className="text-xs">Etapa {currentStep}</Badge>
-              {currentSection?.is_completed && <Badge className="bg-success text-success-foreground text-xs">Concluída</Badge>}
+              <Badge variant="outline" className="text-xs">
+                {currentStep === 0 ? "Dados do Agente" : `Etapa ${currentStep}`}
+              </Badge>
+              {currentStep === 0 && profileCompleted && <Badge className="bg-success text-success-foreground text-xs">Concluída</Badge>}
+              {currentStep > 0 && currentSection?.is_completed && <Badge className="bg-success text-success-foreground text-xs">Concluída</Badge>}
             </div>
             <h2 className="text-xl font-sans font-semibold">{stepInfo.name}</h2>
             <p className="text-sm text-muted-foreground mt-1">{stepInfo.prompt}</p>
           </div>
 
-          {editMode ? (
+          {/* Step 0: Profile Form */}
+          {currentStep === 0 ? (
+            <div className="flex-1 overflow-y-auto p-6">
+              <ProfileFormSteps onComplete={handleProfileComplete} embedded />
+            </div>
+          ) : editMode ? (
             <div className="flex-1 p-6 flex flex-col">
               <Textarea
                 value={editContent}
@@ -372,10 +407,10 @@ const ProjectWizard = () => {
 
           {/* Step navigation */}
           <div className="border-t border-border px-6 py-3 flex justify-between">
-            <Button variant="outline" size="sm" disabled={currentStep === 1} onClick={() => { setCurrentStep(s => s - 1); setEditMode(false); }}>
+            <Button variant="outline" size="sm" disabled={currentStep === 0} onClick={() => { setCurrentStep(s => s - 1); setEditMode(false); }}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Anterior
             </Button>
-            <Button variant="outline" size="sm" disabled={currentStep === totalSteps} onClick={() => { setCurrentStep(s => s + 1); setEditMode(false); }}>
+            <Button variant="outline" size="sm" disabled={currentStep === maxProjectStep} onClick={() => { setCurrentStep(s => s + 1); setEditMode(false); }}>
               Próxima <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
