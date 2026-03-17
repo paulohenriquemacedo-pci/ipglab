@@ -258,6 +258,23 @@ const Dashboard = () => {
         loading={creating}
       />
 
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deletar projeto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O projeto e todos os seus dados serão removidos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteProject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <footer className="border-t border-border py-6 mt-12">
         <div className="max-w-6xl mx-auto px-6 text-center text-sm text-muted-foreground font-sans">
           <a href="mailto:contato@institutopedragoiana.com.br" className="hover:text-foreground transition-colors">
