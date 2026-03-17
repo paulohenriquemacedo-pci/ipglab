@@ -54,8 +54,20 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const deleteProject = async () => {
+    if (!deleteId) return;
+    const { error } = await supabase.from("projects").delete().eq("id", deleteId);
+    if (error) { toast.error("Erro ao deletar projeto"); }
+    else {
+      setProjects(prev => prev.filter(p => p.id !== deleteId));
+      toast.success("Projeto deletado");
+    }
+    setDeleteId(null);
+  };
 
   useEffect(() => {
     const fetchProjects = async () => {
