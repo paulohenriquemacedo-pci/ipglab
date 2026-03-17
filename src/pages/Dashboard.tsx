@@ -138,9 +138,30 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Gerencie seus projetos culturais</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleDownloadAnexoII}>
-              <Download className="h-4 w-4 mr-2" /> Anexo II
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" /> Anexos <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoII, "Anexo II")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo II – Formulário de Inscrição
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoIV, "Anexo IV")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo IV – Representação de Grupo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoV, "Anexo V")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo V – Autodeclaração Étnico-Racial
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVI, "Anexo VI")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo VI – Declaração PcD
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVII, "Anexo VII")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo VII – Declaração de Residência
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" /> Novo Projeto
             </Button>
