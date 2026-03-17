@@ -105,18 +105,26 @@ export type Database = {
       }
       profiles: {
         Row: {
+          acao_cultural_publico: string[] | null
+          acessibilidade_arquitetonica: string[] | null
+          acessibilidade_atitudinal: string[] | null
+          acessibilidade_comunicacional: string[] | null
           agencia: string | null
+          ano_criacao_coletivo: string | null
           artistic_language: string | null
           avatar_url: string | null
           bairro: string | null
           banco: string | null
           bio: string | null
+          categoria_inscricao: string | null
           cep: string | null
           city: string | null
           cnpj: string | null
           complemento: string | null
           comunidade_tradicional: string | null
+          concorre_cotas: boolean | null
           conta_bancaria: string | null
+          cota_tipo: string | null
           cpf: string | null
           created_at: string
           data_nascimento: string | null
@@ -125,38 +133,65 @@ export type Database = {
           experience_level: string | null
           full_name: string | null
           funcao_no_grupo: string | null
+          funcao_profissao: string | null
           genero: string | null
           id: string
           lgbtqiapn: boolean | null
+          lgbtqiapn_tipo: string | null
+          locais_execucao: string | null
+          membros_coletivo: Json | null
+          nome_fantasia: string | null
           nome_grupo: string | null
+          nome_social: string | null
+          num_representantes_legais: string | null
           numero: string | null
           onboarding_completed: boolean
           pcd: boolean | null
           pcd_tipo: string | null
+          perfil_publico: string | null
           person_type: string | null
+          qtd_pessoas_coletivo: string | null
           raca_cor_etnia: string | null
           razao_social: string | null
+          representa_coletivo: boolean | null
           rg: string | null
           rg_orgao: string | null
           state: string | null
           telefone: string | null
           tempo_residencia_municipio: string | null
+          testemunha_cpf: string | null
+          testemunha_endereco: string | null
+          testemunha_nome: string | null
+          testemunha_rg: string | null
+          testemunha_telefone: string | null
+          trajetoria_acoes: string | null
+          trajetoria_impacto: string | null
+          trajetoria_inicio: string | null
+          trajetoria_outras_areas: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          acao_cultural_publico?: string[] | null
+          acessibilidade_arquitetonica?: string[] | null
+          acessibilidade_atitudinal?: string[] | null
+          acessibilidade_comunicacional?: string[] | null
           agencia?: string | null
+          ano_criacao_coletivo?: string | null
           artistic_language?: string | null
           avatar_url?: string | null
           bairro?: string | null
           banco?: string | null
           bio?: string | null
+          categoria_inscricao?: string | null
           cep?: string | null
           city?: string | null
           cnpj?: string | null
           complemento?: string | null
           comunidade_tradicional?: string | null
+          concorre_cotas?: boolean | null
           conta_bancaria?: string | null
+          cota_tipo?: string | null
           cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
@@ -165,38 +200,65 @@ export type Database = {
           experience_level?: string | null
           full_name?: string | null
           funcao_no_grupo?: string | null
+          funcao_profissao?: string | null
           genero?: string | null
           id?: string
           lgbtqiapn?: boolean | null
+          lgbtqiapn_tipo?: string | null
+          locais_execucao?: string | null
+          membros_coletivo?: Json | null
+          nome_fantasia?: string | null
           nome_grupo?: string | null
+          nome_social?: string | null
+          num_representantes_legais?: string | null
           numero?: string | null
           onboarding_completed?: boolean
           pcd?: boolean | null
           pcd_tipo?: string | null
+          perfil_publico?: string | null
           person_type?: string | null
+          qtd_pessoas_coletivo?: string | null
           raca_cor_etnia?: string | null
           razao_social?: string | null
+          representa_coletivo?: boolean | null
           rg?: string | null
           rg_orgao?: string | null
           state?: string | null
           telefone?: string | null
           tempo_residencia_municipio?: string | null
+          testemunha_cpf?: string | null
+          testemunha_endereco?: string | null
+          testemunha_nome?: string | null
+          testemunha_rg?: string | null
+          testemunha_telefone?: string | null
+          trajetoria_acoes?: string | null
+          trajetoria_impacto?: string | null
+          trajetoria_inicio?: string | null
+          trajetoria_outras_areas?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          acao_cultural_publico?: string[] | null
+          acessibilidade_arquitetonica?: string[] | null
+          acessibilidade_atitudinal?: string[] | null
+          acessibilidade_comunicacional?: string[] | null
           agencia?: string | null
+          ano_criacao_coletivo?: string | null
           artistic_language?: string | null
           avatar_url?: string | null
           bairro?: string | null
           banco?: string | null
           bio?: string | null
+          categoria_inscricao?: string | null
           cep?: string | null
           city?: string | null
           cnpj?: string | null
           complemento?: string | null
           comunidade_tradicional?: string | null
+          concorre_cotas?: boolean | null
           conta_bancaria?: string | null
+          cota_tipo?: string | null
           cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
@@ -205,22 +267,41 @@ export type Database = {
           experience_level?: string | null
           full_name?: string | null
           funcao_no_grupo?: string | null
+          funcao_profissao?: string | null
           genero?: string | null
           id?: string
           lgbtqiapn?: boolean | null
+          lgbtqiapn_tipo?: string | null
+          locais_execucao?: string | null
+          membros_coletivo?: Json | null
+          nome_fantasia?: string | null
           nome_grupo?: string | null
+          nome_social?: string | null
+          num_representantes_legais?: string | null
           numero?: string | null
           onboarding_completed?: boolean
           pcd?: boolean | null
           pcd_tipo?: string | null
+          perfil_publico?: string | null
           person_type?: string | null
+          qtd_pessoas_coletivo?: string | null
           raca_cor_etnia?: string | null
           razao_social?: string | null
+          representa_coletivo?: boolean | null
           rg?: string | null
           rg_orgao?: string | null
           state?: string | null
           telefone?: string | null
           tempo_residencia_municipio?: string | null
+          testemunha_cpf?: string | null
+          testemunha_endereco?: string | null
+          testemunha_nome?: string | null
+          testemunha_rg?: string | null
+          testemunha_telefone?: string | null
+          trajetoria_acoes?: string | null
+          trajetoria_impacto?: string | null
+          trajetoria_inicio?: string | null
+          trajetoria_outras_areas?: string | null
           updated_at?: string
           user_id?: string
         }
