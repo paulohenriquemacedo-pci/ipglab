@@ -33,13 +33,12 @@ interface NewProjectDialogProps {
 const EDITAL_STEPS: Record<string, { step_number: number; step_name: string }[]> = {
   // Badiinha edital - steps based on the actual form fields
   premiacao: [
-    { step_number: 1, step_name: "Dados do Agente Cultural" },
-    { step_number: 2, step_name: "Categoria e Cotas" },
-    { step_number: 3, step_name: "Mini Currículo e Atuação" },
-    { step_number: 4, step_name: "Público e Comunidade" },
-    { step_number: 5, step_name: "Acessibilidade" },
-    { step_number: 6, step_name: "Portfólio e Comprovações" },
-    { step_number: 7, step_name: "Revisão e Declarações" },
+    { step_number: 1, step_name: "Principais ações culturais" },
+    { step_number: 2, step_name: "Início da trajetória" },
+    { step_number: 3, step_name: "Impacto na comunidade" },
+    { step_number: 4, step_name: "Ações interdisciplinares" },
+    { step_number: 5, step_name: "Upload de documentos" },
+    { step_number: 6, step_name: "Revisão e Declarações" },
   ],
   // Default steps for other editals
   default: [
