@@ -47,6 +47,7 @@ const ProjectWizard = () => {
   const [profileCompleted, setProfileCompleted] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
   const [autoTriggered, setAutoTriggered] = useState<Set<number>>(new Set());
+  const [finalResponse, setFinalResponse] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const currentSection = sections.find(s => s.step_number === currentStep);
