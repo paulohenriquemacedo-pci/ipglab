@@ -124,9 +124,11 @@ export type Database = {
           endereco: string | null
           experience_level: string | null
           full_name: string | null
+          funcao_no_grupo: string | null
           genero: string | null
           id: string
           lgbtqiapn: boolean | null
+          nome_grupo: string | null
           numero: string | null
           onboarding_completed: boolean
           pcd: boolean | null
@@ -138,6 +140,7 @@ export type Database = {
           rg_orgao: string | null
           state: string | null
           telefone: string | null
+          tempo_residencia_municipio: string | null
           updated_at: string
           user_id: string
         }
@@ -161,9 +164,11 @@ export type Database = {
           endereco?: string | null
           experience_level?: string | null
           full_name?: string | null
+          funcao_no_grupo?: string | null
           genero?: string | null
           id?: string
           lgbtqiapn?: boolean | null
+          nome_grupo?: string | null
           numero?: string | null
           onboarding_completed?: boolean
           pcd?: boolean | null
@@ -175,6 +180,7 @@ export type Database = {
           rg_orgao?: string | null
           state?: string | null
           telefone?: string | null
+          tempo_residencia_municipio?: string | null
           updated_at?: string
           user_id: string
         }
@@ -198,9 +204,11 @@ export type Database = {
           endereco?: string | null
           experience_level?: string | null
           full_name?: string | null
+          funcao_no_grupo?: string | null
           genero?: string | null
           id?: string
           lgbtqiapn?: boolean | null
+          nome_grupo?: string | null
           numero?: string | null
           onboarding_completed?: boolean
           pcd?: boolean | null
@@ -212,6 +220,7 @@ export type Database = {
           rg_orgao?: string | null
           state?: string | null
           telefone?: string | null
+          tempo_residencia_municipio?: string | null
           updated_at?: string
           user_id?: string
         }
