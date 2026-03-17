@@ -105,50 +105,113 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agencia: string | null
           artistic_language: string | null
           avatar_url: string | null
+          bairro: string | null
+          banco: string | null
           bio: string | null
+          cep: string | null
           city: string | null
           cnpj: string | null
+          complemento: string | null
+          comunidade_tradicional: string | null
+          conta_bancaria: string | null
+          cpf: string | null
           created_at: string
+          data_nascimento: string | null
+          email_contato: string | null
+          endereco: string | null
           experience_level: string | null
           full_name: string | null
+          genero: string | null
           id: string
+          lgbtqiapn: boolean | null
+          numero: string | null
           onboarding_completed: boolean
+          pcd: boolean | null
+          pcd_tipo: string | null
           person_type: string | null
+          raca_cor_etnia: string | null
+          razao_social: string | null
+          rg: string | null
+          rg_orgao: string | null
           state: string | null
+          telefone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          agencia?: string | null
           artistic_language?: string | null
           avatar_url?: string | null
+          bairro?: string | null
+          banco?: string | null
           bio?: string | null
+          cep?: string | null
           city?: string | null
           cnpj?: string | null
+          complemento?: string | null
+          comunidade_tradicional?: string | null
+          conta_bancaria?: string | null
+          cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
+          email_contato?: string | null
+          endereco?: string | null
           experience_level?: string | null
           full_name?: string | null
+          genero?: string | null
           id?: string
+          lgbtqiapn?: boolean | null
+          numero?: string | null
           onboarding_completed?: boolean
+          pcd?: boolean | null
+          pcd_tipo?: string | null
           person_type?: string | null
+          raca_cor_etnia?: string | null
+          razao_social?: string | null
+          rg?: string | null
+          rg_orgao?: string | null
           state?: string | null
+          telefone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          agencia?: string | null
           artistic_language?: string | null
           avatar_url?: string | null
+          bairro?: string | null
+          banco?: string | null
           bio?: string | null
+          cep?: string | null
           city?: string | null
           cnpj?: string | null
+          complemento?: string | null
+          comunidade_tradicional?: string | null
+          conta_bancaria?: string | null
+          cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
+          email_contato?: string | null
+          endereco?: string | null
           experience_level?: string | null
           full_name?: string | null
+          genero?: string | null
           id?: string
+          lgbtqiapn?: boolean | null
+          numero?: string | null
           onboarding_completed?: boolean
+          pcd?: boolean | null
+          pcd_tipo?: string | null
           person_type?: string | null
+          raca_cor_etnia?: string | null
+          razao_social?: string | null
+          rg?: string | null
+          rg_orgao?: string | null
           state?: string | null
+          telefone?: string | null
           updated_at?: string
           user_id?: string
         }

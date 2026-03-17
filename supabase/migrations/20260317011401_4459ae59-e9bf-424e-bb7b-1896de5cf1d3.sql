@@ -1,0 +1,23 @@
+
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS cpf text,
+  ADD COLUMN IF NOT EXISTS rg text,
+  ADD COLUMN IF NOT EXISTS rg_orgao text,
+  ADD COLUMN IF NOT EXISTS data_nascimento date,
+  ADD COLUMN IF NOT EXISTS email_contato text,
+  ADD COLUMN IF NOT EXISTS telefone text,
+  ADD COLUMN IF NOT EXISTS endereco text,
+  ADD COLUMN IF NOT EXISTS numero text,
+  ADD COLUMN IF NOT EXISTS complemento text,
+  ADD COLUMN IF NOT EXISTS bairro text,
+  ADD COLUMN IF NOT EXISTS cep text,
+  ADD COLUMN IF NOT EXISTS banco text,
+  ADD COLUMN IF NOT EXISTS agencia text,
+  ADD COLUMN IF NOT EXISTS conta_bancaria text,
+  ADD COLUMN IF NOT EXISTS comunidade_tradicional text,
+  ADD COLUMN IF NOT EXISTS genero text,
+  ADD COLUMN IF NOT EXISTS raca_cor_etnia text,
+  ADD COLUMN IF NOT EXISTS lgbtqiapn boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS pcd boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS pcd_tipo text,
+  ADD COLUMN IF NOT EXISTS razao_social text;
