@@ -94,6 +94,7 @@ const ProjectWizard = () => {
   // Load chat messages when step changes
   useEffect(() => {
     if (currentStep === 0) return;
+    setFinalResponse("");
     const loadChat = async () => {
       const { data: msgs } = await supabase.from("chat_messages").select("*").eq("project_id", id).eq("step_number", currentStep).order("created_at");
       if (msgs && msgs.length > 0) {
