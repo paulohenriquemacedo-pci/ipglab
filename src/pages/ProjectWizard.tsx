@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Send, CheckCircle, Loader2, Edit3, Bot, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Send, CheckCircle, Loader2, Edit3, Bot, User, ThumbsUp } from "lucide-react";
 import logoIpg from "@/assets/logo-ipg.jpeg";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -304,6 +304,35 @@ const ProjectWizard = () => {
     }
   }, [userInput, isStreaming, chatMessages, currentStep, id, edital]);
 
+  // Map step numbers to profile trajectory fields
+  const STEP_TO_PROFILE_FIELD: Record<number, string> = {
+    1: "trajetoria_acoes",
+    2: "trajetoria_inicio",
+    3: "trajetoria_impacto",
+    4: "trajetoria_outras_areas",
+  };
+
+  const approveAiResponse = async (messageContent: string) => {
+    if (!id || !currentSection) return;
+
+    // Save to project_sections
+    await supabase.from("project_sections").update({
+      content: messageContent, ai_draft: messageContent, is_completed: true,
+    }).eq("project_id", id).eq("step_number", currentStep);
+    setSections(prev => prev.map(s => s.step_number === currentStep ? { ...s, content: messageContent, ai_draft: messageContent, is_completed: true } : s));
+
+    // Also save to profile trajectory field if applicable
+    const profileField = STEP_TO_PROFILE_FIELD[currentStep];
+    if (profileField) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").update({ [profileField]: messageContent }).eq("user_id", user.id);
+      }
+    }
+
+    toast.success(`✅ "${getStepInfo(currentStep).name}" aprovada e salva no formulário!`);
+  };
+
   const acceptDraft = async () => {
     if (!currentSection?.ai_draft) return;
     setEditContent(currentSection.ai_draft);
@@ -316,6 +345,16 @@ const ProjectWizard = () => {
     }).eq("project_id", id).eq("step_number", currentStep);
     setSections(prev => prev.map(s => s.step_number === currentStep ? { ...s, content: editContent, is_completed: true } : s));
     setEditMode(false);
+
+    // Also save to profile trajectory field
+    const profileField = STEP_TO_PROFILE_FIELD[currentStep];
+    if (profileField) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").update({ [profileField]: editContent }).eq("user_id", user.id);
+      }
+    }
+
     toast.success(`${getStepInfo(currentStep).name} salva!`);
   };
 
@@ -480,6 +519,16 @@ const ProjectWizard = () => {
                           </div>
                         )}
                         <div className="whitespace-pre-wrap">{msg.content}</div>
+                        {msg.role === "assistant" && currentStep >= 1 && currentStep <= 4 && !currentSection?.is_completed && !isStreaming && i === chatMessages.length - 1 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-3 gap-2 text-xs border-green-500/50 text-green-700 hover:bg-green-50 hover:text-green-800"
+                            onClick={() => approveAiResponse(msg.content)}
+                          >
+                            <ThumbsUp className="h-3.5 w-3.5" /> Aprovar resposta e salvar no formulário
+                          </Button>
+                        )}
                       </div>
                     </motion.div>
                   ))}

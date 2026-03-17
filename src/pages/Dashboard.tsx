@@ -142,6 +142,28 @@ const Dashboard = () => {
     }
   };
 
+  const handleDownloadAll = async () => {
+    const profile = await getProfile();
+    if (!profile) return;
+    const generators = [
+      { fn: generateAnexoII, label: "Anexo II" },
+      { fn: generateAnexoIV, label: "Anexo IV" },
+      { fn: generateAnexoV, label: "Anexo V" },
+      { fn: generateAnexoVI, label: "Anexo VI" },
+      { fn: generateAnexoVII, label: "Anexo VII" },
+    ];
+    let success = 0;
+    for (const gen of generators) {
+      try {
+        await gen.fn(profile);
+        success++;
+      } catch {
+        toast.error(`Erro ao gerar ${gen.label}`);
+      }
+    }
+    if (success > 0) toast.success(`${success} anexos gerados com sucesso!`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
@@ -167,6 +189,10 @@ const Dashboard = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleDownloadAll} className="font-semibold">
+                  <Download className="h-4 w-4 mr-2" /> Baixar todos os anexos
+                </DropdownMenuItem>
+                <div className="h-px bg-border my-1" />
                 <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoII, "Anexo II")}>
                   <FileText className="h-4 w-4 mr-2" /> Anexo II – Formulário de Inscrição
                 </DropdownMenuItem>
