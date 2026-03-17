@@ -15,6 +15,7 @@ import {
   STEP_PROMPTS_DEFAULT,
 } from "@/components/NewProjectDialog";
 import ProfileFormSteps from "@/components/ProfileFormSteps";
+import TransitionDialog from "@/components/TransitionDialog";
 
 interface Section {
   id: string;
@@ -36,7 +37,7 @@ const ProjectWizard = () => {
   const [project, setProject] = useState<any>(null);
   const [edital, setEdital] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
-  const [currentStep, setCurrentStep] = useState(0); // Start at 0 for profile
+  const [currentStep, setCurrentStep] = useState(0);
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
   const [userInput, setUserInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -44,10 +45,12 @@ const ProjectWizard = () => {
   const [editContent, setEditContent] = useState("");
   const [projectTitle, setProjectTitle] = useState("");
   const [profileCompleted, setProfileCompleted] = useState(false);
+  const [showTransition, setShowTransition] = useState(false);
+  const [autoTriggered, setAutoTriggered] = useState<Set<number>>(new Set());
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const currentSection = sections.find(s => s.step_number === currentStep);
-  const totalSteps = sections.length + 1; // +1 for profile step
+  const totalSteps = sections.length + 1;
   const completedSteps = sections.filter(s => s.is_completed).length + (profileCompleted ? 1 : 0);
   const progress = (completedSteps / totalSteps) * 100;
 
@@ -75,32 +78,135 @@ const ProjectWizard = () => {
       const { data: secs } = await supabase.from("project_sections").select("*").eq("project_id", id).order("step_number");
       if (secs) setSections(secs);
 
-      // Check if profile is already completed
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles").select("onboarding_completed").eq("user_id", user.id).single();
         if (profile?.onboarding_completed) {
           setProfileCompleted(true);
-          setCurrentStep(1); // Skip to first project step if profile done
+          setCurrentStep(1);
         }
       }
     };
     load();
   }, [id]);
 
+  // Load chat messages when step changes
   useEffect(() => {
     if (currentStep === 0) return;
     const loadChat = async () => {
       const { data: msgs } = await supabase.from("chat_messages").select("*").eq("project_id", id).eq("step_number", currentStep).order("created_at");
-      if (msgs) setChatMessages(msgs.map(m => ({ role: m.role as "user" | "assistant", content: m.content })));
-      else setChatMessages([]);
+      if (msgs && msgs.length > 0) {
+        setChatMessages(msgs.map(m => ({ role: m.role as "user" | "assistant", content: m.content })));
+      } else {
+        setChatMessages([]);
+      }
     };
     if (id) loadChat();
   }, [currentStep, id]);
 
+  // Auto-trigger AI first question when entering a new step with no messages
+  useEffect(() => {
+    if (currentStep === 0 || isStreaming || !id || !edital) return;
+    if (autoTriggered.has(currentStep)) return;
+    if (chatMessages.length > 0) return;
+
+    // Small delay to ensure chat loaded
+    const timer = setTimeout(() => {
+      triggerAutoQuestion();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentStep, chatMessages, edital, isStreaming, autoTriggered]);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
+
+  const triggerAutoQuestion = async () => {
+    if (!id || isStreaming) return;
+
+    setAutoTriggered(prev => new Set(prev).add(currentStep));
+    setIsStreaming(true);
+
+    const stepInfo = getStepInfo(currentStep);
+
+    try {
+      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+      const autoPrompt = `O usuário acabou de entrar na etapa "${stepInfo.name}". Faça a primeira pergunta para começar a coletar as informações necessárias. Seja acolhedor e direto.`;
+
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: autoPrompt }],
+          step_name: stepInfo.name,
+          step_number: currentStep,
+          project_id: id,
+          edital_type: edital?.instrument_type || "default",
+          edital_briefing: edital?.briefing || "",
+          auto_start: true,
+        }),
+      });
+
+      if (!resp.ok) {
+        setIsStreaming(false);
+        return;
+      }
+
+      const reader = resp.body!.getReader();
+      const decoder = new TextDecoder();
+      let assistantSoFar = "";
+      let textBuffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantSoFar += content;
+              setChatMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant") {
+                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
+                }
+                return [{ role: "assistant", content: assistantSoFar }];
+              });
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
+      if (assistantSoFar) {
+        await supabase.from("chat_messages").insert({
+          project_id: id, step_number: currentStep, role: "assistant", content: assistantSoFar,
+        });
+      }
+    } catch (err) {
+      console.error("Auto-question error:", err);
+    } finally {
+      setIsStreaming(false);
+    }
+  };
 
   const sendMessage = useCallback(async () => {
     const trimmed = userInput.trim();
@@ -219,6 +325,11 @@ const ProjectWizard = () => {
 
   const handleProfileComplete = () => {
     setProfileCompleted(true);
+    setShowTransition(true);
+  };
+
+  const handleTransitionContinue = () => {
+    setShowTransition(false);
     setCurrentStep(1);
   };
 
@@ -227,6 +338,9 @@ const ProjectWizard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Transition Dialog */}
+      <TransitionDialog open={showTransition} onContinue={handleTransitionContinue} />
+
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -338,12 +452,13 @@ const ProjectWizard = () => {
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {chatMessages.length === 0 && (
+                {chatMessages.length === 0 && !isStreaming && (
                   <div className="text-center py-12">
                     <Bot className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground text-sm">
-                      Descreva sua ideia e o assistente IA vai ajudá-lo a elaborar esta seção.
+                      Preparando as perguntas para esta etapa...
                     </p>
+                    <Loader2 className="h-5 w-5 animate-spin mx-auto mt-3 text-primary" />
                   </div>
                 )}
                 <AnimatePresence>
@@ -369,7 +484,7 @@ const ProjectWizard = () => {
                     </motion.div>
                   ))}
                 </AnimatePresence>
-                {isStreaming && (
+                {isStreaming && chatMessages.length > 0 && (
                   <div className="flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Gerando...
                   </div>
@@ -392,7 +507,7 @@ const ProjectWizard = () => {
                     value={userInput}
                     onChange={e => setUserInput(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                    placeholder="Descreva sua ideia ou peça ajuda ao assistente..."
+                    placeholder="Responda à pergunta ou peça ajuda ao assistente..."
                     rows={2}
                     className="resize-none text-sm"
                     disabled={isStreaming}
