@@ -3,7 +3,17 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText, LogOut, Clock, Download, ChevronDown } from "lucide-react";
+import { Plus, FileText, LogOut, Clock, Download, ChevronDown, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Logo from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,8 +54,20 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const deleteProject = async () => {
+    if (!deleteId) return;
+    const { error } = await supabase.from("projects").delete().eq("id", deleteId);
+    if (error) { toast.error("Erro ao deletar projeto"); }
+    else {
+      setProjects(prev => prev.filter(p => p.id !== deleteId));
+      toast.success("Projeto deletado");
+    }
+    setDeleteId(null);
+  };
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -190,30 +212,40 @@ const Dashboard = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map(p => (
-              <Link key={p.id} to={`/project/${p.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="font-sans text-base">{p.title}</CardTitle>
-                      <Badge variant={statusColors[p.status] as any}>{statusLabels[p.status]}</Badge>
-                    </div>
-                    <CardDescription className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {new Date(p.updated_at).toLocaleDateString("pt-BR")}
-                    </CardDescription>
-                  </CardHeader>
-                  {p.conformity_score !== null && (
-                    <CardContent>
-                      <div className="flex items-center gap-2">
-                        <div className="text-sm text-muted-foreground">Conformidade:</div>
-                        <Badge variant={p.conformity_score >= 75 ? "default" : "secondary"}>
-                          {p.conformity_score}%
-                        </Badge>
+              <div key={p.id} className="relative group">
+                <Link to={`/project/${p.id}`}>
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="font-sans text-base pr-8">{p.title}</CardTitle>
+                        <Badge variant={statusColors[p.status] as any}>{statusLabels[p.status]}</Badge>
                       </div>
-                    </CardContent>
-                  )}
-                </Card>
-              </Link>
+                      <CardDescription className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(p.updated_at).toLocaleDateString("pt-BR")}
+                      </CardDescription>
+                    </CardHeader>
+                    {p.conformity_score !== null && (
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm text-muted-foreground">Conformidade:</div>
+                          <Badge variant={p.conformity_score >= 75 ? "default" : "secondary"}>
+                            {p.conformity_score}%
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-3 right-3 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteId(p.id); }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             ))}
           </div>
         )}
@@ -225,6 +257,23 @@ const Dashboard = () => {
         onSelectEdital={createProject}
         loading={creating}
       />
+
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deletar projeto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O projeto e todos os seus dados serão removidos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteProject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <footer className="border-t border-border py-6 mt-12">
         <div className="max-w-6xl mx-auto px-6 text-center text-sm text-muted-foreground font-sans">
