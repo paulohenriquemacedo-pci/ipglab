@@ -93,6 +93,25 @@ const Dashboard = () => {
     navigate("/");
   };
 
+  const handleDownloadAnexoII = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+    if (error || !data) {
+      toast.error("Erro ao carregar perfil. Complete seu cadastro primeiro.");
+      return;
+    }
+    try {
+      await generateAnexoII(data as any);
+      toast.success("Anexo II gerado com sucesso!");
+    } catch {
+      toast.error("Erro ao gerar documento");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
