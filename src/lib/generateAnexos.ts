@@ -208,3 +208,43 @@ export async function generateAnexoVII(profile: ProfileData) {
   });
   await saveDoc(doc, `Anexo_VII_Residencia_${(profile.full_name || "agente").replace(/\s+/g, "_")}.docx`);
 }
+
+// ===== ANEXO IX – Declaração de Indicação/Nomeação de Festeiro =====
+export async function generateAnexoIX(profile: ProfileData) {
+  const doc = new Document({
+    sections: [{
+      properties: { page: { margin: PAGE_MARGIN } },
+      children: [
+        ...editalHeader(),
+        p("ANEXO IX", { bold: true, size: 28, align: AlignmentType.CENTER, spacing: { after: 100 } }),
+        p("DECLARAÇÃO DE INDICAÇÃO/NOMEAÇÃO DE FESTEIRO", { bold: true, size: 22, align: AlignmentType.CENTER, spacing: { after: 300 } }),
+
+        p(`Declaramos, para os devidos fins, que ${val(profile.full_name)}, portador(a) do RG nº ${val(profile.rg)} e CPF nº ${val(profile.cpf)}, foi indicado(a)/nomeado(a) para exercer a função de Festeiro(a) da festividade de _______________, a realizar-se em _______________, no período de _______________.`),
+
+        p("", { spacing: { before: 200 } }),
+        p("E, para constar, firmamos a presente declaração juntamente com as testemunhas abaixo assinadas."),
+
+        p("", { spacing: { before: 200 } }),
+        p("Goiás, _____ de _______________ de 2026.", { align: AlignmentType.LEFT }),
+
+        new Paragraph({ spacing: { before: 600 }, children: [] }),
+        p("________________________________________", { align: AlignmentType.CENTER }),
+        p("Festeiro(a) Nomeado(a)", { align: AlignmentType.CENTER, spacing: { after: 400 } }),
+
+        p("________________________________________", { align: AlignmentType.CENTER }),
+        p("Declarante/Responsável pela Nomeação", { align: AlignmentType.CENTER, spacing: { after: 400 } }),
+
+        p("Testemunhas:", { bold: true, spacing: { before: 300, after: 150 } }),
+
+        p("Nome: _______________________________________________"),
+        p("CPF: ________________________________________________"),
+        p("Assinatura da testemunha 1: __________________________", { spacing: { after: 300 } }),
+
+        p("Nome: _______________________________________________"),
+        p("CPF: ________________________________________________"),
+        p("Assinatura da testemunha 2: __________________________"),
+      ],
+    }],
+  });
+  await saveDoc(doc, `Anexo_IX_Festeiro_${(profile.full_name || "agente").replace(/\s+/g, "_")}.docx`);
+}
