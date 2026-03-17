@@ -3,13 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText, LogOut, Clock, Download } from "lucide-react";
+import { Plus, FileText, LogOut, Clock, Download, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Logo from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import NewProjectDialog, { getStepsForEdital } from "@/components/NewProjectDialog";
 import { generateAnexoII } from "@/lib/generateAnexoII";
+import { generateAnexoIV, generateAnexoV, generateAnexoVI, generateAnexoVII } from "@/lib/generateAnexos";
 
 interface Project {
   id: string;
@@ -93,8 +95,8 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  const handleDownloadAnexoII = async () => {
-    if (!user) return;
+  const getProfile = async () => {
+    if (!user) return null;
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -102,11 +104,17 @@ const Dashboard = () => {
       .single();
     if (error || !data) {
       toast.error("Erro ao carregar perfil. Complete seu cadastro primeiro.");
-      return;
+      return null;
     }
+    return data as any;
+  };
+
+  const handleDownloadAnexo = async (generator: (p: any) => Promise<void>, label: string) => {
+    const profile = await getProfile();
+    if (!profile) return;
     try {
-      await generateAnexoII(data as any);
-      toast.success("Anexo II gerado com sucesso!");
+      await generator(profile);
+      toast.success(`${label} gerado com sucesso!`);
     } catch {
       toast.error("Erro ao gerar documento");
     }
@@ -130,9 +138,30 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Gerencie seus projetos culturais</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleDownloadAnexoII}>
-              <Download className="h-4 w-4 mr-2" /> Anexo II
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" /> Anexos <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoII, "Anexo II")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo II – Formulário de Inscrição
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoIV, "Anexo IV")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo IV – Representação de Grupo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoV, "Anexo V")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo V – Autodeclaração Étnico-Racial
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVI, "Anexo VI")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo VI – Declaração PcD
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVII, "Anexo VII")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo VII – Declaração de Residência
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" /> Novo Projeto
             </Button>

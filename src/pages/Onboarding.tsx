@@ -30,6 +30,7 @@ const Onboarding = () => {
     banco: "", agencia: "", conta_bancaria: "",
     comunidade_tradicional: "", genero: "", raca_cor_etnia: "",
     lgbtqiapn: false, pcd: false, pcd_tipo: "",
+    nome_grupo: "", funcao_no_grupo: "", tempo_residencia_municipio: "",
   });
   const [referenceText, setReferenceText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -281,6 +282,20 @@ const Onboarding = () => {
                     <div className="space-y-2">
                       <Label>Tipo de deficiência</Label>
                       <Input placeholder="Descreva o tipo" value={form.pcd_tipo} onChange={e => update("pcd_tipo", e.target.value)} />
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label>Tempo de residência no município (anos)</Label>
+                    <Input placeholder="Ex: 5" value={form.tempo_residencia_municipio} onChange={e => update("tempo_residencia_municipio", e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nome do grupo/coletivo (se aplicável)</Label>
+                    <Input placeholder="Nome do grupo cultural" value={form.nome_grupo} onChange={e => update("nome_grupo", e.target.value)} />
+                  </div>
+                  {form.nome_grupo && (
+                    <div className="space-y-2">
+                      <Label>Sua função no grupo</Label>
+                      <Input placeholder="Ex: Coordenador, Diretor artístico..." value={form.funcao_no_grupo} onChange={e => update("funcao_no_grupo", e.target.value)} />
                     </div>
                   )}
                 </CardContent>
