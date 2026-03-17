@@ -129,9 +129,14 @@ const Dashboard = () => {
             <h1 className="text-3xl mb-1">Meus Projetos</h1>
             <p className="text-muted-foreground">Gerencie seus projetos culturais</p>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Novo Projeto
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleDownloadAnexoII}>
+              <Download className="h-4 w-4 mr-2" /> Anexo II
+            </Button>
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" /> Novo Projeto
+            </Button>
+          </div>
         </div>
 
         {loading ? (
