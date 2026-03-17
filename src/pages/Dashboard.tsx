@@ -225,6 +225,19 @@ const Dashboard = () => {
         onSelectEdital={createProject}
         loading={creating}
       />
+
+      <footer className="border-t border-border py-6 mt-12">
+        <div className="max-w-6xl mx-auto px-6 text-center text-sm text-muted-foreground font-sans">
+          <a href="mailto:contato@institutopedragoiana.com.br" className="hover:text-foreground transition-colors">
+            contato@institutopedragoiana.com.br
+          </a>
+        </div>
+      </footer>
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSelectEdital={createProject}
+        loading={creating}
+      />
     </div>
   );
 };
