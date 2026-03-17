@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Send, CheckCircle, Loader2, Edit3, Bot, User, ThumbsUp } from "lucide-react";
+import { ArrowLeft, ArrowRight, Send, CheckCircle, Loader2, Edit3, Bot, User, ThumbsUp, ClipboardCopy, AlertCircle } from "lucide-react";
 import logoIpg from "@/assets/logo-ipg.jpeg";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
