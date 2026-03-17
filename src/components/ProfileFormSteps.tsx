@@ -210,7 +210,7 @@ const ProfileFormSteps = ({ onComplete, embedded = false }: ProfileFormStepsProp
           funcao_no_grupo: data.funcao_no_grupo || "",
         }));
         if (data.membros_coletivo && Array.isArray(data.membros_coletivo) && (data.membros_coletivo as any[]).length > 0) {
-          setMembros(data.membros_coletivo as Membro[]);
+          setMembros(data.membros_coletivo as unknown as Membro[]);
         }
       }
       setProfileLoaded(true);
