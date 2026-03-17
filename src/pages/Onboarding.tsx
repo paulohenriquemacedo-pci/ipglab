@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import Logo from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,27 +21,38 @@ const LANGUAGES = ["Teatro","Música","Artes Visuais","Literatura","Audiovisual"
 const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
-    person_type: "", cnpj: "", artistic_language: "", state: "", city: "",
+    person_type: "", cnpj: "", razao_social: "",
+    artistic_language: "", state: "", city: "",
     experience_level: "", bio: "",
+    cpf: "", rg: "", rg_orgao: "", data_nascimento: "",
+    email_contato: "", telefone: "",
+    endereco: "", numero: "", complemento: "", bairro: "", cep: "",
+    banco: "", agencia: "", conta_bancaria: "",
+    comunidade_tradicional: "", genero: "", raca_cor_etnia: "",
+    lgbtqiapn: false, pcd: false, pcd_tipo: "",
   });
   const [referenceText, setReferenceText] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const totalSteps = 3;
+  const totalSteps = 6;
   const progress = ((step + 1) / totalSteps) * 100;
 
-  const update = (key: string, val: string) => setForm(prev => ({ ...prev, [key]: val }));
+  const update = (key: string, val: string | boolean) => setForm(prev => ({ ...prev, [key]: val }));
 
   const handleFinish = async () => {
     if (!user) return;
     setLoading(true);
     try {
+      const { lgbtqiapn, pcd, data_nascimento, ...rest } = form;
       const { error } = await supabase.from("profiles").update({
-        ...form,
+        ...rest,
+        lgbtqiapn,
+        pcd,
+        data_nascimento: data_nascimento || null,
         onboarding_completed: true,
-      }).eq("user_id", user.id);
+      } as any).eq("user_id", user.id);
       if (error) throw error;
 
       if (referenceText.trim().length > 0) {
@@ -61,6 +73,12 @@ const Onboarding = () => {
     }
   };
 
+  const canAdvance = () => {
+    if (step === 0) return form.person_type && form.state && form.city;
+    if (step === 1) return form.cpf;
+    return true;
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 px-4 py-8">
       <div className="w-full max-w-lg">
@@ -73,6 +91,8 @@ const Onboarding = () => {
 
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+
+            {/* Step 0: Tipo e Localização */}
             {step === 0 && (
               <Card>
                 <CardHeader>
@@ -81,7 +101,7 @@ const Onboarding = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Tipo de pessoa</Label>
+                    <Label>Tipo de pessoa *</Label>
                     <Select value={form.person_type} onValueChange={v => update("person_type", v)}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
@@ -91,21 +111,27 @@ const Onboarding = () => {
                     </Select>
                   </div>
                   {form.person_type === "PJ" && (
-                    <div className="space-y-2">
-                      <Label>CNPJ</Label>
-                      <Input placeholder="00.000.000/0001-00" value={form.cnpj} onChange={e => update("cnpj", e.target.value)} />
-                    </div>
+                    <>
+                      <div className="space-y-2">
+                        <Label>Razão Social</Label>
+                        <Input placeholder="Razão social" value={form.razao_social} onChange={e => update("razao_social", e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>CNPJ</Label>
+                        <Input placeholder="00.000.000/0001-00" value={form.cnpj} onChange={e => update("cnpj", e.target.value)} />
+                      </div>
+                    </>
                   )}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Estado</Label>
+                      <Label>Estado *</Label>
                       <Select value={form.state} onValueChange={v => update("state", v)}>
                         <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
                         <SelectContent>{STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Cidade</Label>
+                      <Label>Cidade *</Label>
                       <Input placeholder="Sua cidade" value={form.city} onChange={e => update("city", e.target.value)} />
                     </div>
                   </div>
@@ -113,7 +139,156 @@ const Onboarding = () => {
               </Card>
             )}
 
+            {/* Step 1: Documentos Pessoais */}
             {step === 1 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-sans text-xl">Documentos pessoais</CardTitle>
+                  <CardDescription>Dados exigidos pelo Anexo II do edital</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>CPF *</Label>
+                    <Input placeholder="000.000.000-00" value={form.cpf} onChange={e => update("cpf", e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>RG</Label>
+                      <Input placeholder="Nº do RG" value={form.rg} onChange={e => update("rg", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Órgão expedidor</Label>
+                      <Input placeholder="SSP/GO" value={form.rg_orgao} onChange={e => update("rg_orgao", e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Data de nascimento</Label>
+                      <Input type="date" value={form.data_nascimento} onChange={e => update("data_nascimento", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Telefone</Label>
+                      <Input placeholder="(62) 99999-0000" value={form.telefone} onChange={e => update("telefone", e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>E-mail de contato</Label>
+                    <Input type="email" placeholder="contato@email.com" value={form.email_contato} onChange={e => update("email_contato", e.target.value)} />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 2: Endereço */}
+            {step === 2 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-sans text-xl">Endereço</CardTitle>
+                  <CardDescription>Endereço completo para inscrição no edital</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Logradouro</Label>
+                    <Input placeholder="Rua, Avenida..." value={form.endereco} onChange={e => update("endereco", e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Número</Label>
+                      <Input placeholder="Nº" value={form.numero} onChange={e => update("numero", e.target.value)} />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label>Complemento</Label>
+                      <Input placeholder="Apto, Sala..." value={form.complemento} onChange={e => update("complemento", e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Bairro</Label>
+                      <Input placeholder="Bairro" value={form.bairro} onChange={e => update("bairro", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>CEP</Label>
+                      <Input placeholder="00000-000" value={form.cep} onChange={e => update("cep", e.target.value)} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 3: Dados Bancários e Autodeclarações */}
+            {step === 3 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-sans text-xl">Dados bancários e autodeclarações</CardTitle>
+                  <CardDescription>Informações para pagamento e políticas afirmativas</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Banco</Label>
+                      <Input placeholder="Banco" value={form.banco} onChange={e => update("banco", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Agência</Label>
+                      <Input placeholder="0000" value={form.agencia} onChange={e => update("agencia", e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Conta</Label>
+                      <Input placeholder="00000-0" value={form.conta_bancaria} onChange={e => update("conta_bancaria", e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Gênero</Label>
+                      <Select value={form.genero} onValueChange={v => update("genero", v)}>
+                        <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="masculino">Masculino</SelectItem>
+                          <SelectItem value="feminino">Feminino</SelectItem>
+                          <SelectItem value="nao_binario">Não-binário</SelectItem>
+                          <SelectItem value="outro">Outro</SelectItem>
+                          <SelectItem value="prefiro_nao_dizer">Prefiro não dizer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Raça/Cor/Etnia</Label>
+                      <Select value={form.raca_cor_etnia} onValueChange={v => update("raca_cor_etnia", v)}>
+                        <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="branca">Branca</SelectItem>
+                          <SelectItem value="preta">Preta</SelectItem>
+                          <SelectItem value="parda">Parda</SelectItem>
+                          <SelectItem value="amarela">Amarela</SelectItem>
+                          <SelectItem value="indigena">Indígena</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Comunidade tradicional (se aplicável)</Label>
+                    <Input placeholder="Ex: Quilombola, Kalunga..." value={form.comunidade_tradicional} onChange={e => update("comunidade_tradicional", e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Checkbox checked={form.lgbtqiapn} onCheckedChange={v => update("lgbtqiapn", !!v)} id="lgbtqiapn" />
+                    <Label htmlFor="lgbtqiapn" className="cursor-pointer">Pessoa LGBTQIAPN+</Label>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Checkbox checked={form.pcd} onCheckedChange={v => update("pcd", !!v)} id="pcd" />
+                    <Label htmlFor="pcd" className="cursor-pointer">Pessoa com deficiência (PcD)</Label>
+                  </div>
+                  {form.pcd && (
+                    <div className="space-y-2">
+                      <Label>Tipo de deficiência</Label>
+                      <Input placeholder="Descreva o tipo" value={form.pcd_tipo} onChange={e => update("pcd_tipo", e.target.value)} />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 4: Arte */}
+            {step === 4 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="font-sans text-xl">Sua arte</CardTitle>
@@ -146,11 +321,12 @@ const Onboarding = () => {
               </Card>
             )}
 
-            {step === 2 && (
+            {/* Step 5: Texto de referência */}
+            {step === 5 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="font-sans text-xl">Sua voz artística</CardTitle>
-                  <CardDescription>Cole aqui textos de sua autoria (releases, bios, projetos anteriores) para que a IA preserve seu estilo. Mínimo 500 palavras recomendado.</CardDescription>
+                  <CardDescription>Cole aqui textos de sua autoria para que a IA preserve seu estilo. Mínimo 500 palavras recomendado.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Textarea
@@ -165,6 +341,7 @@ const Onboarding = () => {
                 </CardContent>
               </Card>
             )}
+
           </motion.div>
         </AnimatePresence>
 
@@ -173,7 +350,7 @@ const Onboarding = () => {
             <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
           </Button>
           {step < totalSteps - 1 ? (
-            <Button onClick={() => setStep(s => s + 1)}>
+            <Button onClick={() => setStep(s => s + 1)} disabled={!canAdvance()}>
               Próximo <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
