@@ -30,6 +30,7 @@ const Onboarding = () => {
     banco: "", agencia: "", conta_bancaria: "",
     comunidade_tradicional: "", genero: "", raca_cor_etnia: "",
     lgbtqiapn: false, pcd: false, pcd_tipo: "",
+    nome_grupo: "", funcao_no_grupo: "", tempo_residencia_municipio: "",
   });
   const [referenceText, setReferenceText] = useState("");
   const [loading, setLoading] = useState(false);
