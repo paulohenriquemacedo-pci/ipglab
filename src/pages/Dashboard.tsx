@@ -3,12 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText, LogOut, Clock } from "lucide-react";
+import { Plus, FileText, LogOut, Clock, Download } from "lucide-react";
 import Logo from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import NewProjectDialog, { getStepsForEdital } from "@/components/NewProjectDialog";
+import { generateAnexoII } from "@/lib/generateAnexoII";
 
 interface Project {
   id: string;
@@ -92,6 +93,25 @@ const Dashboard = () => {
     navigate("/");
   };
 
+  const handleDownloadAnexoII = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+    if (error || !data) {
+      toast.error("Erro ao carregar perfil. Complete seu cadastro primeiro.");
+      return;
+    }
+    try {
+      await generateAnexoII(data as any);
+      toast.success("Anexo II gerado com sucesso!");
+    } catch {
+      toast.error("Erro ao gerar documento");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
@@ -109,9 +129,14 @@ const Dashboard = () => {
             <h1 className="text-3xl mb-1">Meus Projetos</h1>
             <p className="text-muted-foreground">Gerencie seus projetos culturais</p>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Novo Projeto
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleDownloadAnexoII}>
+              <Download className="h-4 w-4 mr-2" /> Anexo II
+            </Button>
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" /> Novo Projeto
+            </Button>
+          </div>
         </div>
 
         {loading ? (
