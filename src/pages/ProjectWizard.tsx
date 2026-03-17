@@ -314,21 +314,25 @@ const ProjectWizard = () => {
     4: "trajetoria_outras_areas",
   };
 
-  const approveAiResponse = async (messageContent: string) => {
-    if (!id || !currentSection) return;
+  const approveFinalResponse = async () => {
+    const text = finalResponse.trim();
+    if (!text || !id || !currentSection) {
+      toast.error("Cole a resposta final no campo antes de aprovar.");
+      return;
+    }
 
     // Save to project_sections
     await supabase.from("project_sections").update({
-      content: messageContent, ai_draft: messageContent, is_completed: true,
+      content: text, ai_draft: text, is_completed: true,
     }).eq("project_id", id).eq("step_number", currentStep);
-    setSections(prev => prev.map(s => s.step_number === currentStep ? { ...s, content: messageContent, ai_draft: messageContent, is_completed: true } : s));
+    setSections(prev => prev.map(s => s.step_number === currentStep ? { ...s, content: text, ai_draft: text, is_completed: true } : s));
 
     // Also save to profile trajectory field if applicable
     const profileField = STEP_TO_PROFILE_FIELD[currentStep];
     if (profileField) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from("profiles").update({ [profileField]: messageContent }).eq("user_id", user.id);
+        await supabase.from("profiles").update({ [profileField]: text }).eq("user_id", user.id);
       }
     }
 
