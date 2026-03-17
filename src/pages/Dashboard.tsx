@@ -212,30 +212,40 @@ const Dashboard = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map(p => (
-              <Link key={p.id} to={`/project/${p.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="font-sans text-base">{p.title}</CardTitle>
-                      <Badge variant={statusColors[p.status] as any}>{statusLabels[p.status]}</Badge>
-                    </div>
-                    <CardDescription className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {new Date(p.updated_at).toLocaleDateString("pt-BR")}
-                    </CardDescription>
-                  </CardHeader>
-                  {p.conformity_score !== null && (
-                    <CardContent>
-                      <div className="flex items-center gap-2">
-                        <div className="text-sm text-muted-foreground">Conformidade:</div>
-                        <Badge variant={p.conformity_score >= 75 ? "default" : "secondary"}>
-                          {p.conformity_score}%
-                        </Badge>
+              <div key={p.id} className="relative group">
+                <Link to={`/project/${p.id}`}>
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="font-sans text-base pr-8">{p.title}</CardTitle>
+                        <Badge variant={statusColors[p.status] as any}>{statusLabels[p.status]}</Badge>
                       </div>
-                    </CardContent>
-                  )}
-                </Card>
-              </Link>
+                      <CardDescription className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(p.updated_at).toLocaleDateString("pt-BR")}
+                      </CardDescription>
+                    </CardHeader>
+                    {p.conformity_score !== null && (
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm text-muted-foreground">Conformidade:</div>
+                          <Badge variant={p.conformity_score >= 75 ? "default" : "secondary"}>
+                            {p.conformity_score}%
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-3 right-3 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteId(p.id); }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             ))}
           </div>
         )}
