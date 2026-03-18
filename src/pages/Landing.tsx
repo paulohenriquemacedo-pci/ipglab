@@ -95,11 +95,16 @@ const Landing = () => {
         <div className="max-w-5xl mx-auto px-6">
           <div className="grid md:grid-cols-[280px_1fr] gap-10 items-start">
             <div className="flex flex-col items-center md:items-start">
-              <img src={logoIpg} alt="Instituto Pedra Goiana" className="h-40 w-auto object-contain mb-4" />
+              <img src={logoIpg} alt="Instituto Pedra Goiana" className="h-56 w-auto object-contain mb-4" />
               <p className="text-xs text-muted-foreground font-sans text-center md:text-left">
                 Sede: Cidade de Goiás — GO<br />
                 Fundado em setembro de 2025
               </p>
+              <Button variant="outline" className="mt-4 w-full" asChild>
+                <a href="https://institutopedragoiana.com.br/" target="_blank" rel="noopener noreferrer">
+                  Visitar site do IPG <ArrowRight className="ml-2 h-4 w-4" />
+                </a>
+              </Button>
             </div>
             <div>
               <h2 className="text-3xl md:text-4xl mb-4">Sobre o Instituto Pedra Goiana</h2>
