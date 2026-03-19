@@ -139,6 +139,7 @@ export const STEP_PROMPTS_FOMENTO: Record<number, { name: string; prompt: string
 };
 
 
+const instrumentLabels: Record<string, string> = {
   premiacao: "Premiação",
   fomento: "Fomento",
   apoio: "Apoio",
