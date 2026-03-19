@@ -193,11 +193,13 @@ const Dashboard = () => {
                   <Download className="h-4 w-4 mr-2" /> Anexos <ChevronDown className="h-4 w-4 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleDownloadAll} className="font-semibold">
-                  <Download className="h-4 w-4 mr-2" /> Baixar todos os anexos
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuItem disabled className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
+                  Edital Badiinha (Premiação)
                 </DropdownMenuItem>
-                <div className="h-px bg-border my-1" />
+                <DropdownMenuItem onClick={handleDownloadAll} className="font-semibold">
+                  <Download className="h-4 w-4 mr-2" /> Baixar todos (Badiinha)
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoII, "Anexo II")}>
                   <FileText className="h-4 w-4 mr-2" /> Anexo II – Formulário de Inscrição
                 </DropdownMenuItem>
@@ -212,6 +214,28 @@ const Dashboard = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVII, "Anexo VII")}>
                   <FileText className="h-4 w-4 mr-2" /> Anexo VII – Declaração de Residência
+                </DropdownMenuItem>
+                <div className="h-px bg-border my-2" />
+                <DropdownMenuItem disabled className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
+                  Edital Octo Marques (Fomento)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoIIA, "Anexo II-A")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo II-A – Inscrição PF/MEI/Coletivo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoIIB, "Anexo II-B")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo II-B – Inscrição Pessoa Jurídica
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVI_OctoMarques, "Anexo VI")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo VI – Declaração Coletivo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVII_OctoMarques, "Anexo VII")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo VII – Declaração Étnico-Racial
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVIII_OctoMarques, "Anexo VIII")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo VIII – Declaração PcD
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoIX_OctoMarques, "Anexo IX")}>
+                  <FileText className="h-4 w-4 mr-2" /> Anexo IX – Declaração de Residência
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
