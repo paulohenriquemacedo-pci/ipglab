@@ -481,7 +481,13 @@ const ProjectWizard = () => {
           {/* Step 0: Profile Form */}
           {currentStep === 0 ? (
             <div className="flex-1 overflow-y-auto p-6">
-              <ProfileFormSteps onComplete={handleProfileComplete} embedded />
+              {id && (
+                <ProjectRegistrationForm
+                  projectId={id}
+                  editalType={edital?.instrument_type || "premiacao"}
+                  onComplete={handleProfileComplete}
+                />
+              )}
             </div>
           ) : editMode ? (
             <div className="flex-1 p-6 flex flex-col">
