@@ -104,6 +104,38 @@ Faça uma revisão completa:
 Pergunte se o usuário gostaria de revisar alguma seção específica.`,
 };
 
+const STEP_PROMPTS_FOMENTO: Record<number, string> = {
+  1: `Você está ajudando o agente cultural a elaborar a DESCRIÇÃO DO PROJETO para o Edital "Octo Marques 110 Anos" (Fomento PNAB - Município de Goiás/GO).
+Pergunte em qual das 8 categorias pretende inscrever: I-Artes Visuais/Urbanas/Cênicas, II-Artesanato, III-Audiovisual, IV-Cultura Popular, V-Educação Patrimonial, VI-Gastronomia, VII-Leitura/Escrita/Oralidade, VIII-Música.
+Ajude a articular a ideia central, objetivos e justificativa do projeto. O texto deve ser claro e demonstrar relevância cultural.`,
+  2: `Você está ajudando a elaborar a seção de ATUAÇÃO CULTURAL E INTEGRAÇÃO.
+Critério A (20pts): Reconhecida atuação na categoria cultural inscrita - pergunte sobre experiência, projetos anteriores, tempo de atuação.
+Critério B (30pts - maior peso!): Integração e inovação com outras esferas como educação, saúde, meio ambiente, assistência social. Pergunte como o projeto dialoga com estas áreas.`,
+  3: `Você está ajudando a elaborar a seção de IMPACTO SOCIAL E COMUNITÁRIO.
+Critério C (15pts): Contribuição a populações em vulnerabilidade social (idosos, crianças, pessoas negras, etc).
+Critério D (15pts): Contribuição à comunidade (ações comunitárias, contratação de profissionais locais).
+Pergunte: quem são os beneficiários? Como o projeto transforma a realidade local?`,
+  4: `Você está ajudando a elaborar a seção de PATRIMÔNIO E ACESSIBILIDADE.
+Critério E (10pts): Diálogo com patrimônio cultural material e imaterial e educação patrimonial.
+Critério F (10pts): Acessibilidade - medidas para pessoas com mobilidade reduzida ou deficiência (auditiva, visual, motora, intelectual, múltipla).
+Pergunte sobre medidas de acessibilidade arquitetônica, comunicacional e atitudinal previstas no projeto.`,
+  5: `Você está ajudando a elaborar o PLANO DE TRABALHO E ORÇAMENTO.
+Ajude a detalhar as atividades/ações do projeto e construir a planilha orçamentária.
+O valor deve ser compatível com o máximo da categoria. Os valores devem ser condizentes com o mercado.
+Pergunte item a item: materiais, serviços, cachês, transporte, alimentação, divulgação, etc.`,
+  6: `Você está ajudando a elaborar o CRONOGRAMA E EQUIPE.
+O projeto deve ser executado até 31/03/2027.
+Ajude a organizar as atividades em etapas com prazos realistas.
+Pergunte sobre a equipe: profissionais envolvidos, funções, qualificações. Valorize contratação de profissionais da comunidade.`,
+  7: `Você está ajudando na etapa de DOCUMENTOS E REVISÃO FINAL.
+Verifique se todos os documentos necessários foram providenciados:
+- Formulário de inscrição/Plano de trabalho (Anexo II)
+- Planilha orçamentária
+- Autodeclaração étnico-racial (se concorrer a cotas: 25% negros, 10% indígenas, 5% PcD)
+- Declaração de representação de grupo (se coletivo sem CNPJ)
+Revise a consistência geral da proposta e os bônus de pontuação aplicáveis (mulher 0,5pt, LGBTQIAPN+ 0,5pt, quilombola 0,5pt, rural/distrito 1pt, periferia 1pt).`,
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -112,7 +144,11 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const stepPrompts = edital_type === "premiacao" ? STEP_PROMPTS_PREMIACAO : STEP_PROMPTS_DEFAULT;
+    let stepPrompts: Record<number, string>;
+    if (edital_type === "premiacao") stepPrompts = STEP_PROMPTS_PREMIACAO;
+    else if (edital_type === "fomento") stepPrompts = STEP_PROMPTS_FOMENTO;
+    else stepPrompts = STEP_PROMPTS_DEFAULT;
+    
     const editalContext = edital_briefing
       ? `\n\nCONTEXTO DO EDITAL:\n${edital_briefing}`
       : "";

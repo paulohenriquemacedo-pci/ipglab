@@ -40,6 +40,16 @@ const EDITAL_STEPS: Record<string, { step_number: number; step_name: string }[]>
     { step_number: 5, step_name: "Upload de documentos" },
     { step_number: 6, step_name: "Revisão e Declarações" },
   ],
+  // Fomento edital (Octo Marques) - based on criteria and plan de trabalho
+  fomento: [
+    { step_number: 1, step_name: "Descrição do Projeto" },
+    { step_number: 2, step_name: "Atuação Cultural e Integração" },
+    { step_number: 3, step_name: "Impacto Social e Comunitário" },
+    { step_number: 4, step_name: "Patrimônio e Acessibilidade" },
+    { step_number: 5, step_name: "Plano de Trabalho e Orçamento" },
+    { step_number: 6, step_name: "Cronograma e Equipe" },
+    { step_number: 7, step_name: "Documentos e Revisão" },
+  ],
   // Default steps for other editals
   default: [
     { step_number: 1, step_name: "Ideia Central" },
@@ -96,6 +106,38 @@ export const STEP_PROMPTS_DEFAULT: Record<number, { name: string; prompt: string
   6: { name: "Equipe", prompt: "Quem faz parte da equipe? Descreva os principais profissionais envolvidos e suas funções." },
   7: { name: "Contrapartidas", prompt: "Quais são as contrapartidas do projeto? Que benefícios ele oferece à sociedade?" },
 };
+
+export const STEP_PROMPTS_FOMENTO: Record<number, { name: string; prompt: string }> = {
+  1: {
+    name: "Descrição do Projeto",
+    prompt: "Ajude o agente cultural a descrever seu projeto cultural. Pergunte: qual é a ideia central do projeto? Em qual categoria pretende inscrever (Artes Visuais/Cênicas/Urbanas, Artesanato, Audiovisual, Cultura Popular, Educação Patrimonial, Gastronomia, Leitura/Escrita/Oralidade, ou Música)? Qual subcategoria específica? Qual o objetivo principal?",
+  },
+  2: {
+    name: "Atuação Cultural e Integração",
+    prompt: "Ajude a descrever a atuação cultural do proponente e como o projeto se integra com outras esferas. Critério A (20pts): Reconhecida atuação na categoria cultural inscrita. Critério B (30pts): Integração e inovação com outras esferas como educação, saúde, meio ambiente, assistência social. Pergunte sobre experiência prévia, projetos realizados e como este projeto dialoga com outras áreas além da cultura.",
+  },
+  3: {
+    name: "Impacto Social e Comunitário",
+    prompt: "Ajude a descrever o impacto social e comunitário do projeto. Critério C (15pts): Contribuição a populações em situação de vulnerabilidade social (idosos, crianças, pessoas negras, etc). Critério D (15pts): Contribuição à comunidade em que atua (ações dentro da comunidade, contratação de profissionais locais). Pergunte: quem serão os beneficiários diretos? Como o projeto impacta a comunidade? Há envolvimento de populações vulneráveis?",
+  },
+  4: {
+    name: "Patrimônio e Acessibilidade",
+    prompt: "Ajude a descrever como o projeto dialoga com o patrimônio cultural e promove acessibilidade. Critério E (10pts): Diálogo e ações com o patrimônio cultural e educação patrimonial. Critério F (10pts): Acessibilidade a pessoas com mobilidade reduzida ou deficiência (auditiva, visual, motora, intelectual ou múltipla). Pergunte sobre medidas de acessibilidade arquitetônica, comunicacional e atitudinal previstas.",
+  },
+  5: {
+    name: "Plano de Trabalho e Orçamento",
+    prompt: "Ajude a elaborar o plano de trabalho e a planilha orçamentária do projeto. Pergunte: quais são as atividades/ações previstas? Quais são os custos estimados por item (materiais, serviços, cachês, transporte, alimentação, divulgação)? O valor total deve ser compatível com o valor máximo da categoria escolhida. Os valores devem ser condizentes com as práticas de mercado.",
+  },
+  6: {
+    name: "Cronograma e Equipe",
+    prompt: "Ajude a elaborar o cronograma de execução e descrever a equipe do projeto. Execução até 31/03/2027. Pergunte: quais são as etapas e seus prazos? Quem compõe a equipe e qual a função de cada pessoa? Há contratação de profissionais da comunidade? Descreva as metas e resultados esperados para cada etapa.",
+  },
+  7: {
+    name: "Documentos e Revisão",
+    prompt: "Ajude a revisar toda a inscrição e verificar os documentos necessários: Formulário de inscrição/Plano de trabalho (Anexo II), planilha orçamentária, autodeclaração étnico-racial (se concorrer a cotas), declaração PcD (se aplicável), declaração de representação de grupo (se coletivo sem CNPJ). Verifique se o projeto atende a todos os critérios de seleção e se os bônus de pontuação aplicáveis foram considerados.",
+  },
+};
+
 
 const instrumentLabels: Record<string, string> = {
   premiacao: "Premiação",
