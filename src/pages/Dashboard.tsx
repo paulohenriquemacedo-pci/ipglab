@@ -5,21 +5,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Plus, FileText, LogOut, Clock, Download, ChevronDown, Trash2 } from "lucide-react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Logo from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import NewProjectDialog, { getStepsForEdital } from "@/components/NewProjectDialog";
+import ProjectRegistrationForm from "@/components/ProjectRegistrationForm";
 import { generateAnexoII } from "@/lib/generateAnexoII";
 import { generateAnexoIV, generateAnexoV, generateAnexoVI, generateAnexoVII } from "@/lib/generateAnexos";
 import {
@@ -39,19 +37,13 @@ interface Project {
 }
 
 const statusLabels: Record<string, string> = {
-  draft: "Rascunho",
-  in_progress: "Em elaboração",
-  completed: "Concluído",
-  submitted: "Submetido",
-  approved: "Aprovado",
+  draft: "Rascunho", in_progress: "Em elaboração", completed: "Concluído",
+  submitted: "Submetido", approved: "Aprovado",
 };
 
 const statusColors: Record<string, string> = {
-  draft: "secondary",
-  in_progress: "default",
-  completed: "default",
-  submitted: "outline",
-  approved: "default",
+  draft: "secondary", in_progress: "default", completed: "default",
+  submitted: "outline", approved: "default",
 };
 
 const Dashboard = () => {
@@ -60,13 +52,16 @@ const Dashboard = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // Registration flow state
+  const [regProjectId, setRegProjectId] = useState<string | null>(null);
+  const [regEditalType, setRegEditalType] = useState<string>("premiacao");
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const deleteProject = async () => {
     if (!deleteId) return;
     const { error } = await supabase.from("projects").delete().eq("id", deleteId);
-    if (error) { toast.error("Erro ao deletar projeto"); }
+    if (error) toast.error("Erro ao deletar projeto");
     else {
       setProjects(prev => prev.filter(p => p.id !== deleteId));
       toast.success("Projeto deletado");
@@ -90,7 +85,6 @@ const Dashboard = () => {
   const createProject = async (editalId: string, editalName: string) => {
     setCreating(true);
     try {
-      // Get edital info to determine steps
       const { data: edital } = await supabase
         .from("editais")
         .select("instrument_type")
@@ -111,10 +105,20 @@ const Dashboard = () => {
       const steps = getStepsForEdital(edital?.instrument_type || null);
       const sections = steps.map(s => ({ ...s, project_id: data.id }));
       await supabase.from("project_sections").insert(sections);
-      navigate(`/project/${data.id}`);
+
+      // Open registration form instead of navigating directly
+      setDialogOpen(false);
+      setRegEditalType(edital?.instrument_type || "premiacao");
+      setRegProjectId(data.id);
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleRegistrationComplete = () => {
+    const projectId = regProjectId;
+    setRegProjectId(null);
+    if (projectId) navigate(`/project/${projectId}`);
   };
 
   const handleLogout = async () => {
@@ -122,22 +126,32 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  const getProfile = async () => {
+  const getRegistrationData = async (projectId?: string) => {
     if (!user) return null;
+    // Try project-specific registration first
+    if (projectId) {
+      const { data } = await supabase
+        .from("project_registrations")
+        .select("*")
+        .eq("project_id", projectId)
+        .single();
+      if (data) return data as any;
+    }
+    // Fallback to profile
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", user.id)
       .single();
     if (error || !data) {
-      toast.error("Erro ao carregar perfil. Complete seu cadastro primeiro.");
+      toast.error("Erro ao carregar dados. Complete seu cadastro primeiro.");
       return null;
     }
     return data as any;
   };
 
   const handleDownloadAnexo = async (generator: (p: any) => Promise<void>, label: string) => {
-    const profile = await getProfile();
+    const profile = await getRegistrationData();
     if (!profile) return;
     try {
       await generator(profile);
@@ -148,7 +162,7 @@ const Dashboard = () => {
   };
 
   const handleDownloadAll = async () => {
-    const profile = await getProfile();
+    const profile = await getRegistrationData();
     if (!profile) return;
     const generators = [
       { fn: generateAnexoII, label: "Anexo II" },
@@ -159,12 +173,7 @@ const Dashboard = () => {
     ];
     let success = 0;
     for (const gen of generators) {
-      try {
-        await gen.fn(profile);
-        success++;
-      } catch {
-        toast.error(`Erro ao gerar ${gen.label}`);
-      }
+      try { await gen.fn(profile); success++; } catch { toast.error(`Erro ao gerar ${gen.label}`); }
     }
     if (success > 0) toast.success(`${success} anexos gerados com sucesso!`);
   };
@@ -293,8 +302,7 @@ const Dashboard = () => {
                   </Card>
                 </Link>
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="ghost" size="icon"
                   className="absolute top-3 right-3 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteId(p.id); }}
                 >
@@ -312,6 +320,26 @@ const Dashboard = () => {
         onSelectEdital={createProject}
         loading={creating}
       />
+
+      {/* Registration Form Dialog */}
+      <Dialog open={!!regProjectId} onOpenChange={(open) => { if (!open) setRegProjectId(null); }}>
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Dados Cadastrais do Proponente</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do proponente para este projeto. Esses dados serão usados para gerar os anexos automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+          {regProjectId && (
+            <ProjectRegistrationForm
+              projectId={regProjectId}
+              editalType={regEditalType}
+              onComplete={handleRegistrationComplete}
+              onCancel={() => setRegProjectId(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>

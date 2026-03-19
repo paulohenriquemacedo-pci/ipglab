@@ -15,7 +15,7 @@ import {
   STEP_PROMPTS_DEFAULT,
   STEP_PROMPTS_FOMENTO,
 } from "@/components/NewProjectDialog";
-import ProfileFormSteps from "@/components/ProfileFormSteps";
+import ProjectRegistrationForm from "@/components/ProjectRegistrationForm";
 import TransitionDialog from "@/components/TransitionDialog";
 
 interface Section {
@@ -81,13 +81,15 @@ const ProjectWizard = () => {
       const { data: secs } = await supabase.from("project_sections").select("*").eq("project_id", id).order("step_number");
       if (secs) setSections(secs);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from("profiles").select("onboarding_completed").eq("user_id", user.id).single();
-        if (profile?.onboarding_completed) {
-          setProfileCompleted(true);
-          setCurrentStep(1);
-        }
+      // Check if project has registration data
+      const { data: reg } = await supabase
+        .from("project_registrations")
+        .select("id")
+        .eq("project_id", id)
+        .single();
+      if (reg) {
+        setProfileCompleted(true);
+        setCurrentStep(1);
       }
     };
     load();
@@ -479,7 +481,13 @@ const ProjectWizard = () => {
           {/* Step 0: Profile Form */}
           {currentStep === 0 ? (
             <div className="flex-1 overflow-y-auto p-6">
-              <ProfileFormSteps onComplete={handleProfileComplete} embedded />
+              {id && (
+                <ProjectRegistrationForm
+                  projectId={id}
+                  editalType={edital?.instrument_type || "premiacao"}
+                  onComplete={handleProfileComplete}
+                />
+              )}
             </div>
           ) : editMode ? (
             <div className="flex-1 p-6 flex flex-col">
