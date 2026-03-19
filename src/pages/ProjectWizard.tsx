@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   STEP_PROMPTS_PREMIACAO,
   STEP_PROMPTS_DEFAULT,
+  STEP_PROMPTS_FOMENTO,
 } from "@/components/NewProjectDialog";
 import ProfileFormSteps from "@/components/ProfileFormSteps";
 import TransitionDialog from "@/components/TransitionDialog";
