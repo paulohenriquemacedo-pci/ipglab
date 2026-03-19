@@ -40,6 +40,16 @@ const EDITAL_STEPS: Record<string, { step_number: number; step_name: string }[]>
     { step_number: 5, step_name: "Upload de documentos" },
     { step_number: 6, step_name: "Revisão e Declarações" },
   ],
+  // Fomento edital (Octo Marques) - based on criteria and plan de trabalho
+  fomento: [
+    { step_number: 1, step_name: "Descrição do Projeto" },
+    { step_number: 2, step_name: "Atuação Cultural e Integração" },
+    { step_number: 3, step_name: "Impacto Social e Comunitário" },
+    { step_number: 4, step_name: "Patrimônio e Acessibilidade" },
+    { step_number: 5, step_name: "Plano de Trabalho e Orçamento" },
+    { step_number: 6, step_name: "Cronograma e Equipe" },
+    { step_number: 7, step_name: "Documentos e Revisão" },
+  ],
   // Default steps for other editals
   default: [
     { step_number: 1, step_name: "Ideia Central" },
