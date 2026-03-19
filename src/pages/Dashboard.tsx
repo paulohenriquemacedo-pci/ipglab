@@ -22,6 +22,11 @@ import { toast } from "sonner";
 import NewProjectDialog, { getStepsForEdital } from "@/components/NewProjectDialog";
 import { generateAnexoII } from "@/lib/generateAnexoII";
 import { generateAnexoIV, generateAnexoV, generateAnexoVI, generateAnexoVII } from "@/lib/generateAnexos";
+import {
+  generateAnexoIIA, generateAnexoIIB,
+  generateAnexoVI_OctoMarques, generateAnexoVII_OctoMarques,
+  generateAnexoVIII_OctoMarques, generateAnexoIX_OctoMarques,
+} from "@/lib/generateAnexosOctoMarques";
 
 interface Project {
   id: string;
