@@ -81,13 +81,15 @@ const ProjectWizard = () => {
       const { data: secs } = await supabase.from("project_sections").select("*").eq("project_id", id).order("step_number");
       if (secs) setSections(secs);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from("profiles").select("onboarding_completed").eq("user_id", user.id).single();
-        if (profile?.onboarding_completed) {
-          setProfileCompleted(true);
-          setCurrentStep(1);
-        }
+      // Check if project has registration data
+      const { data: reg } = await supabase
+        .from("project_registrations")
+        .select("id")
+        .eq("project_id", id)
+        .single();
+      if (reg) {
+        setProfileCompleted(true);
+        setCurrentStep(1);
       }
     };
     load();
