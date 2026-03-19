@@ -15,7 +15,7 @@ import {
   STEP_PROMPTS_DEFAULT,
   STEP_PROMPTS_FOMENTO,
 } from "@/components/NewProjectDialog";
-import ProfileFormSteps from "@/components/ProfileFormSteps";
+import ProjectRegistrationForm from "@/components/ProjectRegistrationForm";
 import TransitionDialog from "@/components/TransitionDialog";
 
 interface Section {
