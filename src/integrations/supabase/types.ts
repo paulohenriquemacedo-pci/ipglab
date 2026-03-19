@@ -132,6 +132,7 @@ export type Database = {
           data_nascimento: string | null
           email_contato: string | null
           endereco: string | null
+          escolaridade: string | null
           experience_level: string | null
           full_name: string | null
           funcao_no_grupo: string | null
@@ -152,9 +153,11 @@ export type Database = {
           pcd_tipo: string | null
           perfil_publico: string | null
           person_type: string | null
+          programa_social: string | null
           qtd_pessoas_coletivo: string | null
           raca_cor_etnia: string | null
           razao_social: string | null
+          renda_mensal: string | null
           representa_coletivo: boolean | null
           rg: string | null
           rg_orgao: string | null
@@ -202,6 +205,7 @@ export type Database = {
           data_nascimento?: string | null
           email_contato?: string | null
           endereco?: string | null
+          escolaridade?: string | null
           experience_level?: string | null
           full_name?: string | null
           funcao_no_grupo?: string | null
@@ -222,9 +226,11 @@ export type Database = {
           pcd_tipo?: string | null
           perfil_publico?: string | null
           person_type?: string | null
+          programa_social?: string | null
           qtd_pessoas_coletivo?: string | null
           raca_cor_etnia?: string | null
           razao_social?: string | null
+          renda_mensal?: string | null
           representa_coletivo?: boolean | null
           rg?: string | null
           rg_orgao?: string | null
@@ -272,6 +278,7 @@ export type Database = {
           data_nascimento?: string | null
           email_contato?: string | null
           endereco?: string | null
+          escolaridade?: string | null
           experience_level?: string | null
           full_name?: string | null
           funcao_no_grupo?: string | null
@@ -292,9 +299,11 @@ export type Database = {
           pcd_tipo?: string | null
           perfil_publico?: string | null
           person_type?: string | null
+          programa_social?: string | null
           qtd_pessoas_coletivo?: string | null
           raca_cor_etnia?: string | null
           razao_social?: string | null
+          renda_mensal?: string | null
           representa_coletivo?: boolean | null
           rg?: string | null
           rg_orgao?: string | null
