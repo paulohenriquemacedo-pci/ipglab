@@ -184,6 +184,7 @@ DIRETRIZES:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        model: "google/gemini-3.1-pro-preview",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
