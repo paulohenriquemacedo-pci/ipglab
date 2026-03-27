@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowRight, ArrowLeft, Plus, Trash2, CheckCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Plus, Trash2, CheckCircle, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -286,7 +286,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
     setMembros(p => p.map((m, idx) => idx === i ? { ...m, [key]: val } : m));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (andContinue = false) => {
     if (!user) return;
     setLoading(true);
     try {
@@ -383,7 +383,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       } as any).eq("user_id", user.id);
 
       toast.success("Dados cadastrais salvos para este projeto!");
-      onComplete();
+      if (andContinue) onComplete();
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar dados cadastrais");
     } finally {
@@ -909,17 +909,24 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
             <ArrowLeft className="h-4 w-4 mr-1" /> Anterior
           </Button>
         </div>
-        {subStep < totalSubSteps - 1 ? (
-          <Button size="sm" onClick={() => setSubStep(s => s + 1)} disabled={!canAdvance()}>
-            Próximo <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
-        ) : (
-          <Button size="sm" onClick={handleSave} disabled={loading}>
+        <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={() => handleSave(false)} disabled={loading}>
             {loading ? "Salvando..." : (
-              <><CheckCircle className="h-4 w-4 mr-1" /> Salvar e Continuar</>
+              <><Save className="h-4 w-4 mr-1" /> Salvar Rascunho</>
             )}
           </Button>
-        )}
+          {subStep < totalSubSteps - 1 ? (
+            <Button size="sm" onClick={() => setSubStep(s => s + 1)} disabled={!canAdvance()}>
+              Próximo <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : (
+            <Button size="sm" onClick={() => handleSave(true)} disabled={loading}>
+              {loading ? "Salvando..." : (
+                <><CheckCircle className="h-4 w-4 mr-1" /> Salvar e Continuar</>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
