@@ -920,7 +920,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
               Próximo <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button size="sm" onClick={handleSave} disabled={loading}>
+            <Button size="sm" onClick={() => handleSave(true)} disabled={loading}>
               {loading ? "Salvando..." : (
                 <><CheckCircle className="h-4 w-4 mr-1" /> Salvar e Continuar</>
               )}
