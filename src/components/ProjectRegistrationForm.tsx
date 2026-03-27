@@ -359,12 +359,21 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
 
       let error;
       if (existing) {
-        ({ error } = await supabase.from("project_registrations").update(regData as any).eq("project_id", projectId));
+        // Remove key fields from update payload to avoid conflicts
+        const { project_id: _pid, user_id: _uid, ...updateData } = regData;
+        const result = await supabase.from("project_registrations").update(updateData as any).eq("id", existing.id);
+        error = result.error;
+        console.log("Update result:", result);
       } else {
-        ({ error } = await supabase.from("project_registrations").insert(regData as any));
+        const result = await supabase.from("project_registrations").insert(regData as any);
+        error = result.error;
+        console.log("Insert result:", result);
       }
 
-      if (error) throw error;
+      if (error) {
+        console.error("Save error:", error);
+        throw error;
+      }
       
       // Also update profile with basic info (name, etc) for convenience
       await supabase.from("profiles").update({
