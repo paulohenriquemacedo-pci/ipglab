@@ -110,31 +110,31 @@ export const STEP_PROMPTS_DEFAULT: Record<number, { name: string; prompt: string
 export const STEP_PROMPTS_FOMENTO: Record<number, { name: string; prompt: string }> = {
   1: {
     name: "Descrição do Projeto",
-    prompt: "Ajude o agente cultural a descrever seu projeto cultural. Pergunte: qual é a ideia central do projeto? Em qual categoria pretende inscrever (Artes Visuais/Cênicas/Urbanas, Artesanato, Audiovisual, Cultura Popular, Educação Patrimonial, Gastronomia, Leitura/Escrita/Oralidade, ou Música)? Qual subcategoria específica? Qual o objetivo principal?",
+    prompt: "Ajude o agente cultural a descrever seu projeto cultural. Pergunte: qual é a ideia central do projeto? Em qual categoria pretende inscrever (Artes Visuais/Cênicas/Urbanas, Artesanato, Audiovisual, Cultura Popular, Educação Patrimonial, Gastronomia, Leitura/Escrita/Oralidade, ou Música)? Qual o objetivo principal?",
   },
   2: {
     name: "Atuação Cultural e Integração",
-    prompt: "Ajude a descrever a atuação cultural do proponente e como o projeto se integra com outras esferas. Critério A (20pts): Reconhecida atuação na categoria cultural inscrita. Critério B (30pts): Integração e inovação com outras esferas como educação, saúde, meio ambiente, assistência social. Pergunte sobre experiência prévia, projetos realizados e como este projeto dialoga com outras áreas além da cultura.",
+    prompt: "Ajude a descrever a atuação cultural do proponente e como o projeto se integra com outras esferas. Critério A (20pts): Reconhecida atuação na categoria cultural inscrita. Critério B (30pts): Integração e inovação com educação, saúde, meio ambiente, assistência social.",
   },
   3: {
     name: "Impacto Social e Comunitário",
-    prompt: "Ajude a descrever o impacto social e comunitário do projeto. Critério C (15pts): Contribuição a populações em situação de vulnerabilidade social (idosos, crianças, pessoas negras, etc). Critério D (15pts): Contribuição à comunidade em que atua (ações dentro da comunidade, contratação de profissionais locais). Pergunte: quem serão os beneficiários diretos? Como o projeto impacta a comunidade? Há envolvimento de populações vulneráveis?",
+    prompt: "Ajude a descrever o impacto social e comunitário do projeto. Critério C (15pts): Contribuição a populações em vulnerabilidade social. Critério D (15pts): Contribuição à comunidade.",
   },
   4: {
     name: "Patrimônio e Acessibilidade",
-    prompt: "Ajude a descrever como o projeto dialoga com o patrimônio cultural e promove acessibilidade. Critério E (10pts): Diálogo e ações com o patrimônio cultural e educação patrimonial. Critério F (10pts): Acessibilidade a pessoas com mobilidade reduzida ou deficiência (auditiva, visual, motora, intelectual ou múltipla). Pergunte sobre medidas de acessibilidade arquitetônica, comunicacional e atitudinal previstas.",
+    prompt: "Ajude a descrever como o projeto dialoga com o patrimônio cultural e promove acessibilidade. Critério E (10pts): Patrimônio cultural e educação patrimonial. Critério F (10pts): Acessibilidade.",
   },
   5: {
-    name: "Plano de Trabalho e Orçamento",
-    prompt: "Ajude a elaborar o plano de trabalho e a planilha orçamentária do projeto. Pergunte: quais são as atividades/ações previstas? Quais são os custos estimados por item (materiais, serviços, cachês, transporte, alimentação, divulgação)? O valor total deve ser compatível com o valor máximo da categoria escolhida. Os valores devem ser condizentes com as práticas de mercado.",
+    name: "Cronograma e Equipe",
+    prompt: "Ajude a elaborar o cronograma de execução (até 31/03/2027) e descrever a equipe do projeto. Detalhe etapas, prazos, metas e profissionais envolvidos.",
   },
   6: {
-    name: "Cronograma e Equipe",
-    prompt: "Ajude a elaborar o cronograma de execução e descrever a equipe do projeto. Execução até 31/03/2027. Pergunte: quais são as etapas e seus prazos? Quem compõe a equipe e qual a função de cada pessoa? Há contratação de profissionais da comunidade? Descreva as metas e resultados esperados para cada etapa.",
+    name: "Planilha Orçamentária",
+    prompt: "Preencha a planilha orçamentária com os itens de despesa. Os valores devem ser compatíveis com o limite da categoria e condizentes com as práticas de mercado.",
   },
   7: {
-    name: "Documentos e Revisão",
-    prompt: "Ajude a revisar toda a inscrição e verificar os documentos necessários: Formulário de inscrição/Plano de trabalho (Anexo II), planilha orçamentária, autodeclaração étnico-racial (se concorrer a cotas), declaração PcD (se aplicável), declaração de representação de grupo (se coletivo sem CNPJ). Verifique se o projeto atende a todos os critérios de seleção e se os bônus de pontuação aplicáveis foram considerados.",
+    name: "Anexos e Declarações",
+    prompt: "Gere e baixe todos os documentos obrigatórios para inscrição: Formulário (Anexo II), declarações étnico-raciais, PcD, residência e representação de coletivo.",
   },
 };
 
