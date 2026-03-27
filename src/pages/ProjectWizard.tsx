@@ -491,6 +491,18 @@ const ProjectWizard = () => {
                 />
               )}
             </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 6 ? (
+            <div className="flex-1 overflow-y-auto">
+              <BudgetSpreadsheet projectId={id!} maxBudget={edital?.max_budget} editalType="fomento" />
+            </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 7 ? (
+            <div className="flex-1 overflow-y-auto">
+              <AnnexManager projectId={id!} editalType="fomento" />
+            </div>
+          ) : edital?.instrument_type === "premiacao" && currentStep === 6 ? (
+            <div className="flex-1 overflow-y-auto">
+              <AnnexManager projectId={id!} editalType="premiacao" />
+            </div>
           ) : editMode ? (
             <div className="flex-1 p-6 flex flex-col">
               <Textarea
