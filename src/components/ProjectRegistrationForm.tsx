@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,6 +136,18 @@ interface ProjectRegistrationFormProps {
 }
 
 type FormState = Record<string, any>;
+type PersistOptions = {
+  silent?: boolean;
+  showSuccess?: boolean;
+  syncProfile?: boolean;
+  throwOnError?: boolean;
+};
+
+type LocalDraft = {
+  form: FormState;
+  membros: Membro[];
+  updatedAt: string;
+};
 
 function getSubSteps(editalType: string) {
   if (editalType === "fomento") {
@@ -204,41 +216,201 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
   const [loading, setLoading] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const { user } = useAuth();
+  const draftStorageKey = useMemo(
+    () => `project_registration_draft:${projectId}:${user?.id ?? "anon"}`,
+    [projectId, user?.id],
+  );
 
   const SUB_STEPS = getSubSteps(editalType);
   const totalSubSteps = SUB_STEPS.length;
 
+  const saveLocalDraft = useCallback((snapshotForm: FormState, snapshotMembros: Membro[]) => {
+    if (typeof window === "undefined") return;
+    try {
+      const payload: LocalDraft = {
+        form: snapshotForm,
+        membros: snapshotMembros,
+        updatedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(draftStorageKey, JSON.stringify(payload));
+    } catch {
+      // No-op: local storage may be unavailable.
+    }
+  }, [draftStorageKey]);
+
+  const buildRegistrationPayload = useCallback((snapshotForm: FormState, snapshotMembros: Membro[]) => {
+    if (!user) return null;
+
+    const comunidade = snapshotForm.comunidade_tradicional === "Outro" ? snapshotForm.comunidade_tradicional_outro : snapshotForm.comunidade_tradicional;
+    const funcao = snapshotForm.funcao_profissao === "Outro" ? snapshotForm.funcao_profissao_outro : snapshotForm.funcao_profissao;
+    const genero = snapshotForm.genero === "Outro" ? snapshotForm.genero_outro : snapshotForm.genero;
+    const programaSocial = snapshotForm.programa_social === "Outro" ? snapshotForm.programa_social_outro : snapshotForm.programa_social;
+
+    const regData: Record<string, any> = {
+      project_id: projectId,
+      user_id: user.id,
+      person_type: snapshotForm.person_type,
+      full_name: snapshotForm.full_name,
+      nome_social: snapshotForm.nome_social || null,
+      cpf: snapshotForm.cpf,
+      rg: snapshotForm.rg,
+      rg_orgao: snapshotForm.rg_orgao,
+      data_nascimento: snapshotForm.data_nascimento || null,
+      email_contato: snapshotForm.email_contato,
+      telefone: snapshotForm.telefone,
+      endereco: snapshotForm.endereco,
+      numero: snapshotForm.numero,
+      complemento: snapshotForm.complemento || null,
+      bairro: snapshotForm.bairro,
+      cep: snapshotForm.cep,
+      city: snapshotForm.city,
+      state: snapshotForm.state,
+      banco: snapshotForm.banco,
+      agencia: snapshotForm.agencia,
+      conta_bancaria: snapshotForm.conta_bancaria,
+      tipo_conta_bancaria: snapshotForm.tipo_conta_bancaria || null,
+      cnpj_mei: snapshotForm.cnpj_mei || null,
+      categoria_inscricao: snapshotForm.categoria_inscricao,
+      concorre_cotas: snapshotForm.concorre_cotas,
+      cota_tipo: snapshotForm.concorre_cotas ? snapshotForm.cota_tipo : null,
+      comunidade_tradicional: comunidade || null,
+      genero,
+      lgbtqiapn: snapshotForm.lgbtqiapn_tipo !== "Não se aplica." && snapshotForm.lgbtqiapn_tipo !== "",
+      lgbtqiapn_tipo: snapshotForm.lgbtqiapn_tipo || null,
+      raca_cor_etnia: snapshotForm.raca_cor_etnia,
+      pcd: snapshotForm.pcd,
+      pcd_tipo: snapshotForm.pcd ? (snapshotForm.pcd_tipo === "Outro" ? snapshotForm.pcd_tipo_outro : snapshotForm.pcd_tipo) : null,
+      escolaridade: snapshotForm.escolaridade || null,
+      renda_mensal: snapshotForm.renda_mensal || null,
+      programa_social: programaSocial || null,
+      funcao_profissao: funcao,
+      bio: snapshotForm.bio,
+      representa_coletivo: snapshotForm.representa_coletivo,
+      nome_grupo: snapshotForm.representa_coletivo ? snapshotForm.nome_grupo : null,
+      funcao_no_grupo: snapshotForm.representa_coletivo ? snapshotForm.funcao_no_grupo : null,
+      ano_criacao_coletivo: snapshotForm.representa_coletivo ? snapshotForm.ano_criacao_coletivo : null,
+      qtd_pessoas_coletivo: snapshotForm.representa_coletivo ? snapshotForm.qtd_pessoas_coletivo : null,
+      perfil_publico: snapshotForm.perfil_publico || null,
+      acao_cultural_publico: snapshotForm.acao_cultural_publico.length > 0 ? snapshotForm.acao_cultural_publico : null,
+      acessibilidade_arquitetonica: snapshotForm.acessibilidade_arquitetonica.length > 0 ? snapshotForm.acessibilidade_arquitetonica : null,
+      acessibilidade_comunicacional: snapshotForm.acessibilidade_comunicacional.length > 0 ? snapshotForm.acessibilidade_comunicacional : null,
+      acessibilidade_atitudinal: snapshotForm.acessibilidade_atitudinal.length > 0 ? snapshotForm.acessibilidade_atitudinal : null,
+      acessibilidade_descricao: snapshotForm.acessibilidade_descricao || null,
+      locais_execucao: snapshotForm.locais_execucao || null,
+      membros_coletivo: snapshotForm.representa_coletivo ? snapshotMembros.filter(m => m.nome) : null,
+      tempo_residencia_municipio: snapshotForm.tempo_residencia_municipio || null,
+      testemunha_nome: snapshotForm.testemunha_nome || null,
+      testemunha_cpf: snapshotForm.testemunha_cpf || null,
+      testemunha_rg: snapshotForm.testemunha_rg || null,
+      testemunha_telefone: snapshotForm.testemunha_telefone || null,
+      testemunha_endereco: snapshotForm.testemunha_endereco || null,
+    };
+
+    if (snapshotForm.person_type === "PJ") {
+      regData.razao_social = snapshotForm.razao_social;
+      regData.nome_fantasia = snapshotForm.nome_fantasia;
+      regData.cnpj = snapshotForm.cnpj;
+      regData.num_representantes_legais = snapshotForm.num_representantes_legais;
+    }
+
+    return regData;
+  }, [projectId, user]);
+
+  const persistDraft = useCallback(async (options: PersistOptions = {}) => {
+    if (!user) return false;
+
+    const snapshotForm = form;
+    const snapshotMembros = membros;
+    saveLocalDraft(snapshotForm, snapshotMembros);
+
+    try {
+      const regData = buildRegistrationPayload(snapshotForm, snapshotMembros);
+      if (!regData) return false;
+
+      const { error } = await supabase
+        .from("project_registrations")
+        .upsert(regData as any, { onConflict: "project_id" });
+
+      if (error) throw error;
+
+      if (options.syncProfile) {
+        await supabase.from("profiles").update({
+          full_name: snapshotForm.full_name,
+          person_type: snapshotForm.person_type,
+          onboarding_completed: true,
+        } as any).eq("user_id", user.id);
+      }
+
+      if (options.showSuccess) {
+        toast.success("Dados cadastrais salvos para este projeto!");
+      }
+
+      return true;
+    } catch (err: any) {
+      if (!options.silent) {
+        toast.error(err.message || "Erro ao salvar dados cadastrais");
+      }
+      if (options.throwOnError) throw err;
+      return false;
+    }
+  }, [user, form, membros, saveLocalDraft, buildRegistrationPayload]);
+
   // Load existing registration or pre-fill from profile
   useEffect(() => {
     if (!user || dataLoaded) return;
+
     const load = async () => {
-      // Check if registration already exists for this project
+      let localDraft: LocalDraft | null = null;
+      if (typeof window !== "undefined") {
+        try {
+          const rawDraft = localStorage.getItem(draftStorageKey);
+          if (rawDraft) {
+            localDraft = JSON.parse(rawDraft) as LocalDraft;
+          }
+        } catch {
+          localDraft = null;
+        }
+      }
+
       const { data: reg } = await supabase
         .from("project_registrations")
         .select("*")
         .eq("project_id", projectId)
         .single();
 
+      const localUpdatedAt = localDraft?.updatedAt ? Date.parse(localDraft.updatedAt) : 0;
+      const remoteUpdatedAt = reg?.updated_at ? Date.parse(reg.updated_at) : 0;
+      const shouldUseLocalDraft = !!localDraft && localUpdatedAt >= remoteUpdatedAt;
+
+      if (shouldUseLocalDraft && localDraft) {
+        setForm(prev => ({ ...prev, ...localDraft!.form }));
+        setMembros(Array.isArray(localDraft.membros) && localDraft.membros.length > 0 ? localDraft.membros : [{ nome: "", cpf: "" }]);
+        setDataLoaded(true);
+        return;
+      }
+
       if (reg) {
-        // Load existing registration
-        const fields = Object.keys(form);
-        const loaded: FormState = { ...form };
-        for (const key of fields) {
-          if ((reg as any)[key] !== undefined && (reg as any)[key] !== null) {
-            loaded[key] = (reg as any)[key];
+        setForm(prev => {
+          const loaded: FormState = { ...prev };
+          const fields = Object.keys(prev);
+          for (const key of fields) {
+            if ((reg as any)[key] !== undefined && (reg as any)[key] !== null) {
+              loaded[key] = (reg as any)[key];
+            }
           }
-        }
-        setForm(loaded);
+          return loaded;
+        });
+
         if (reg.membros_coletivo && Array.isArray(reg.membros_coletivo) && (reg.membros_coletivo as any[]).length > 0) {
           setMembros(reg.membros_coletivo as unknown as Membro[]);
         }
       } else {
-        // Pre-fill from profile
         const { data: profile } = await supabase
           .from("profiles")
           .select("*")
           .eq("user_id", user.id)
           .single();
+
         if (profile) {
           setForm(prev => ({
             ...prev,
@@ -267,128 +439,99 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
             cnpj: profile.cnpj || "",
           }));
         }
+
+        if (localDraft) {
+          setForm(prev => ({ ...prev, ...localDraft!.form }));
+          setMembros(Array.isArray(localDraft.membros) && localDraft.membros.length > 0 ? localDraft.membros : [{ nome: "", cpf: "" }]);
+        }
       }
+
       setDataLoaded(true);
     };
-    load();
-  }, [user, dataLoaded, projectId]);
 
-  const update = (key: string, val: string | boolean | string[]) => setForm(prev => ({ ...prev, [key]: val }));
-  const toggleArray = (key: string, value: string) => {
-    const arr = (form[key] as string[]) || [];
-    if (arr.includes(value)) update(key, arr.filter(v => v !== value));
-    else update(key, [...arr, value]);
+    void load();
+  }, [user, dataLoaded, projectId, draftStorageKey]);
+
+  useEffect(() => {
+    if (!user || !dataLoaded) return;
+
+    const timer = window.setTimeout(() => {
+      void persistDraft({ silent: true });
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [form, membros, user, dataLoaded, persistDraft]);
+
+  useEffect(() => {
+    return () => {
+      saveLocalDraft(form, membros);
+    };
+  }, [form, membros, saveLocalDraft]);
+
+  const update = (key: string, val: string | boolean | string[]) => {
+    setForm(prev => {
+      const next = { ...prev, [key]: val };
+      saveLocalDraft(next, membros);
+      return next;
+    });
   };
 
-  const addMembro = () => setMembros(p => [...p, { nome: "", cpf: "" }]);
-  const removeMembro = (i: number) => setMembros(p => p.filter((_, idx) => idx !== i));
+  const toggleArray = (key: string, value: string) => {
+    setForm(prev => {
+      const arr = (prev[key] as string[]) || [];
+      const next = arr.includes(value)
+        ? { ...prev, [key]: arr.filter(v => v !== value) }
+        : { ...prev, [key]: [...arr, value] };
+      saveLocalDraft(next, membros);
+      return next;
+    });
+  };
+
+  const addMembro = () => {
+    setMembros(prev => {
+      const next = [...prev, { nome: "", cpf: "" }];
+      saveLocalDraft(form, next);
+      return next;
+    });
+  };
+
+  const removeMembro = (i: number) => {
+    setMembros(prev => {
+      const next = prev.filter((_, idx) => idx !== i);
+      saveLocalDraft(form, next);
+      return next;
+    });
+  };
+
   const updateMembro = (i: number, key: keyof Membro, val: string) => {
-    setMembros(p => p.map((m, idx) => idx === i ? { ...m, [key]: val } : m));
+    setMembros(prev => {
+      const next = prev.map((m, idx) => idx === i ? { ...m, [key]: val } : m);
+      saveLocalDraft(form, next);
+      return next;
+    });
   };
 
   const handleSave = async (andContinue = false) => {
     if (!user) return;
     setLoading(true);
     try {
-      const comunidade = form.comunidade_tradicional === "Outro" ? form.comunidade_tradicional_outro : form.comunidade_tradicional;
-      const funcao = form.funcao_profissao === "Outro" ? form.funcao_profissao_outro : form.funcao_profissao;
-      const genero = form.genero === "Outro" ? form.genero_outro : form.genero;
-      const programaSocial = form.programa_social === "Outro" ? form.programa_social_outro : form.programa_social;
+      const saved = await persistDraft({
+        showSuccess: true,
+        syncProfile: true,
+        throwOnError: true,
+      });
 
-      const regData: Record<string, any> = {
-        project_id: projectId,
-        user_id: user.id,
-        person_type: form.person_type,
-        full_name: form.full_name, nome_social: form.nome_social || null,
-        cpf: form.cpf, rg: form.rg, rg_orgao: form.rg_orgao,
-        data_nascimento: form.data_nascimento || null,
-        email_contato: form.email_contato, telefone: form.telefone,
-        endereco: form.endereco, numero: form.numero, complemento: form.complemento || null,
-        bairro: form.bairro, cep: form.cep, city: form.city, state: form.state,
-        banco: form.banco, agencia: form.agencia, conta_bancaria: form.conta_bancaria,
-        tipo_conta_bancaria: form.tipo_conta_bancaria || null,
-        cnpj_mei: form.cnpj_mei || null,
-        categoria_inscricao: form.categoria_inscricao,
-        concorre_cotas: form.concorre_cotas,
-        cota_tipo: form.concorre_cotas ? form.cota_tipo : null,
-        comunidade_tradicional: comunidade || null,
-        genero: genero,
-        lgbtqiapn: form.lgbtqiapn_tipo !== "Não se aplica." && form.lgbtqiapn_tipo !== "",
-        lgbtqiapn_tipo: form.lgbtqiapn_tipo || null,
-        raca_cor_etnia: form.raca_cor_etnia,
-        pcd: form.pcd,
-        pcd_tipo: form.pcd ? (form.pcd_tipo === "Outro" ? form.pcd_tipo_outro : form.pcd_tipo) : null,
-        escolaridade: form.escolaridade || null,
-        renda_mensal: form.renda_mensal || null,
-        programa_social: programaSocial || null,
-        funcao_profissao: funcao, bio: form.bio,
-        representa_coletivo: form.representa_coletivo,
-        nome_grupo: form.representa_coletivo ? form.nome_grupo : null,
-        funcao_no_grupo: form.representa_coletivo ? form.funcao_no_grupo : null,
-        ano_criacao_coletivo: form.representa_coletivo ? form.ano_criacao_coletivo : null,
-        qtd_pessoas_coletivo: form.representa_coletivo ? form.qtd_pessoas_coletivo : null,
-        perfil_publico: form.perfil_publico || null,
-        acao_cultural_publico: form.acao_cultural_publico.length > 0 ? form.acao_cultural_publico : null,
-        acessibilidade_arquitetonica: form.acessibilidade_arquitetonica.length > 0 ? form.acessibilidade_arquitetonica : null,
-        acessibilidade_comunicacional: form.acessibilidade_comunicacional.length > 0 ? form.acessibilidade_comunicacional : null,
-        acessibilidade_atitudinal: form.acessibilidade_atitudinal.length > 0 ? form.acessibilidade_atitudinal : null,
-        acessibilidade_descricao: form.acessibilidade_descricao || null,
-        locais_execucao: form.locais_execucao || null,
-        membros_coletivo: form.representa_coletivo ? membros.filter(m => m.nome) : null,
-        tempo_residencia_municipio: form.tempo_residencia_municipio || null,
-        testemunha_nome: form.testemunha_nome || null,
-        testemunha_cpf: form.testemunha_cpf || null,
-        testemunha_rg: form.testemunha_rg || null,
-        testemunha_telefone: form.testemunha_telefone || null,
-        testemunha_endereco: form.testemunha_endereco || null,
-      };
-
-      if (form.person_type === "PJ") {
-        regData.razao_social = form.razao_social;
-        regData.nome_fantasia = form.nome_fantasia;
-        regData.cnpj = form.cnpj;
-        regData.num_representantes_legais = form.num_representantes_legais;
+      if (saved && andContinue) {
+        onComplete();
       }
-
-      // Upsert - insert or update
-      const { data: existing } = await supabase
-        .from("project_registrations")
-        .select("id")
-        .eq("project_id", projectId)
-        .single();
-
-      let error;
-      if (existing) {
-        // Remove key fields from update payload to avoid conflicts
-        const { project_id: _pid, user_id: _uid, ...updateData } = regData;
-        const result = await supabase.from("project_registrations").update(updateData as any).eq("id", existing.id);
-        error = result.error;
-        console.log("Update result:", result);
-      } else {
-        const result = await supabase.from("project_registrations").insert(regData as any);
-        error = result.error;
-        console.log("Insert result:", result);
-      }
-
-      if (error) {
-        console.error("Save error:", error);
-        throw error;
-      }
-      
-      // Also update profile with basic info (name, etc) for convenience
-      await supabase.from("profiles").update({
-        full_name: form.full_name,
-        person_type: form.person_type,
-        onboarding_completed: true,
-      } as any).eq("user_id", user.id);
-
-      toast.success("Dados cadastrais salvos para este projeto!");
-      if (andContinue) onComplete();
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao salvar dados cadastrais");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubStepChange = async (nextStep: number) => {
+    await persistDraft({ silent: true });
+    setSubStep(Math.max(0, Math.min(nextStep, totalSubSteps - 1)));
   };
 
   const canAdvance = () => {
@@ -880,7 +1023,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
         {SUB_STEPS.map((name, i) => (
           <button
             key={i}
-            onClick={() => setSubStep(i)}
+            onClick={() => { void handleSubStepChange(i); }}
             className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
               subStep === i
                 ? "bg-primary text-primary-foreground border-primary"
@@ -905,7 +1048,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
           {onCancel && subStep === 0 && (
             <Button variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => setSubStep(s => s - 1)} disabled={subStep === 0}>
+          <Button variant="outline" size="sm" onClick={() => { void handleSubStepChange(subStep - 1); }} disabled={subStep === 0}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Anterior
           </Button>
         </div>
@@ -916,7 +1059,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
             )}
           </Button>
           {subStep < totalSubSteps - 1 ? (
-            <Button size="sm" onClick={() => setSubStep(s => s + 1)} disabled={!canAdvance()}>
+            <Button size="sm" onClick={() => { void handleSubStepChange(subStep + 1); }} disabled={!canAdvance()}>
               Próximo <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
