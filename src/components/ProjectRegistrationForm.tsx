@@ -1023,7 +1023,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
         {SUB_STEPS.map((name, i) => (
           <button
             key={i}
-            onClick={() => setSubStep(i)}
+            onClick={() => { void handleSubStepChange(i); }}
             className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
               subStep === i
                 ? "bg-primary text-primary-foreground border-primary"
@@ -1048,7 +1048,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
           {onCancel && subStep === 0 && (
             <Button variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => setSubStep(s => s - 1)} disabled={subStep === 0}>
+          <Button variant="outline" size="sm" onClick={() => { void handleSubStepChange(subStep - 1); }} disabled={subStep === 0}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Anterior
           </Button>
         </div>
@@ -1059,7 +1059,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
             )}
           </Button>
           {subStep < totalSubSteps - 1 ? (
-            <Button size="sm" onClick={() => setSubStep(s => s + 1)} disabled={!canAdvance()}>
+            <Button size="sm" onClick={() => { void handleSubStepChange(subStep + 1); }} disabled={!canAdvance()}>
               Próximo <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
