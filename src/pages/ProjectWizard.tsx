@@ -17,6 +17,8 @@ import {
 } from "@/components/NewProjectDialog";
 import ProjectRegistrationForm from "@/components/ProjectRegistrationForm";
 import TransitionDialog from "@/components/TransitionDialog";
+import BudgetSpreadsheet from "@/components/BudgetSpreadsheet";
+import AnnexManager from "@/components/AnnexManager";
 
 interface Section {
   id: string;
