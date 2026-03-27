@@ -909,17 +909,24 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
             <ArrowLeft className="h-4 w-4 mr-1" /> Anterior
           </Button>
         </div>
-        {subStep < totalSubSteps - 1 ? (
-          <Button size="sm" onClick={() => setSubStep(s => s + 1)} disabled={!canAdvance()}>
-            Próximo <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
-        ) : (
-          <Button size="sm" onClick={handleSave} disabled={loading}>
+        <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={handleSave} disabled={loading}>
             {loading ? "Salvando..." : (
-              <><CheckCircle className="h-4 w-4 mr-1" /> Salvar e Continuar</>
+              <><Save className="h-4 w-4 mr-1" /> Salvar Rascunho</>
             )}
           </Button>
-        )}
+          {subStep < totalSubSteps - 1 ? (
+            <Button size="sm" onClick={() => setSubStep(s => s + 1)} disabled={!canAdvance()}>
+              Próximo <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : (
+            <Button size="sm" onClick={handleSave} disabled={loading}>
+              {loading ? "Salvando..." : (
+                <><CheckCircle className="h-4 w-4 mr-1" /> Salvar e Continuar</>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
