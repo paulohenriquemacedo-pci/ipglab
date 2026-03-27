@@ -119,21 +119,14 @@ Pergunte: quem são os beneficiários? Como o projeto transforma a realidade loc
 Critério E (10pts): Diálogo com patrimônio cultural material e imaterial e educação patrimonial.
 Critério F (10pts): Acessibilidade - medidas para pessoas com mobilidade reduzida ou deficiência (auditiva, visual, motora, intelectual, múltipla).
 Pergunte sobre medidas de acessibilidade arquitetônica, comunicacional e atitudinal previstas no projeto.`,
-  5: `Você está ajudando a elaborar o PLANO DE TRABALHO E ORÇAMENTO.
-Ajude a detalhar as atividades/ações do projeto e construir a planilha orçamentária.
-O valor deve ser compatível com o máximo da categoria. Os valores devem ser condizentes com o mercado.
-Pergunte item a item: materiais, serviços, cachês, transporte, alimentação, divulgação, etc.`,
-  6: `Você está ajudando a elaborar o CRONOGRAMA E EQUIPE.
+  5: `Você está ajudando a elaborar o CRONOGRAMA E EQUIPE.
 O projeto deve ser executado até 31/03/2027.
 Ajude a organizar as atividades em etapas com prazos realistas.
 Pergunte sobre a equipe: profissionais envolvidos, funções, qualificações. Valorize contratação de profissionais da comunidade.`,
-  7: `Você está ajudando na etapa de DOCUMENTOS E REVISÃO FINAL.
-Verifique se todos os documentos necessários foram providenciados:
-- Formulário de inscrição/Plano de trabalho (Anexo II)
-- Planilha orçamentária
-- Autodeclaração étnico-racial (se concorrer a cotas: 25% negros, 10% indígenas, 5% PcD)
-- Declaração de representação de grupo (se coletivo sem CNPJ)
-Revise a consistência geral da proposta e os bônus de pontuação aplicáveis (mulher 0,5pt, LGBTQIAPN+ 0,5pt, quilombola 0,5pt, rural/distrito 1pt, periferia 1pt).`,
+  6: `Esta etapa é a PLANILHA ORÇAMENTÁRIA - preenchida diretamente no formulário interativo.
+O usuário pode pedir ajuda para definir itens e valores. Ajude a estimar custos condizentes com as práticas de mercado.`,
+  7: `Esta etapa é de ANEXOS E DECLARAÇÕES - gerados automaticamente com os dados cadastrais.
+Ajude o usuário a verificar se todos os documentos obrigatórios foram gerados e se os bônus de pontuação aplicáveis foram considerados (mulher 0,5pt, LGBTQIAPN+ 0,5pt, quilombola 0,5pt, rural/distrito 1pt, periferia 1pt).`,
 };
 
 serve(async (req) => {
@@ -184,6 +177,7 @@ DIRETRIZES:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        model: "google/gemini-3.1-pro-preview",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,

@@ -17,6 +17,8 @@ import {
 } from "@/components/NewProjectDialog";
 import ProjectRegistrationForm from "@/components/ProjectRegistrationForm";
 import TransitionDialog from "@/components/TransitionDialog";
+import BudgetSpreadsheet from "@/components/BudgetSpreadsheet";
+import AnnexManager from "@/components/AnnexManager";
 
 interface Section {
   id: string;
@@ -488,6 +490,18 @@ const ProjectWizard = () => {
                   onComplete={handleProfileComplete}
                 />
               )}
+            </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 6 ? (
+            <div className="flex-1 overflow-y-auto">
+              <BudgetSpreadsheet projectId={id!} maxBudget={edital?.max_budget} editalType="fomento" />
+            </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 7 ? (
+            <div className="flex-1 overflow-y-auto">
+              <AnnexManager projectId={id!} editalType="fomento" />
+            </div>
+          ) : edital?.instrument_type === "premiacao" && currentStep === 6 ? (
+            <div className="flex-1 overflow-y-auto">
+              <AnnexManager projectId={id!} editalType="premiacao" />
             </div>
           ) : editMode ? (
             <div className="flex-1 p-6 flex flex-col">
