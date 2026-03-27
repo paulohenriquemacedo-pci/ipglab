@@ -910,7 +910,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
           </Button>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" onClick={handleSave} disabled={loading}>
+          <Button variant="secondary" size="sm" onClick={() => handleSave(false)} disabled={loading}>
             {loading ? "Salvando..." : (
               <><Save className="h-4 w-4 mr-1" /> Salvar Rascunho</>
             )}
