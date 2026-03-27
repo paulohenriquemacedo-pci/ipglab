@@ -383,7 +383,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       } as any).eq("user_id", user.id);
 
       toast.success("Dados cadastrais salvos para este projeto!");
-      onComplete();
+      if (andContinue) onComplete();
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar dados cadastrais");
     } finally {
