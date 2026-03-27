@@ -40,7 +40,7 @@ const Landing = () => {
               Plataforma de Projetos Culturais com IA
             </div>
             <h1 className="text-4xl md:text-6xl tracking-tight leading-[1.1] mb-6">
-              Elabore projetos culturais <span className="text-primary italic">com inteligência</span>
+              Elabore projetos culturais <span className="text-primary italic">com a inteligência do IPG-Lab</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed font-sans">
               Transforme sua ideia artística em um projeto técnico robusto, conforme aos editais de fomento — 
