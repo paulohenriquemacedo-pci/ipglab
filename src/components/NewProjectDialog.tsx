@@ -46,9 +46,9 @@ const EDITAL_STEPS: Record<string, { step_number: number; step_name: string }[]>
     { step_number: 2, step_name: "Atuação Cultural e Integração" },
     { step_number: 3, step_name: "Impacto Social e Comunitário" },
     { step_number: 4, step_name: "Patrimônio e Acessibilidade" },
-    { step_number: 5, step_name: "Plano de Trabalho e Orçamento" },
-    { step_number: 6, step_name: "Cronograma e Equipe" },
-    { step_number: 7, step_name: "Documentos e Revisão" },
+    { step_number: 5, step_name: "Cronograma e Equipe" },
+    { step_number: 6, step_name: "Planilha Orçamentária" },
+    { step_number: 7, step_name: "Anexos e Declarações" },
   ],
   // Default steps for other editals
   default: [
