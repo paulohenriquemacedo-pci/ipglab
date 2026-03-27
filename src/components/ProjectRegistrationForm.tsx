@@ -286,7 +286,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
     setMembros(p => p.map((m, idx) => idx === i ? { ...m, [key]: val } : m));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (andContinue = false) => {
     if (!user) return;
     setLoading(true);
     try {
