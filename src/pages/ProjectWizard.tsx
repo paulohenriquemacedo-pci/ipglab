@@ -51,6 +51,7 @@ const ProjectWizard = () => {
   const [showTransition, setShowTransition] = useState(false);
   const [autoTriggered, setAutoTriggered] = useState<Set<number>>(new Set());
   const [finalResponse, setFinalResponse] = useState("");
+  const [categoriaInscricao, setCategoriaInscricao] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const currentSection = sections.find(s => s.step_number === currentStep);
@@ -86,11 +87,12 @@ const ProjectWizard = () => {
       // Check if project has registration data
       const { data: reg } = await supabase
         .from("project_registrations")
-        .select("id")
+        .select("id, categoria_inscricao")
         .eq("project_id", id)
         .single();
       if (reg) {
         setProfileCompleted(true);
+        if ((reg as any).categoria_inscricao) setCategoriaInscricao((reg as any).categoria_inscricao);
         setCurrentStep(1);
       }
     };
@@ -493,7 +495,7 @@ const ProjectWizard = () => {
             </div>
           ) : edital?.instrument_type === "fomento" && currentStep === 6 ? (
             <div className="flex-1 overflow-y-auto">
-              <BudgetSpreadsheet projectId={id!} maxBudget={edital?.max_budget} editalType="fomento" />
+              <BudgetSpreadsheet projectId={id!} maxBudget={edital?.max_budget} editalType="fomento" categoriaInscricao={categoriaInscricao} />
             </div>
           ) : edital?.instrument_type === "fomento" && currentStep === 7 ? (
             <div className="flex-1 overflow-y-auto">

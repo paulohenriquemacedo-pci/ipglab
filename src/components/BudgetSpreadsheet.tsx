@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Save, AlertTriangle, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Save, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ interface BudgetSpreadsheetProps {
   projectId: string;
   maxBudget?: number | null;
   editalType?: string;
+  categoriaInscricao?: string;
 }
 
 const CATEGORIAS_ORCAMENTO = [
@@ -44,13 +45,48 @@ const CATEGORIAS_ORCAMENTO = [
 
 const UNIDADES = ["Unidade", "Hora", "Diária", "Mês", "Serviço", "Kit", "Lote", "Pessoa"];
 
+// ===== LIMITES ORÇAMENTÁRIOS POR CATEGORIA – OCTO MARQUES =====
+export const BUDGET_LIMITS_FOMENTO: Record<string, number> = {
+  // Artes Visuais
+  "Criação ou exposição artística": 20000,
+  "Fotografia": 20000,
+  "Arte Urbana": 20000,
+  "Performances artísticas": 20000,
+  // Artesanato
+  "Barro / argila / pedra sabão / trabalho manual": 20000,
+  // Educação Patrimonial
+  "Oficinas/ fomento a pesquisas exploratórias / mapeamentos": 20000,
+  // Gastronomia
+  "Gastronomia tradicional / releituras de prato / receitas tradicionais": 20000,
+  // Leitura, escrita e oralidade
+  "Vocalização": 20000,
+  "Editoração": 20000,
+  "Produção de audiolivros, podcasts literários e literatura sonora": 20000,
+  // Cultura Popular
+  "Dança popular em grupo / grupos de capoeira": 20000,
+  "Recolhas de narrativas de histórias, lendas populares e das memórias de pessoas do município": 20000,
+  // Música
+  "Instrumentos": 20000,
+  "Apresentação musical de dupla": 10000,
+  "Apresentação musical de bandas, grupos e corais": 20000,
+  "Circulação, produção e difusão musical": 20000,
+};
+
 function generateId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadsheetProps) => {
+const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, categoriaInscricao }: BudgetSpreadsheetProps) => {
   const [items, setItems] = useState<BudgetItem[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Determine effective budget limit
+  const effectiveMaxBudget = (() => {
+    if (editalType === "fomento" && categoriaInscricao && BUDGET_LIMITS_FOMENTO[categoriaInscricao]) {
+      return BUDGET_LIMITS_FOMENTO[categoriaInscricao];
+    }
+    return maxBudget || null;
+  })();
 
   // Load saved budget from project_sections
   useEffect(() => {
@@ -64,12 +100,10 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadshe
       if (data?.content) {
         try {
           const parsed = JSON.parse(data.content);
-          if (Array.isArray(parsed)) setItems(parsed);
+          if (Array.isArray(parsed)) { setItems(parsed); return; }
         } catch { /* not JSON, ignore */ }
       }
-      if (items.length === 0) {
-        setItems([{ id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0 }]);
-      }
+      setItems([{ id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0 }]);
     };
     load();
   }, [projectId]);
@@ -87,8 +121,8 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadshe
   };
 
   const total = items.reduce((sum, i) => sum + (i.quantidade * i.valor_unitario), 0);
-  const isOverBudget = maxBudget ? total > maxBudget : false;
-  const budgetPercent = maxBudget ? (total / maxBudget) * 100 : 0;
+  const isOverBudget = effectiveMaxBudget ? total > effectiveMaxBudget : false;
+  const budgetPercent = effectiveMaxBudget ? (total / effectiveMaxBudget) * 100 : 0;
 
   const saveBudget = useCallback(async () => {
     setSaving(true);
@@ -144,13 +178,28 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadshe
         </Button>
       </div>
 
+      {/* Category-specific limit info */}
+      {editalType === "fomento" && categoriaInscricao && BUDGET_LIMITS_FOMENTO[categoriaInscricao] && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-3 px-4 flex items-start gap-3">
+            <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+            <div className="text-sm">
+              <p className="font-medium text-foreground">Categoria: {categoriaInscricao}</p>
+              <p className="text-muted-foreground">
+                Limite máximo para esta subcategoria: <strong className="text-foreground">{formatCurrency(BUDGET_LIMITS_FOMENTO[categoriaInscricao])}</strong>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Budget limit indicator */}
-      {maxBudget && (
+      {effectiveMaxBudget && (
         <Card className={isOverBudget ? "border-destructive" : ""}>
           <CardContent className="py-3 px-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Limite do edital</span>
-              <span className="text-sm">{formatCurrency(maxBudget)}</span>
+              <span className="text-sm">{formatCurrency(effectiveMaxBudget)}</span>
             </div>
             <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
               <div
@@ -186,7 +235,7 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadshe
           <span></span>
         </div>
 
-        {items.map((item, idx) => (
+        {items.map((item) => (
           <Card key={item.id} className="p-3">
             <div className="grid grid-cols-1 md:grid-cols-[180px_1fr_100px_80px_120px_40px] gap-2 items-center">
               <Select value={item.categoria} onValueChange={v => updateItem(item.id, "categoria", v)}>
