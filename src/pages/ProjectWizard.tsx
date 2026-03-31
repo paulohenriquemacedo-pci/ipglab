@@ -87,11 +87,12 @@ const ProjectWizard = () => {
       // Check if project has registration data
       const { data: reg } = await supabase
         .from("project_registrations")
-        .select("id")
+        .select("id, categoria_inscricao")
         .eq("project_id", id)
         .single();
       if (reg) {
         setProfileCompleted(true);
+        if ((reg as any).categoria_inscricao) setCategoriaInscricao((reg as any).categoria_inscricao);
         setCurrentStep(1);
       }
     };
