@@ -495,7 +495,7 @@ const ProjectWizard = () => {
             </div>
           ) : edital?.instrument_type === "fomento" && currentStep === 6 ? (
             <div className="flex-1 overflow-y-auto">
-              <BudgetSpreadsheet projectId={id!} maxBudget={edital?.max_budget} editalType="fomento" />
+              <BudgetSpreadsheet projectId={id!} maxBudget={edital?.max_budget} editalType="fomento" categoriaInscricao={categoriaInscricao} />
             </div>
           ) : edital?.instrument_type === "fomento" && currentStep === 7 ? (
             <div className="flex-1 overflow-y-auto">
