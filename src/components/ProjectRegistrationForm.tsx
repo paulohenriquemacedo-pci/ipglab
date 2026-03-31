@@ -6,11 +6,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowRight, ArrowLeft, Plus, Trash2, CheckCircle, Save } from "lucide-react";
+import { ArrowRight, ArrowLeft, Plus, Trash2, CheckCircle, Save, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+
+// ===== MASKS =====
+function maskCPF(v: string) {
+  return v.replace(/\D/g, "").slice(0, 11)
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+function maskCNPJ(v: string) {
+  return v.replace(/\D/g, "").slice(0, 14)
+    .replace(/(\d{2})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1/$2")
+    .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+}
+function maskCEP(v: string) {
+  return v.replace(/\D/g, "").slice(0, 8).replace(/(\d{5})(\d)/, "$1-$2");
+}
+function maskPhone(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 10) return d.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+  return d.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
+}
 
 const STATES = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
 
@@ -96,7 +119,6 @@ const ACESS_ATI = [
   "outras medidas que visem a eliminação de atitudes capacitistas",
 ];
 
-// Categorias por tipo de edital
 const CATEGORIAS_PREMIACAO = [
   { value: "grupos_coletivos", label: "Grupos e coletivos culturais" },
   { value: "festas_populares", label: "Festas populares" },
@@ -113,7 +135,6 @@ const CATEGORIAS_FOMENTO = [
   { grupo: "Música", items: ["Instrumentos", "Apresentação musical de dupla", "Apresentação musical de bandas, grupos e corais", "Circulação, produção e difusão musical"] },
 ];
 
-// Cotas PF vs PJ
 const COTAS_PF = [
   { value: "negra", label: "Pessoa negra" },
   { value: "indigena", label: "Pessoa indígena" },
@@ -130,7 +151,7 @@ interface Membro { nome: string; cpf: string; }
 
 interface ProjectRegistrationFormProps {
   projectId: string;
-  editalType: string; // "premiacao" | "fomento"
+  editalType: string;
   onComplete: () => void;
   onCancel?: () => void;
 }
@@ -149,6 +170,40 @@ type LocalDraft = {
   updatedAt: string;
 };
 
+// ===== VALIDATION HELPERS =====
+const REQUIRED_FIELDS_BY_STEP: Record<number, string[]> = {
+  0: ["person_type"],
+  1: ["full_name", "cpf", "email_contato", "telefone"],
+  2: ["banco", "agencia", "conta_bancaria"],
+  3: ["bio"],
+  4: ["raca_cor_etnia"],
+};
+
+function getFieldLabel(key: string): string {
+  const labels: Record<string, string> = {
+    person_type: "Tipo de proponente",
+    full_name: "Nome completo",
+    cpf: "CPF",
+    email_contato: "E-mail",
+    telefone: "Telefone",
+    banco: "Banco",
+    agencia: "Agência",
+    conta_bancaria: "Conta bancária",
+    bio: "Mini currículo",
+    raca_cor_etnia: "Raça/cor/etnia",
+    categoria_inscricao: "Categoria de inscrição",
+  };
+  return labels[key] || key;
+}
+
+function isFieldFilled(val: any): boolean {
+  if (val === null || val === undefined) return false;
+  if (typeof val === "string") return val.trim().length > 0;
+  if (typeof val === "boolean") return true;
+  if (Array.isArray(val)) return val.length > 0;
+  return true;
+}
+
 function getSubSteps(editalType: string) {
   if (editalType === "fomento") {
     return [
@@ -163,7 +218,6 @@ function getSubSteps(editalType: string) {
       "Residência e Testemunha",
     ];
   }
-  // premiacao
   return [
     "Tipo de Proponente",
     "Dados Pessoais",
@@ -176,12 +230,42 @@ function getSubSteps(editalType: string) {
   ];
 }
 
+// ===== Masked Input component =====
+function MaskedInput({ value, onChange, mask, ...props }: { value: string; onChange: (v: string) => void; mask: (v: string) => string } & Omit<React.ComponentProps<typeof Input>, "onChange">) {
+  return (
+    <Input
+      {...props}
+      value={value}
+      onChange={e => onChange(mask(e.target.value))}
+    />
+  );
+}
+
+// ===== Field with validation indicator =====
+function FieldWithStatus({ label, required, filled, children }: { label: string; required?: boolean; filled?: boolean; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <Label>{label}{required ? " *" : ""}</Label>
+        {required && filled !== undefined && (
+          filled ? (
+            <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+          ) : (
+            <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+          )
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }: ProjectRegistrationFormProps) => {
   const [subStep, setSubStep] = useState(0);
   const [form, setForm] = useState<FormState>({
     person_type: "", full_name: "", nome_social: "",
     cpf: "", rg: "", rg_orgao: "", data_nascimento: "",
-    email_contato: "", telefone: "",
+    email_contato: "", telefone: "", whatsapp: "",
     endereco: "", numero: "", complemento: "", bairro: "", cep: "",
     city: "", state: "",
     banco: "", agencia: "", conta_bancaria: "", tipo_conta_bancaria: "",
@@ -224,6 +308,16 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
   const SUB_STEPS = getSubSteps(editalType);
   const totalSubSteps = SUB_STEPS.length;
 
+  // Count completed required fields per step for visual indicator
+  const getStepCompletionStatus = useCallback((stepIdx: number): "complete" | "partial" | "empty" => {
+    const required = REQUIRED_FIELDS_BY_STEP[stepIdx];
+    if (!required || required.length === 0) return "complete";
+    const filled = required.filter(f => isFieldFilled(form[f])).length;
+    if (filled === required.length) return "complete";
+    if (filled > 0) return "partial";
+    return "empty";
+  }, [form]);
+
   const saveLocalDraft = useCallback((snapshotForm: FormState, snapshotMembros: Membro[]) => {
     if (typeof window === "undefined") return;
     try {
@@ -234,7 +328,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       };
       localStorage.setItem(draftStorageKey, JSON.stringify(payload));
     } catch {
-      // No-op: local storage may be unavailable.
+      // No-op
     }
   }, [draftStorageKey]);
 
@@ -434,9 +528,14 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
             conta_bancaria: profile.conta_bancaria || "",
             tipo_conta_bancaria: profile.tipo_conta_bancaria || "",
             person_type: profile.person_type || "",
+            cnpj: profile.cnpj || "",
             razao_social: profile.razao_social || "",
             nome_fantasia: profile.nome_fantasia || "",
-            cnpj: profile.cnpj || "",
+            bio: profile.bio || "",
+            comunidade_tradicional: profile.comunidade_tradicional || "",
+            genero: profile.genero || "",
+            raca_cor_etnia: profile.raca_cor_etnia || "",
+            funcao_profissao: profile.funcao_profissao || "",
           }));
         }
 
@@ -544,13 +643,12 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
 
   const renderTipoProponente = () => (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Você é pessoa física ou pessoa jurídica? *</Label>
+      <FieldWithStatus label="Você é pessoa física ou pessoa jurídica?" required filled={!!form.person_type}>
         <RadioGroup value={form.person_type} onValueChange={v => update("person_type", v)} className="flex gap-6">
           <div className="flex items-center gap-2"><RadioGroupItem value="PF" id="pf" /><Label htmlFor="pf">Pessoa Física</Label></div>
           <div className="flex items-center gap-2"><RadioGroupItem value="PJ" id="pj" /><Label htmlFor="pj">Pessoa Jurídica</Label></div>
         </RadioGroup>
-      </div>
+      </FieldWithStatus>
       <div className="space-y-2">
         <Label>Vai concorrer às cotas? *</Label>
         <RadioGroup value={form.concorre_cotas ? "sim" : "nao"} onValueChange={v => update("concorre_cotas", v === "sim")} className="flex gap-6">
@@ -578,11 +676,21 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
     <div className="space-y-4">
       {form.person_type === "PJ" && (
         <>
-          <div className="space-y-2"><Label>Razão Social *</Label><Input value={form.razao_social} onChange={e => update("razao_social", e.target.value)} /></div>
+          <FieldWithStatus label="Razão Social" required filled={!!form.razao_social}>
+            <Input value={form.razao_social} onChange={e => update("razao_social", e.target.value)} />
+          </FieldWithStatus>
           <div className="space-y-2"><Label>Nome Fantasia</Label><Input value={form.nome_fantasia} onChange={e => update("nome_fantasia", e.target.value)} /></div>
-          <div className="space-y-2"><Label>CNPJ *</Label><Input placeholder="00.000.000/0001-00" value={form.cnpj} onChange={e => update("cnpj", e.target.value)} /></div>
+          <FieldWithStatus label="CNPJ" required filled={!!form.cnpj}>
+            <MaskedInput placeholder="00.000.000/0001-00" value={form.cnpj} onChange={v => update("cnpj", v)} mask={maskCNPJ} />
+          </FieldWithStatus>
           <div className="space-y-2"><Label>Endereço da sede *</Label><Input value={form.endereco} onChange={e => update("endereco", e.target.value)} /></div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2"><Label>Número</Label><Input value={form.numero} onChange={e => update("numero", e.target.value)} /></div>
+            <div className="space-y-2"><Label>Complemento</Label><Input value={form.complemento} onChange={e => update("complemento", e.target.value)} /></div>
+            <div className="space-y-2"><Label>Bairro</Label><Input value={form.bairro} onChange={e => update("bairro", e.target.value)} /></div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2"><Label>CEP</Label><MaskedInput placeholder="00000-000" value={form.cep} onChange={v => update("cep", v)} mask={maskCEP} /></div>
             <div className="space-y-2"><Label>Cidade *</Label><Input value={form.city} onChange={e => update("city", e.target.value)} /></div>
             <div className="space-y-2">
               <Label>Estado *</Label>
@@ -594,11 +702,15 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
           <p className="text-sm font-semibold text-muted-foreground">Dados do Representante Legal</p>
         </>
       )}
-      <div className="space-y-2"><Label>Nome Completo *</Label><Input value={form.full_name} onChange={e => update("full_name", e.target.value)} /></div>
-      <div className="space-y-2"><Label>Nome artístico ou nome social</Label><Input value={form.nome_social} onChange={e => update("nome_social", e.target.value)} /></div>
-      <div className="space-y-2"><Label>CPF *</Label><Input placeholder="000.000.000-00" value={form.cpf} onChange={e => update("cpf", e.target.value)} /></div>
+      <FieldWithStatus label="Nome Completo" required filled={!!form.full_name}>
+        <Input value={form.full_name} onChange={e => update("full_name", e.target.value)} />
+      </FieldWithStatus>
+      <div className="space-y-2"><Label>Nome artístico ou nome social</Label><Input value={form.nome_social} onChange={e => update("nome_social", e.target.value)} placeholder="Se possuir" /></div>
+      <FieldWithStatus label="CPF" required filled={!!form.cpf}>
+        <MaskedInput placeholder="000.000.000-00" value={form.cpf} onChange={v => update("cpf", v)} mask={maskCPF} />
+      </FieldWithStatus>
       {form.person_type === "PF" && (
-        <div className="space-y-2"><Label>CNPJ (Se a inscrição for realizada em nome do MEI)</Label><Input placeholder="00.000.000/0001-00" value={form.cnpj_mei} onChange={e => update("cnpj_mei", e.target.value)} /></div>
+        <div className="space-y-2"><Label>CNPJ (Se MEI)</Label><MaskedInput placeholder="00.000.000/0001-00" value={form.cnpj_mei} onChange={v => update("cnpj_mei", v)} mask={maskCNPJ} /></div>
       )}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2"><Label>RG *</Label><Input value={form.rg} onChange={e => update("rg", e.target.value)} /></div>
@@ -606,14 +718,29 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2"><Label>Data de nascimento *</Label><Input type="date" value={form.data_nascimento} onChange={e => update("data_nascimento", e.target.value)} /></div>
-        <div className="space-y-2"><Label>Telefone/Whatsapp *</Label><Input placeholder="(62) 99999-0000" value={form.telefone} onChange={e => update("telefone", e.target.value)} /></div>
       </div>
-      <div className="space-y-2"><Label>E-mail *</Label><Input type="email" value={form.email_contato} onChange={e => update("email_contato", e.target.value)} /></div>
+      <FieldWithStatus label="E-mail" required filled={!!form.email_contato}>
+        <Input type="email" value={form.email_contato} onChange={e => update("email_contato", e.target.value)} />
+      </FieldWithStatus>
+      <div className="grid grid-cols-2 gap-4">
+        <FieldWithStatus label="Telefone" required filled={!!form.telefone}>
+          <MaskedInput placeholder="(62) 99999-0000" value={form.telefone} onChange={v => update("telefone", v)} mask={maskPhone} />
+        </FieldWithStatus>
+        <div className="space-y-2">
+          <Label>WhatsApp <span className="text-xs text-muted-foreground">(se diferente)</span></Label>
+          <MaskedInput placeholder="(62) 99999-0000" value={form.whatsapp} onChange={v => update("whatsapp", v)} mask={maskPhone} />
+        </div>
+      </div>
       {form.person_type === "PF" && (
         <>
           <div className="space-y-2"><Label>Endereço completo *</Label><Input value={form.endereco} onChange={e => update("endereco", e.target.value)} /></div>
           <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2"><Label>CEP *</Label><Input placeholder="00000-000" value={form.cep} onChange={e => update("cep", e.target.value)} /></div>
+            <div className="space-y-2"><Label>Número</Label><Input value={form.numero} onChange={e => update("numero", e.target.value)} /></div>
+            <div className="space-y-2"><Label>Complemento</Label><Input value={form.complemento} onChange={e => update("complemento", e.target.value)} /></div>
+            <div className="space-y-2"><Label>Bairro</Label><Input value={form.bairro} onChange={e => update("bairro", e.target.value)} /></div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2"><Label>CEP *</Label><MaskedInput placeholder="00000-000" value={form.cep} onChange={v => update("cep", v)} mask={maskCEP} /></div>
             <div className="space-y-2"><Label>Cidade *</Label><Input value={form.city} onChange={e => update("city", e.target.value)} /></div>
             <div className="space-y-2">
               <Label>Estado *</Label>
@@ -627,26 +754,31 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
 
   const renderDadosBancarios = () => (
     <div className="space-y-4">
-      <div className="space-y-2"><Label>Banco *</Label><Input value={form.banco} onChange={e => update("banco", e.target.value)} /></div>
-      <div className="space-y-2"><Label>Agência *</Label><Input value={form.agencia} onChange={e => update("agencia", e.target.value)} /></div>
+      <FieldWithStatus label="Banco" required filled={!!form.banco}>
+        <Input value={form.banco} onChange={e => update("banco", e.target.value)} placeholder="Ex: Banco do Brasil, Caixa, Itaú..." />
+      </FieldWithStatus>
+      <FieldWithStatus label="Agência" required filled={!!form.agencia}>
+        <Input value={form.agencia} onChange={e => update("agencia", e.target.value)} placeholder="Número da agência" />
+      </FieldWithStatus>
       <div className="space-y-2">
-        <Label>Tipo *</Label>
+        <Label>Tipo de Conta *</Label>
         <RadioGroup value={form.tipo_conta_bancaria} onValueChange={v => update("tipo_conta_bancaria", v)} className="flex gap-6">
           <div className="flex items-center gap-2"><RadioGroupItem value="corrente" id="cc" /><Label htmlFor="cc">Conta Corrente</Label></div>
           <div className="flex items-center gap-2"><RadioGroupItem value="poupanca" id="cp" /><Label htmlFor="cp">Conta Poupança</Label></div>
         </RadioGroup>
       </div>
-      <div className="space-y-2"><Label>Conta *</Label><Input value={form.conta_bancaria} onChange={e => update("conta_bancaria", e.target.value)} /></div>
+      <FieldWithStatus label="Conta" required filled={!!form.conta_bancaria}>
+        <Input value={form.conta_bancaria} onChange={e => update("conta_bancaria", e.target.value)} placeholder="Número da conta com dígito" />
+      </FieldWithStatus>
     </div>
   );
 
   const renderMiniCurriculo = () => (
     <div className="space-y-5">
-      <div className="space-y-2">
-        <Label>Mini Currículo *</Label>
+      <FieldWithStatus label="Mini Currículo" required filled={!!form.bio}>
         <p className="text-xs text-muted-foreground">Escreva um resumo do seu currículo destacando as principais atuações culturais realizadas.</p>
         <Textarea placeholder="Descreva suas principais atuações culturais..." value={form.bio} onChange={e => update("bio", e.target.value)} rows={5} />
-      </div>
+      </FieldWithStatus>
       <div className="space-y-2">
         <Label>Pertence a alguma comunidade tradicional? *</Label>
         <RadioGroup value={form.comunidade_tradicional} onValueChange={v => update("comunidade_tradicional", v)} className="space-y-1">
@@ -680,14 +812,13 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
           ))}
         </RadioGroup>
       </div>
-      <div className="space-y-2">
-        <Label>Raça, cor ou etnia *</Label>
+      <FieldWithStatus label="Raça, cor ou etnia" required filled={!!form.raca_cor_etnia}>
         <RadioGroup value={form.raca_cor_etnia} onValueChange={v => update("raca_cor_etnia", v)} className="flex flex-wrap gap-4">
           {RACAS.map(r => (
             <div key={r} className="flex items-center gap-2"><RadioGroupItem value={r} id={`raca-${r}`} /><Label htmlFor={`raca-${r}`} className="font-normal">{r}</Label></div>
           ))}
         </RadioGroup>
-      </div>
+      </FieldWithStatus>
       <div className="space-y-2">
         <Label>Você é uma Pessoa com Deficiência – PcD? *</Label>
         <RadioGroup value={form.pcd ? "sim" : "nao"} onValueChange={v => update("pcd", v === "sim")} className="flex gap-6">
@@ -742,8 +873,8 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       <div className="space-y-2">
         <Label>Você é beneficiário de algum programa social? *</Label>
         <RadioGroup value={form.programa_social} onValueChange={v => update("programa_social", v)} className="space-y-1">
-          {PROGRAMAS_SOCIAIS.map(p => (
-            <div key={p} className="flex items-center gap-2"><RadioGroupItem value={p} id={`prog-${p}`} /><Label htmlFor={`prog-${p}`} className="font-normal text-sm">{p}</Label></div>
+          {PROGRAMAS_SOCIAIS.map(pg => (
+            <div key={pg} className="flex items-center gap-2"><RadioGroupItem value={pg} id={`prog-${pg}`} /><Label htmlFor={`prog-${pg}`} className="font-normal text-sm">{pg}</Label></div>
           ))}
           <div className="flex items-center gap-2"><RadioGroupItem value="Outro" id="prog-outro" /><Label htmlFor="prog-outro" className="font-normal">Outro</Label></div>
         </RadioGroup>
@@ -764,6 +895,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       {form.representa_coletivo && (
         <>
           <div className="space-y-2"><Label>Nome do coletivo</Label><Input value={form.nome_grupo} onChange={e => update("nome_grupo", e.target.value)} /></div>
+          <div className="space-y-2"><Label>Função no grupo</Label><Input value={form.funcao_no_grupo} onChange={e => update("funcao_no_grupo", e.target.value)} placeholder="Ex: Coordenador, Líder..." /></div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2"><Label>Ano de Criação</Label><Input value={form.ano_criacao_coletivo} onChange={e => update("ano_criacao_coletivo", e.target.value)} /></div>
             <div className="space-y-2"><Label>Quantas pessoas?</Label><Input value={form.qtd_pessoas_coletivo} onChange={e => update("qtd_pessoas_coletivo", e.target.value)} /></div>
@@ -773,7 +905,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
             {membros.map((m, i) => (
               <div key={i} className="flex gap-2 items-center">
                 <Input placeholder="Nome completo" value={m.nome} onChange={e => updateMembro(i, "nome", e.target.value)} className="flex-1" />
-                <Input placeholder="CPF" value={m.cpf} onChange={e => updateMembro(i, "cpf", e.target.value)} className="w-40" />
+                <MaskedInput placeholder="000.000.000-00" value={m.cpf} onChange={v => updateMembro(i, "cpf", v)} mask={maskCPF} className="w-44" />
                 {membros.length > 1 && <Button variant="ghost" size="icon" onClick={() => removeMembro(i)}><Trash2 className="h-4 w-4" /></Button>}
               </div>
             ))}
@@ -783,8 +915,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       )}
 
       {/* Categoria - diferente por edital */}
-      <div className="space-y-2">
-        <Label className="font-semibold">Escolha a categoria a que vai concorrer *</Label>
+      <FieldWithStatus label="Escolha a categoria a que vai concorrer" required filled={!!form.categoria_inscricao}>
         {editalType === "fomento" ? (
           <div className="space-y-3">
             {CATEGORIAS_FOMENTO.map(cat => (
@@ -808,7 +939,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
             ))}
           </RadioGroup>
         )}
-      </div>
+      </FieldWithStatus>
     </div>
   );
 
@@ -821,10 +952,10 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       <div className="space-y-2">
         <Label>Ação cultural voltada para algum destes perfis? *</Label>
         <div className="grid grid-cols-1 gap-1">
-          {PUBLICO_ALVO.map(p => (
-            <div key={p} className="flex items-center gap-2">
-              <Checkbox checked={form.acao_cultural_publico.includes(p)} onCheckedChange={() => toggleArray("acao_cultural_publico", p)} id={`pub-${p}`} />
-              <Label htmlFor={`pub-${p}`} className="font-normal text-sm cursor-pointer">{p}</Label>
+          {PUBLICO_ALVO.map(pa => (
+            <div key={pa} className="flex items-center gap-2">
+              <Checkbox checked={form.acao_cultural_publico.includes(pa)} onCheckedChange={() => toggleArray("acao_cultural_publico", pa)} id={`pub-${pa}`} />
+              <Label htmlFor={`pub-${pa}`} className="font-normal text-sm cursor-pointer">{pa}</Label>
             </div>
           ))}
         </div>
@@ -877,16 +1008,16 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
         <Label className="font-semibold">Testemunha (Declaração de Residência)</Label>
         <div className="space-y-2"><Label>Nome da testemunha</Label><Input value={form.testemunha_nome} onChange={e => update("testemunha_nome", e.target.value)} /></div>
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2"><Label>CPF</Label><Input value={form.testemunha_cpf} onChange={e => update("testemunha_cpf", e.target.value)} /></div>
+          <div className="space-y-2"><Label>CPF</Label><MaskedInput value={form.testemunha_cpf} onChange={v => update("testemunha_cpf", v)} mask={maskCPF} placeholder="000.000.000-00" /></div>
           <div className="space-y-2"><Label>RG</Label><Input value={form.testemunha_rg} onChange={e => update("testemunha_rg", e.target.value)} /></div>
         </div>
-        <div className="space-y-2"><Label>Telefone</Label><Input value={form.testemunha_telefone} onChange={e => update("testemunha_telefone", e.target.value)} /></div>
+        <div className="space-y-2"><Label>Telefone</Label><MaskedInput value={form.testemunha_telefone} onChange={v => update("testemunha_telefone", v)} mask={maskPhone} placeholder="(62) 99999-0000" /></div>
         <div className="space-y-2"><Label>Endereço</Label><Input value={form.testemunha_endereco} onChange={e => update("testemunha_endereco", e.target.value)} /></div>
       </div>
     </div>
   );
 
-  // Premiação-specific: Coletivo + Público
+  // Premiação-specific
   const renderColetivoPublicoPremiacao = () => (
     <div className="space-y-5">
       <div className="space-y-2">
@@ -916,7 +1047,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
             {membros.map((m, i) => (
               <div key={i} className="flex gap-2 items-center">
                 <Input placeholder="Nome completo" value={m.nome} onChange={e => updateMembro(i, "nome", e.target.value)} className="flex-1" />
-                <Input placeholder="CPF" value={m.cpf} onChange={e => updateMembro(i, "cpf", e.target.value)} className="w-40" />
+                <MaskedInput placeholder="000.000.000-00" value={m.cpf} onChange={v => updateMembro(i, "cpf", v)} mask={maskCPF} className="w-44" />
                 {membros.length > 1 && <Button variant="ghost" size="icon" onClick={() => removeMembro(i)}><Trash2 className="h-4 w-4" /></Button>}
               </div>
             ))}
@@ -931,10 +1062,10 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       <div className="space-y-2">
         <Label>Ação cultural voltada para algum destes perfis? *</Label>
         <div className="grid grid-cols-1 gap-1">
-          {PUBLICO_ALVO.map(p => (
-            <div key={p} className="flex items-center gap-2">
-              <Checkbox checked={form.acao_cultural_publico.includes(p)} onCheckedChange={() => toggleArray("acao_cultural_publico", p)} id={`pub-${p}`} />
-              <Label htmlFor={`pub-${p}`} className="font-normal text-sm cursor-pointer">{p}</Label>
+          {PUBLICO_ALVO.map(pa => (
+            <div key={pa} className="flex items-center gap-2">
+              <Checkbox checked={form.acao_cultural_publico.includes(pa)} onCheckedChange={() => toggleArray("acao_cultural_publico", pa)} id={`pub-${pa}`} />
+              <Label htmlFor={`pub-${pa}`} className="font-normal text-sm cursor-pointer">{pa}</Label>
             </div>
           ))}
         </div>
@@ -942,7 +1073,6 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
     </div>
   );
 
-  // Premiação: Acessibilidade + Locais
   const renderAcessibilidadeLocais = () => (
     <div className="space-y-5">
       <p className="text-xs text-muted-foreground">Marque quais medidas de acessibilidade foram implementadas nos projetos.</p>
@@ -984,7 +1114,6 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
     </div>
   );
 
-  // Premiação: Dados complementares (residência + testemunha)
   const renderDadosComplementares = () => renderResidenciaTestemunha();
 
   // ===== STEP RENDERING =====
@@ -1003,7 +1132,6 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
         default: return null;
       }
     }
-    // premiacao
     switch (subStep) {
       case 0: return renderTipoProponente();
       case 1: return renderDadosPessoais();
@@ -1020,19 +1148,25 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-1.5 mb-4">
-        {SUB_STEPS.map((name, i) => (
-          <button
-            key={i}
-            onClick={() => { void handleSubStepChange(i); }}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-              subStep === i
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
-            }`}
-          >
-            {i + 1}. {name}
-          </button>
-        ))}
+        {SUB_STEPS.map((name, i) => {
+          const status = getStepCompletionStatus(i);
+          return (
+            <button
+              key={i}
+              onClick={() => { void handleSubStepChange(i); }}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1.5 ${
+                subStep === i
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : status === "complete"
+                    ? "bg-green-50 text-green-700 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700"
+                    : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
+              }`}
+            >
+              {status === "complete" && subStep !== i && <CheckCircle className="h-3 w-3" />}
+              {i + 1}. {name}
+            </button>
+          );
+        })}
       </div>
 
       <div className="overflow-y-auto max-h-[60vh] pr-2">
