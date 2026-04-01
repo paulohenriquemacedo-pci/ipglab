@@ -69,7 +69,7 @@ const ProjectWizard = () => {
   const progress = (completedSteps / totalSteps) * 100;
 
   const getStepInfo = (stepNum: number) => {
-    if (stepNum === 0) return { name: "Dados Cadastrais", prompt: "Preencha seus dados pessoais, bancários e perfil socioidentitário conforme o formulário de inscrição." };
+    if (stepNum === 0) return { name: "Dados Cadastrais", prompt: instrumentType === "fomento" ? "Preencha seus dados pessoais e perfil socioidentitário conforme o formulário de inscrição." : "Preencha seus dados pessoais, bancários e perfil socioidentitário conforme o formulário de inscrição." };
     const instrumentType = edital?.instrument_type;
     if (instrumentType === "premiacao" && STEP_PROMPTS_PREMIACAO[stepNum]) return STEP_PROMPTS_PREMIACAO[stepNum];
     if (instrumentType === "fomento" && STEP_PROMPTS_FOMENTO[stepNum]) return STEP_PROMPTS_FOMENTO[stepNum];
