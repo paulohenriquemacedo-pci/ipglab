@@ -353,6 +353,9 @@ export type Database = {
           email_contato: string | null
           endereco: string | null
           escolaridade: string | null
+          estrategia_divulgacao: string | null
+          fontes_recurso_detalhe: string | null
+          fontes_recurso_tipos: string[] | null
           full_name: string | null
           funcao_no_grupo: string | null
           funcao_profissao: string | null
@@ -371,6 +374,9 @@ export type Database = {
           pcd_tipo: string | null
           perfil_publico: string | null
           person_type: string | null
+          possui_fontes_recurso: boolean | null
+          prev_venda_ingressos: boolean | null
+          prev_venda_ingressos_detalhe: string | null
           programa_social: string | null
           project_id: string
           qtd_pessoas_coletivo: string | null
@@ -423,6 +429,9 @@ export type Database = {
           email_contato?: string | null
           endereco?: string | null
           escolaridade?: string | null
+          estrategia_divulgacao?: string | null
+          fontes_recurso_detalhe?: string | null
+          fontes_recurso_tipos?: string[] | null
           full_name?: string | null
           funcao_no_grupo?: string | null
           funcao_profissao?: string | null
@@ -441,6 +450,9 @@ export type Database = {
           pcd_tipo?: string | null
           perfil_publico?: string | null
           person_type?: string | null
+          possui_fontes_recurso?: boolean | null
+          prev_venda_ingressos?: boolean | null
+          prev_venda_ingressos_detalhe?: string | null
           programa_social?: string | null
           project_id: string
           qtd_pessoas_coletivo?: string | null
@@ -493,6 +505,9 @@ export type Database = {
           email_contato?: string | null
           endereco?: string | null
           escolaridade?: string | null
+          estrategia_divulgacao?: string | null
+          fontes_recurso_detalhe?: string | null
+          fontes_recurso_tipos?: string[] | null
           full_name?: string | null
           funcao_no_grupo?: string | null
           funcao_profissao?: string | null
@@ -511,6 +526,9 @@ export type Database = {
           pcd_tipo?: string | null
           perfil_publico?: string | null
           person_type?: string | null
+          possui_fontes_recurso?: boolean | null
+          prev_venda_ingressos?: boolean | null
+          prev_venda_ingressos_detalhe?: string | null
           programa_social?: string | null
           project_id?: string
           qtd_pessoas_coletivo?: string | null
