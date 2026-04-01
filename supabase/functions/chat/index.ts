@@ -289,8 +289,8 @@ serve(async (req) => {
 
   try {
     const { messages, step_name, step_number, edital_type, edital_briefing, auto_start } = await req.json();
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     let stepPrompts: Record<number, string>;
     if (edital_type === "premiacao") stepPrompts = STEP_PROMPTS_PREMIACAO;
@@ -325,14 +325,14 @@ DIRETRIZES:
 - Formate o texto de forma clara com parágrafos
 - Quando aplicável, mencione os critérios de seleção e como maximizar a pontuação`;
 
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GEMINI_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gemini-2.5-pro",
+        model: "google/gemini-3.1-pro-preview",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
