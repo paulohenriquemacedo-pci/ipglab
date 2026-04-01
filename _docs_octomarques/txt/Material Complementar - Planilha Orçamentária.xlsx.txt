@@ -1,0 +1,48 @@
+Sheet: Planilha1
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,,
+DESCRIÇÃO DO ITEM,JUSTIFICATIVA,UNIDADE DE MEDIDA,VALOR UNITÁRIO,QNTD.,VALOR TOTAL,REFERÊNCIA (OPCIONAL)
+Exemplo: Fotógrafo,Profissional necessário para registro da oficina,Serviço,"R$ 1,100.00",1," R$ 1,100.00 ", R$ -   
+,,,,, R$ -   , R$ -   
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ 500.00 ,
+,,,,, R$ 300.00 ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   , R$ -   
+,,,,, R$ -   , R$ -   
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   ,
+,,,,, R$ -   , R$ -   
+,,,,, R$ -   , R$ -   
+,,,,, R$ -   , R$ -   
+,,,,, R$ -   , R$ -   
+,,,,, R$ -   , R$ -   
+,,,,, R$ -   , R$ -   
+"ADCIONE MAIS, CASO NECESSÁRIO +",,,,, R$ -   , R$ -   
+TOTAL,,,,," R$ 1,900.00 ", R$ -   
+,,,,,,
+,,,,,,
+ATENÇÃO: A PLANILHA POSSUI AUTOSSOMA E DEVE SER IMPRESSA EM ORIENTAÇÃO PAISAGEM,,,,,,
+

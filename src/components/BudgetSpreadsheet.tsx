@@ -16,6 +16,8 @@ interface BudgetItem {
   unidade: string;
   quantidade: number;
   valor_unitario: number;
+  justificativa: string;
+  referencia_preco: string;
 }
 
 interface BudgetSpreadsheetProps {
@@ -68,14 +70,14 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadshe
         } catch { /* not JSON, ignore */ }
       }
       if (items.length === 0) {
-        setItems([{ id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0 }]);
+        setItems([{ id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0, justificativa: "", referencia_preco: "" }]);
       }
     };
     load();
   }, [projectId]);
 
   const addItem = () => {
-    setItems(prev => [...prev, { id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0 }]);
+    setItems(prev => [...prev, { id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0, justificativa: "", referencia_preco: "" }]);
   };
 
   const removeItem = (id: string) => {
@@ -245,6 +247,27 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadshe
             <div className="text-right mt-1 md:hidden">
               <span className="text-xs text-muted-foreground">Subtotal: </span>
               <span className="text-sm font-medium">{formatCurrency(item.quantidade * item.valor_unitario)}</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 pt-3 border-t">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground font-semibold">Justificativa e Especificidade</Label>
+                <Input
+                  className="h-8 text-xs"
+                  placeholder="Por que este item é essencial para o projeto?"
+                  value={item.justificativa || ""}
+                  onChange={e => updateItem(item.id, "justificativa", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground font-semibold">Referência de Preço</Label>
+                <Input
+                  className="h-8 text-xs"
+                  placeholder="Ex: Tabela SATED, Pesquisa de Mercado, Link..."
+                  value={item.referencia_preco || ""}
+                  onChange={e => updateItem(item.id, "referencia_preco", e.target.value)}
+                />
+              </div>
             </div>
           </Card>
         ))}

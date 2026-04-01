@@ -24,7 +24,7 @@ const COMUNIDADES = [
 ];
 
 const GENEROS = [
-  "Mulher Cisgênero", "Homem Cisgênero", "Mulher Transgênero",
+  "Mulher cisgênero", "Homem cisgênero", "Mulher Transgênero",
   "Homem Transgênero", "Pessoa Não Binária", "Não informar",
 ];
 
@@ -36,7 +36,21 @@ const LGBTQIAPN_OPCOES = [
 ];
 
 const RACAS = ["Branca", "Preta", "Parda", "Indígena", "Amarela"];
-const PCD_TIPOS = ["Auditiva", "Física", "Intelectual", "Múltipla", "Visual"];
+const PCD_TIPOS = ["Auditiva", "Física", "Intelectual", "Múltipla", "Visual", "Outros"];
+
+const ESCOLARIDADES = [
+  "Não tenho Educação Formal", "Ensino Fundamental Incompleto", "Ensino Fundamental Completo",
+  "Ensino Médio Incompleto", "Ensino Médio Completo", "Curso Técnico Completo",
+  "Ensino Superior Incompleto", "Ensino Superior Completo", "Pós Graduação Incompleta", "Pós-Graduação Completa"
+];
+
+const RENDA_FAIXAS = [
+  "Nenhuma renda.", "Até 1 salário mínimo", "De 1 a 3 salários mínimos",
+  "De 3 a 5 salários mínimos", "De 5 a 8 salários mínimos",
+  "De 8 a 10 salários mínimos", "Acima de 10 salários mínimos"
+];
+
+const PROGRAMAS_SOCIAIS = ["Não", "Bolsa família", "Benefício de Prestação Continuada"];
 
 const FUNCOES = [
   "Artista, Artesão(a), Brincante, Criador(a) e afins.",
@@ -94,14 +108,12 @@ interface ProfileFormStepsProps {
 }
 
 const PROFILE_SUB_STEPS = [
-  "Informações do Agente Cultural",
+  "Informações do Agente",
   "Dados Pessoais",
   "Dados Bancários",
-  "Mini Currículo e Perfil",
+  "Currículo e Perfil",
   "Autodeclarações",
-  "Coletivo e Público-Alvo",
-  "Acessibilidade e Locais",
-  "Dados Complementares",
+  "Coletivo",
 ];
 
 const ProfileFormSteps = ({ onComplete, embedded = false }: ProfileFormStepsProps) => {
@@ -122,6 +134,9 @@ const ProfileFormSteps = ({ onComplete, embedded = false }: ProfileFormStepsProp
     raca_cor_etnia: "",
     pcd: false, pcd_tipo: "", pcd_tipo_outro: "",
     funcao_profissao: "", funcao_profissao_outro: "",
+    escolaridade: "",
+    renda_mensal: "",
+    programa_social: "", programa_social_outro: "",
     bio: "",
     representa_coletivo: false,
     nome_grupo: "", ano_criacao_coletivo: "", qtd_pessoas_coletivo: "",
@@ -185,6 +200,10 @@ const ProfileFormSteps = ({ onComplete, embedded = false }: ProfileFormStepsProp
           pcd: data.pcd || false,
           pcd_tipo: data.pcd_tipo || "",
           funcao_profissao: data.funcao_profissao || "",
+          escolaridade: data.escolaridade || "",
+          renda_mensal: data.renda_mensal || "",
+          programa_social: data.programa_social || "",
+          programa_social_outro: data.programa_social_outro || "",
           bio: data.bio || "",
           representa_coletivo: data.representa_coletivo || false,
           nome_grupo: data.nome_grupo || "",
@@ -263,20 +282,11 @@ const ProfileFormSteps = ({ onComplete, embedded = false }: ProfileFormStepsProp
         funcao_no_grupo: form.representa_coletivo ? form.funcao_no_grupo : null,
         ano_criacao_coletivo: form.representa_coletivo ? form.ano_criacao_coletivo : null,
         qtd_pessoas_coletivo: form.representa_coletivo ? form.qtd_pessoas_coletivo : null,
-        perfil_publico: form.perfil_publico || null,
-        acao_cultural_publico: form.acao_cultural_publico.length > 0 ? form.acao_cultural_publico : null,
-        acessibilidade_arquitetonica: form.acessibilidade_arquitetonica.length > 0 ? form.acessibilidade_arquitetonica : null,
-        acessibilidade_comunicacional: form.acessibilidade_comunicacional.length > 0 ? form.acessibilidade_comunicacional : null,
-        acessibilidade_atitudinal: form.acessibilidade_atitudinal.length > 0 ? form.acessibilidade_atitudinal : null,
-        acessibilidade_descricao: form.acessibilidade_descricao || null,
-        locais_execucao: form.locais_execucao || null,
-        membros_coletivo: form.representa_coletivo ? membros.filter(m => m.nome) : null,
         tempo_residencia_municipio: form.tempo_residencia_municipio || null,
-        testemunha_nome: form.testemunha_nome || null,
-        testemunha_cpf: form.testemunha_cpf || null,
-        testemunha_rg: form.testemunha_rg || null,
-        testemunha_telefone: form.testemunha_telefone || null,
-        testemunha_endereco: form.testemunha_endereco || null,
+        escolaridade: form.escolaridade || null,
+        renda_mensal: form.renda_mensal || null,
+        programa_social: form.programa_social || null,
+        programa_social_outro: form.programa_social === "Outros" ? form.programa_social_outro : null,
         onboarding_completed: true,
       };
       if (form.person_type === "PJ") {
@@ -490,6 +500,35 @@ const ProfileFormSteps = ({ onComplete, embedded = false }: ProfileFormStepsProp
               </RadioGroup>
               {form.funcao_profissao === "Outro" && <Input placeholder="Especifique..." value={form.funcao_profissao_outro} onChange={e => update("funcao_profissao_outro", e.target.value)} className="mt-2" />}
             </div>
+            
+            <div className="space-y-2">
+              <Label>Qual o seu grau de escolaridade? *</Label>
+              <RadioGroup value={form.escolaridade} onValueChange={v => update("escolaridade", v)} className="flex flex-col gap-1">
+                {ESCOLARIDADES.map(e => (
+                  <div key={e} className="flex items-center gap-2"><RadioGroupItem value={e} id={`esc-${e}`} /><Label htmlFor={`esc-${e}`} className="font-normal text-sm">{e}</Label></div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Qual a sua renda mensal fixa individual (últimos 3 meses)? *</Label>
+              <RadioGroup value={form.renda_mensal} onValueChange={v => update("renda_mensal", v)} className="flex flex-col gap-1">
+                {RENDA_FAIXAS.map(r => (
+                  <div key={r} className="flex items-center gap-2"><RadioGroupItem value={r} id={`renda-${r}`} /><Label htmlFor={`renda-${r}`} className="font-normal text-sm">{r}</Label></div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Você é beneficiário de algum programa social? *</Label>
+              <RadioGroup value={form.programa_social} onValueChange={v => update("programa_social", v)} className="flex flex-col gap-1">
+                {PROGRAMAS_SOCIAIS.map(p => (
+                  <div key={p} className="flex items-center gap-2"><RadioGroupItem value={p} id={`prog-${p}`} /><Label htmlFor={`prog-${p}`} className="font-normal text-sm">{p}</Label></div>
+                ))}
+                <div className="flex items-center gap-2"><RadioGroupItem value="Outros" id="prog-outro" /><Label htmlFor="prog-outro" className="font-normal text-sm">Outros</Label></div>
+              </RadioGroup>
+              {form.programa_social === "Outros" && <Input placeholder="Especifique..." value={form.programa_social_outro} onChange={e => update("programa_social_outro", e.target.value)} className="mt-2" />}
+            </div>
           </div>
         );
 
@@ -523,100 +562,6 @@ const ProfileFormSteps = ({ onComplete, embedded = false }: ProfileFormStepsProp
                 </div>
               </>
             )}
-            <div className="space-y-2">
-              <Label>Perfil do público atingido pelos projetos *</Label>
-              <p className="text-xs text-muted-foreground">Quem é o público? Crianças, adultas, idosas? Fazem parte de alguma comunidade?</p>
-              <Textarea placeholder="Descreva o perfil do público..." value={form.perfil_publico} onChange={e => update("perfil_publico", e.target.value)} rows={4} />
-            </div>
-            <div className="space-y-2">
-              <Label>Ação cultural voltada para algum destes perfis? *</Label>
-              <div className="grid grid-cols-1 gap-1">
-                {PUBLICO_ALVO.map(p => (
-                  <div key={p} className="flex items-center gap-2">
-                    <Checkbox checked={form.acao_cultural_publico.includes(p)} onCheckedChange={() => toggleArray("acao_cultural_publico", p)} id={`pub-${p}`} />
-                    <Label htmlFor={`pub-${p}`} className="font-normal text-sm cursor-pointer">{p}</Label>
-                  </div>
-                ))}
-                <div className="flex items-center gap-2">
-                  <Checkbox checked={form.acao_cultural_publico_outro !== ""} onCheckedChange={(c) => update("acao_cultural_publico_outro", c ? " " : "")} id="pub-outro" />
-                  <Label htmlFor="pub-outro" className="font-normal text-sm cursor-pointer">Outro</Label>
-                </div>
-                {form.acao_cultural_publico_outro !== "" && <Input placeholder="Especifique..." value={form.acao_cultural_publico_outro} onChange={e => update("acao_cultural_publico_outro", e.target.value)} className="mt-1" />}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-5">
-            <p className="text-xs text-muted-foreground">Marque quais medidas de acessibilidade foram implementadas nos projetos (conforme IN MINC nº 10/2023).</p>
-            <div className="space-y-2">
-              <Label className="font-semibold">Acessibilidade arquitetônica:</Label>
-              {ACESS_ARQ.map(a => (
-                <div key={a} className="flex items-center gap-2">
-                  <Checkbox checked={form.acessibilidade_arquitetonica.includes(a)} onCheckedChange={() => toggleArray("acessibilidade_arquitetonica", a)} id={`aarq-${a}`} />
-                  <Label htmlFor={`aarq-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
-                </div>
-              ))}
-              <div className="flex items-center gap-2">
-                <Checkbox checked={form.acessibilidade_arq_outro !== ""} onCheckedChange={(c) => update("acessibilidade_arq_outro", c ? " " : "")} id="aarq-outro" />
-                <Label htmlFor="aarq-outro" className="font-normal text-sm cursor-pointer">Outro</Label>
-              </div>
-              {form.acessibilidade_arq_outro !== "" && <Input placeholder="Especifique..." value={form.acessibilidade_arq_outro} onChange={e => update("acessibilidade_arq_outro", e.target.value)} />}
-            </div>
-            <div className="space-y-2">
-              <Label className="font-semibold">Acessibilidade comunicacional:</Label>
-              {ACESS_COM.map(a => (
-                <div key={a} className="flex items-center gap-2">
-                  <Checkbox checked={form.acessibilidade_comunicacional.includes(a)} onCheckedChange={() => toggleArray("acessibilidade_comunicacional", a)} id={`acom-${a}`} />
-                  <Label htmlFor={`acom-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
-                </div>
-              ))}
-              <div className="flex items-center gap-2">
-                <Checkbox checked={form.acessibilidade_com_outro !== ""} onCheckedChange={(c) => update("acessibilidade_com_outro", c ? " " : "")} id="acom-outro" />
-                <Label htmlFor="acom-outro" className="font-normal text-sm cursor-pointer">Outro</Label>
-              </div>
-              {form.acessibilidade_com_outro !== "" && <Input placeholder="Especifique..." value={form.acessibilidade_com_outro} onChange={e => update("acessibilidade_com_outro", e.target.value)} />}
-            </div>
-            <div className="space-y-2">
-              <Label className="font-semibold">Acessibilidade atitudinal:</Label>
-              {ACESS_ATI.map(a => (
-                <div key={a} className="flex items-center gap-2">
-                  <Checkbox checked={form.acessibilidade_atitudinal.includes(a)} onCheckedChange={() => toggleArray("acessibilidade_atitudinal", a)} id={`aati-${a}`} />
-                  <Label htmlFor={`aati-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-2">
-              <Label>Como essas medidas foram implementadas? *</Label>
-              <Textarea placeholder="Descreva como as medidas foram implementadas..." value={form.acessibilidade_descricao} onChange={e => update("acessibilidade_descricao", e.target.value)} rows={3} />
-            </div>
-            <div className="space-y-2">
-              <Label>Locais onde os projetos foram executados *</Label>
-              <p className="text-xs text-muted-foreground">Espaços culturais e ambientes no município de Goiás.</p>
-              <Textarea placeholder="Informe os espaços culturais..." value={form.locais_execucao} onChange={e => update("locais_execucao", e.target.value)} rows={3} />
-            </div>
-          </div>
-        );
-
-      case 7:
-        return (
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <Label>Tempo de residência no município de Goiás</Label>
-              <Input placeholder="Ex: 5 anos" value={form.tempo_residencia_municipio} onChange={e => update("tempo_residencia_municipio", e.target.value)} />
-            </div>
-            <div className="border rounded-lg p-4 space-y-3">
-              <Label className="font-semibold">Testemunha (Anexo VII – Declaração de Residência)</Label>
-              <div className="space-y-2"><Label>Nome da testemunha</Label><Input value={form.testemunha_nome} onChange={e => update("testemunha_nome", e.target.value)} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>CPF</Label><Input value={form.testemunha_cpf} onChange={e => update("testemunha_cpf", e.target.value)} /></div>
-                <div className="space-y-2"><Label>RG</Label><Input value={form.testemunha_rg} onChange={e => update("testemunha_rg", e.target.value)} /></div>
-              </div>
-              <div className="space-y-2"><Label>Telefone</Label><Input value={form.testemunha_telefone} onChange={e => update("testemunha_telefone", e.target.value)} /></div>
-              <div className="space-y-2"><Label>Endereço</Label><Input value={form.testemunha_endereco} onChange={e => update("testemunha_endereco", e.target.value)} /></div>
-            </div>
           </div>
         );
 

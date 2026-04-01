@@ -18,13 +18,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import NewProjectDialog, { getStepsForEdital } from "@/components/NewProjectDialog";
 import ProjectRegistrationForm from "@/components/ProjectRegistrationForm";
-import { generateAnexoII } from "@/lib/generateAnexoII";
-import { generateAnexoIV, generateAnexoV, generateAnexoVI, generateAnexoVII } from "@/lib/generateAnexos";
-import {
-  generateAnexoIIA, generateAnexoIIB,
-  generateAnexoVI_OctoMarques, generateAnexoVII_OctoMarques,
-  generateAnexoVIII_OctoMarques, generateAnexoIX_OctoMarques,
-} from "@/lib/generateAnexosOctoMarques";
 
 interface Project {
   id: string;
@@ -34,6 +27,7 @@ interface Project {
   created_at: string;
   updated_at: string;
   edital_id: string | null;
+  project_registrations?: { full_name: string }[];
 }
 
 const statusLabels: Record<string, string> = {
@@ -73,7 +67,7 @@ const Dashboard = () => {
     const fetchProjects = async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("*")
+        .select("*, project_registrations(full_name)")
         .order("updated_at", { ascending: false });
       if (error) toast.error("Erro ao carregar projetos");
       else setProjects(data || []);
@@ -85,11 +79,13 @@ const Dashboard = () => {
   const createProject = async (editalId: string, editalName: string) => {
     setCreating(true);
     try {
-      const { data: edital } = await supabase
+      const { data: edital, error: editalError } = await supabase
         .from("editais")
         .select("instrument_type")
         .eq("id", editalId)
         .single();
+      
+      console.log("Creating project for edital:", editalId, "instrument_type:", edital?.instrument_type);
 
       const { data, error } = await supabase
         .from("projects")
@@ -100,16 +96,36 @@ const Dashboard = () => {
         })
         .select()
         .single();
-      if (error) { toast.error("Erro ao criar projeto"); return; }
+
+      if (error) { 
+        console.error("Error creating project:", error);
+        toast.error("Erro ao criar projeto: " + error.message); 
+        return; 
+      }
 
       const steps = getStepsForEdital(edital?.instrument_type || null);
-      const sections = steps.map(s => ({ ...s, project_id: data.id }));
-      await supabase.from("project_sections").insert(sections);
+      console.log("Steps to insert:", steps.length, steps);
+      
+      const sections = steps.map(s => ({ 
+        project_id: data.id,
+        step_number: s.step_number,
+        step_name: s.step_name
+      }));
+
+      const { error: sectionsError } = await supabase.from("project_sections").insert(sections);
+      
+      if (sectionsError) {
+        console.error("Error creating sections:", sectionsError);
+        toast.error("Erro ao configurar as etapas do projeto: " + sectionsError.message);
+      }
 
       // Open registration form instead of navigating directly
       setDialogOpen(false);
       setRegEditalType(edital?.instrument_type || "premiacao");
       setRegProjectId(data.id);
+    } catch (err: any) {
+      console.error("Unexpected error in createProject:", err);
+      toast.error("Erro inesperado: " + err.message);
     } finally {
       setCreating(false);
     }
@@ -150,33 +166,6 @@ const Dashboard = () => {
     return data as any;
   };
 
-  const handleDownloadAnexo = async (generator: (p: any) => Promise<void>, label: string) => {
-    const profile = await getRegistrationData();
-    if (!profile) return;
-    try {
-      await generator(profile);
-      toast.success(`${label} gerado com sucesso!`);
-    } catch {
-      toast.error("Erro ao gerar documento");
-    }
-  };
-
-  const handleDownloadAll = async () => {
-    const profile = await getRegistrationData();
-    if (!profile) return;
-    const generators = [
-      { fn: generateAnexoII, label: "Anexo II" },
-      { fn: generateAnexoIV, label: "Anexo IV" },
-      { fn: generateAnexoV, label: "Anexo V" },
-      { fn: generateAnexoVI, label: "Anexo VI" },
-      { fn: generateAnexoVII, label: "Anexo VII" },
-    ];
-    let success = 0;
-    for (const gen of generators) {
-      try { await gen.fn(profile); success++; } catch { toast.error(`Erro ao gerar ${gen.label}`); }
-    }
-    if (success > 0) toast.success(`${success} anexos gerados com sucesso!`);
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -195,63 +184,9 @@ const Dashboard = () => {
             <h1 className="text-3xl mb-1">Meus Projetos</h1>
             <p className="text-muted-foreground">Gerencie seus projetos culturais</p>
           </div>
-          <div className="flex gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Download className="h-4 w-4 mr-2" /> Anexos <ChevronDown className="h-4 w-4 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuItem disabled className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-                  Edital Badiinha (Premiação)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownloadAll} className="font-semibold">
-                  <Download className="h-4 w-4 mr-2" /> Baixar todos (Badiinha)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoII, "Anexo II")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo II – Formulário de Inscrição
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoIV, "Anexo IV")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo IV – Representação de Grupo
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoV, "Anexo V")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo V – Autodeclaração Étnico-Racial
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVI, "Anexo VI")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo VI – Declaração PcD
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVII, "Anexo VII")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo VII – Declaração de Residência
-                </DropdownMenuItem>
-                <div className="h-px bg-border my-2" />
-                <DropdownMenuItem disabled className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-                  Edital Octo Marques (Fomento)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoIIA, "Anexo II-A")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo II-A – Inscrição PF/MEI/Coletivo
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoIIB, "Anexo II-B")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo II-B – Inscrição Pessoa Jurídica
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVI_OctoMarques, "Anexo VI")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo VI – Declaração Coletivo
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVII_OctoMarques, "Anexo VII")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo VII – Declaração Étnico-Racial
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoVIII_OctoMarques, "Anexo VIII")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo VIII – Declaração PcD
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownloadAnexo(generateAnexoIX_OctoMarques, "Anexo IX")}>
-                  <FileText className="h-4 w-4 mr-2" /> Anexo IX – Declaração de Residência
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" /> Novo Projeto
-            </Button>
-          </div>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Novo Projeto
+          </Button>
         </div>
 
         {loading ? (
@@ -275,41 +210,52 @@ const Dashboard = () => {
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map(p => (
-              <div key={p.id} className="relative group">
-                <Link to={`/project/${p.id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <CardTitle className="font-sans text-base pr-8">{p.title}</CardTitle>
-                        <Badge variant={statusColors[p.status] as any}>{statusLabels[p.status]}</Badge>
-                      </div>
-                      <CardDescription className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(p.updated_at).toLocaleDateString("pt-BR")}
-                      </CardDescription>
-                    </CardHeader>
-                    {p.conformity_score !== null && (
-                      <CardContent>
-                        <div className="flex items-center gap-2">
-                          <div className="text-sm text-muted-foreground">Conformidade:</div>
-                          <Badge variant={p.conformity_score >= 75 ? "default" : "secondary"}>
-                            {p.conformity_score}%
-                          </Badge>
+            {projects.map(p => {
+              const isDefaultTitle = p.title.startsWith("Projeto - Edital");
+              const propName = p.project_registrations && p.project_registrations.length > 0 ? p.project_registrations[0].full_name : null;
+              
+              const displayTitle = !isDefaultTitle && p.title.trim() !== "" ? p.title : (propName || "Projeto Sem Título");
+              const displaySubtitle = !isDefaultTitle ? (propName ? `Prop: ${propName}` : "Proponente pendente") : p.title;
+
+              return (
+                <div key={p.id} className="relative group">
+                  <Link to={`/project/${p.id}`}>
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                      <CardHeader>
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex flex-col gap-1 pr-4">
+                            <CardTitle className="font-sans text-base leading-tight line-clamp-2">{displayTitle}</CardTitle>
+                            <div className="text-sm font-medium text-muted-foreground line-clamp-2">{displaySubtitle}</div>
+                          </div>
+                          <Badge variant={statusColors[p.status] as any} className="shrink-0">{statusLabels[p.status]}</Badge>
                         </div>
-                      </CardContent>
-                    )}
-                  </Card>
-                </Link>
-                <Button
-                  variant="ghost" size="icon"
-                  className="absolute top-3 right-3 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteId(p.id); }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+                        <CardDescription className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(p.updated_at).toLocaleDateString("pt-BR")}
+                        </CardDescription>
+                      </CardHeader>
+                      {p.conformity_score !== null && (
+                        <CardContent>
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm text-muted-foreground">Conformidade:</div>
+                            <Badge variant={p.conformity_score >= 75 ? "default" : "secondary"}>
+                              {p.conformity_score}%
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
+                  </Link>
+                  <Button
+                    variant="ghost" size="icon"
+                    className="absolute top-3 right-3 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteId(p.id); }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

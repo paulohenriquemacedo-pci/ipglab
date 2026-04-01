@@ -55,10 +55,9 @@ const ESCOLARIDADES = [
 ];
 
 const RENDAS = [
-  "Nenhuma renda", "Até 1 salário mínimo",
-  "De 1 a 3 salários mínimos", "De 3 a 5 salários mínimos",
-  "De 5 a 8 salários mínimos", "De 8 a 10 salários mínimos",
-  "Acima de 10 salários mínimos",
+  "Nenhuma renda.", "Até 1 salário mínimo", "De 1 a 3 salários mínimos",
+  "De 3 a 5 salários mínimos", "De 5 a 8 salários mínimos",
+  "De 8 a 10 salários mínimos", "Acima de 10 salários mínimos"
 ];
 
 const PROGRAMAS_SOCIAIS = ["Não", "Bolsa família", "Benefício de Prestação Continuada"];
@@ -71,7 +70,15 @@ const PUBLICO_ALVO = [
   "Mulheres", "LGBTQIAPN+", "Povos e comunidades tradicionais",
   "Negros e/ou negras", "Ciganos", "Indígenas",
   "Não é voltada especificamente para um perfil, é aberta para todos",
-  "Área periférica",
+  "Área periférica", "Outros"
+];
+
+const FONTES_RECURSO = [
+  "Apoio financeiro municipal", "Apoio financeiro estadual",
+  "Recursos de Lei de Incentivo Municipal", "Recursos de Lei de Incentivo Estadual",
+  "Recursos de Lei de Incentivo Federal", "Patrocínio privado direto",
+  "Patrocínio de instituição internacional", "Doações de Pessoas Físicas",
+  "Doações de Empresas", "Cobrança de ingressos", "Outros"
 ];
 
 const ACESS_ARQ = [
@@ -106,6 +113,7 @@ const CATEGORIAS_PREMIACAO = [
 const CATEGORIAS_FOMENTO = [
   { grupo: "Artes Visuais", items: ["Criação ou exposição artística", "Fotografia", "Arte Urbana", "Performances artísticas"] },
   { grupo: "Artesanato", items: ["Barro / argila / pedra sabão / trabalho manual"] },
+  { grupo: "Audiovisual", items: ["Etapas de produção de filmes", "Criação e produção de vídeo"] },
   { grupo: "Educação Patrimonial", items: ["Oficinas/ fomento a pesquisas exploratórias / mapeamentos"] },
   { grupo: "Gastronomia", items: ["Gastronomia tradicional / releituras de prato / receitas tradicionais"] },
   { grupo: "Leitura, escrita e oralidade", items: ["Vocalização", "Editoração", "Produção de audiolivros, podcasts literários e literatura sonora"] },
@@ -159,7 +167,6 @@ function getSubSteps(editalType: string) {
       "Autodeclarações",
       "Escolaridade e Renda",
       "Coletivo e Categoria",
-      "Público-Alvo e Acessibilidade",
       "Residência e Testemunha",
     ];
   }
@@ -211,6 +218,12 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
     testemunha_nome: "", testemunha_cpf: "", testemunha_rg: "",
     testemunha_telefone: "", testemunha_endereco: "",
     funcao_no_grupo: "",
+    possui_fontes_recurso: false,
+    fontes_recurso_tipos: [] as string[],
+    fontes_recurso_detalhe: "",
+    prev_venda_ingressos: false,
+    prev_venda_ingressos_detalhe: "",
+    estrategia_divulgacao: "",
   });
   const [membros, setMembros] = useState<Membro[]>([{ nome: "", cpf: "" }]);
   const [loading, setLoading] = useState(false);
@@ -304,6 +317,12 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
       testemunha_rg: snapshotForm.testemunha_rg || null,
       testemunha_telefone: snapshotForm.testemunha_telefone || null,
       testemunha_endereco: snapshotForm.testemunha_endereco || null,
+      possui_fontes_recurso: snapshotForm.possui_fontes_recurso,
+      fontes_recurso_tipos: snapshotForm.possui_fontes_recurso ? snapshotForm.fontes_recurso_tipos : null,
+      fontes_recurso_detalhe: snapshotForm.possui_fontes_recurso ? snapshotForm.fontes_recurso_detalhe : null,
+      prev_venda_ingressos: snapshotForm.prev_venda_ingressos,
+      prev_venda_ingressos_detalhe: snapshotForm.prev_venda_ingressos ? snapshotForm.prev_venda_ingressos_detalhe : null,
+      estrategia_divulgacao: snapshotForm.estrategia_divulgacao || null,
     };
 
     if (snapshotForm.person_type === "PJ") {
@@ -812,61 +831,6 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
     </div>
   );
 
-  const renderPublicoAcessibilidade = () => (
-    <div className="space-y-5">
-      <div className="space-y-2">
-        <Label>Perfil do público atingido *</Label>
-        <Textarea placeholder="Descreva o perfil do público..." value={form.perfil_publico} onChange={e => update("perfil_publico", e.target.value)} rows={3} />
-      </div>
-      <div className="space-y-2">
-        <Label>Ação cultural voltada para algum destes perfis? *</Label>
-        <div className="grid grid-cols-1 gap-1">
-          {PUBLICO_ALVO.map(p => (
-            <div key={p} className="flex items-center gap-2">
-              <Checkbox checked={form.acao_cultural_publico.includes(p)} onCheckedChange={() => toggleArray("acao_cultural_publico", p)} id={`pub-${p}`} />
-              <Label htmlFor={`pub-${p}`} className="font-normal text-sm cursor-pointer">{p}</Label>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label className="font-semibold">Acessibilidade arquitetônica:</Label>
-        {ACESS_ARQ.map(a => (
-          <div key={a} className="flex items-center gap-2">
-            <Checkbox checked={form.acessibilidade_arquitetonica.includes(a)} onCheckedChange={() => toggleArray("acessibilidade_arquitetonica", a)} id={`aarq-${a}`} />
-            <Label htmlFor={`aarq-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
-          </div>
-        ))}
-      </div>
-      <div className="space-y-2">
-        <Label className="font-semibold">Acessibilidade comunicacional:</Label>
-        {ACESS_COM.map(a => (
-          <div key={a} className="flex items-center gap-2">
-            <Checkbox checked={form.acessibilidade_comunicacional.includes(a)} onCheckedChange={() => toggleArray("acessibilidade_comunicacional", a)} id={`acom-${a}`} />
-            <Label htmlFor={`acom-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
-          </div>
-        ))}
-      </div>
-      <div className="space-y-2">
-        <Label className="font-semibold">Acessibilidade atitudinal:</Label>
-        {ACESS_ATI.map(a => (
-          <div key={a} className="flex items-center gap-2">
-            <Checkbox checked={form.acessibilidade_atitudinal.includes(a)} onCheckedChange={() => toggleArray("acessibilidade_atitudinal", a)} id={`aati-${a}`} />
-            <Label htmlFor={`aati-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
-          </div>
-        ))}
-      </div>
-      <div className="space-y-2">
-        <Label>Como essas medidas serão implementadas?</Label>
-        <Textarea placeholder="Descreva como as medidas de acessibilidade serão implementadas..." value={form.acessibilidade_descricao} onChange={e => update("acessibilidade_descricao", e.target.value)} rows={3} />
-      </div>
-      <div className="space-y-2">
-        <Label>Local onde o projeto será executado *</Label>
-        <Textarea placeholder="Informe os espaços culturais e ambientes..." value={form.locais_execucao} onChange={e => update("locais_execucao", e.target.value)} rows={3} />
-      </div>
-    </div>
-  );
-
   const renderResidenciaTestemunha = () => (
     <div className="space-y-5">
       <div className="space-y-2">
@@ -998,8 +962,7 @@ const ProjectRegistrationForm = ({ projectId, editalType, onComplete, onCancel }
         case 4: return renderAutodeclaracoes();
         case 5: return renderEscolaridadeRenda();
         case 6: return renderColetivoCategoria();
-        case 7: return renderPublicoAcessibilidade();
-        case 8: return renderResidenciaTestemunha();
+        case 7: return renderResidenciaTestemunha();
         default: return null;
       }
     }

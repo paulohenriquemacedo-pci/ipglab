@@ -14,11 +14,19 @@ import {
   STEP_PROMPTS_PREMIACAO,
   STEP_PROMPTS_DEFAULT,
   STEP_PROMPTS_FOMENTO,
+  getStepsForEdital,
 } from "@/components/NewProjectDialog";
 import ProjectRegistrationForm from "@/components/ProjectRegistrationForm";
 import TransitionDialog from "@/components/TransitionDialog";
 import BudgetSpreadsheet from "@/components/BudgetSpreadsheet";
+import ChronogramTable from "@/components/ChronogramTable";
+import TeamTable from "@/components/TeamTable";
+import StepPeriodPanel from "@/components/StepPeriodPanel";
+import StepFundingPanel from "@/components/StepFundingPanel";
+import StepPublicPanel from "@/components/StepPublicPanel";
+import StepAcessibilityPanel from "@/components/StepAcessibilityPanel";
 import AnnexManager from "@/components/AnnexManager";
+import { BUDGET_LIMITS } from "@/lib/constants";
 
 interface Section {
   id: string;
@@ -39,6 +47,7 @@ const ProjectWizard = () => {
   const navigate = useNavigate();
   const [project, setProject] = useState<any>(null);
   const [edital, setEdital] = useState<any>(null);
+  const [regData, setRegData] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
@@ -54,8 +63,9 @@ const ProjectWizard = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const currentSection = sections.find(s => s.step_number === currentStep);
-  const totalSteps = sections.length + 1;
-  const completedSteps = sections.filter(s => s.is_completed).length + (profileCompleted ? 1 : 0);
+  const wizardSteps = edital ? getStepsForEdital(edital.instrument_type) : [];
+  const totalSteps = wizardSteps.length + 1;
+  const completedSteps = wizardSteps.filter(ws => sections.find(s => s.step_number === ws.step_number)?.is_completed).length + (profileCompleted ? 1 : 0);
   const progress = (completedSteps / totalSteps) * 100;
 
   const getStepInfo = (stepNum: number) => {
@@ -86,10 +96,11 @@ const ProjectWizard = () => {
       // Check if project has registration data
       const { data: reg } = await supabase
         .from("project_registrations")
-        .select("id")
+        .select("*")
         .eq("project_id", id)
         .single();
       if (reg) {
+        setRegData(reg);
         setProfileCompleted(true);
         setCurrentStep(1);
       }
@@ -387,6 +398,19 @@ const ProjectWizard = () => {
   const stepInfo = getStepInfo(currentStep);
   const maxProjectStep = sections.length > 0 ? Math.max(...sections.map(s => s.step_number)) : 0;
 
+  const calculateMaxBudget = () => {
+    let limit = edital?.max_budget || 0;
+    if (regData?.categoria_inscricao) {
+      for (const grupo in BUDGET_LIMITS) {
+        if (BUDGET_LIMITS[grupo][regData.categoria_inscricao]) {
+          limit = BUDGET_LIMITS[grupo][regData.categoria_inscricao];
+          break;
+        }
+      }
+    }
+    return limit;
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Transition Dialog */}
@@ -440,13 +464,14 @@ const ProjectWizard = () => {
             </button>
 
             {/* Project steps */}
-            {sections.map(s => {
-              const isCurrent = currentStep === s.step_number;
-              const isCompleted = s.is_completed;
+            {getStepsForEdital(edital?.instrument_type).map(stepData => {
+              const isCurrent = currentStep === stepData.step_number;
+              const section = sections.find(s => s.step_number === stepData.step_number);
+              const isCompleted = section?.is_completed;
               return (
                 <button
-                  key={s.step_number}
-                  onClick={() => { setCurrentStep(s.step_number); setEditMode(false); }}
+                  key={stepData.step_number}
+                  onClick={() => { setCurrentStep(stepData.step_number); setEditMode(false); }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors text-left ${
                     isCurrent ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"
                   }`}
@@ -456,9 +481,9 @@ const ProjectWizard = () => {
                   ) : (
                     <span className={`h-5 w-5 rounded-full border-2 flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
                       isCurrent ? "border-primary text-primary" : "border-muted-foreground/30 text-muted-foreground"
-                    }`}>{s.step_number}</span>
+                    }`}>{stepData.step_number}</span>
                   )}
-                  <span className="truncate">{s.step_name}</span>
+                  <span className="truncate">{stepData.step_name}</span>
                 </button>
               );
             })}
@@ -477,7 +502,11 @@ const ProjectWizard = () => {
               {currentStep > 0 && currentSection?.is_completed && <Badge className="bg-success text-success-foreground text-xs">Concluída</Badge>}
             </div>
             <h2 className="text-xl font-sans font-semibold">{stepInfo.name}</h2>
-            <p className="text-sm text-muted-foreground mt-1">{stepInfo.prompt}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {"description" in stepInfo && (stepInfo as any).description 
+                ? (stepInfo as any).description 
+                : stepInfo.prompt}
+            </p>
           </div>
 
           {/* Step 0: Profile Form */}
@@ -491,11 +520,68 @@ const ProjectWizard = () => {
                 />
               )}
             </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 4 ? (
+            <div className="flex-1 overflow-y-auto p-6">
+              <StepPublicPanel projectId={id!} />
+              <div className="mt-6 flex justify-end">
+                <Button onClick={() => {
+                  setFinalResponse("Perfil de público definido via painel.");
+                  approveFinalResponse();
+                }}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Confirmar Público
+                </Button>
+              </div>
+            </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 5 ? (
+            <div className="flex-1 overflow-y-auto p-6">
+              <StepAcessibilityPanel projectId={id!} />
+              <div className="mt-6 flex justify-end">
+                <Button onClick={() => {
+                  setFinalResponse("Acessibilidade e locais definidos via painel.");
+                  approveFinalResponse();
+                }}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Confirmar Acessibilidade
+                </Button>
+              </div>
+            </div>
           ) : edital?.instrument_type === "fomento" && currentStep === 6 ? (
-            <div className="flex-1 overflow-y-auto">
-              <BudgetSpreadsheet projectId={id!} maxBudget={edital?.max_budget} editalType="fomento" />
+            <div className="flex-1 overflow-y-auto p-6">
+              <StepPeriodPanel initialValue={currentSection?.content || ""} onChange={val => setFinalResponse(val)} />
+              <div className="mt-6 flex justify-end">
+                <Button onClick={approveFinalResponse}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Aprovar Período
+                </Button>
+              </div>
             </div>
           ) : edital?.instrument_type === "fomento" && currentStep === 7 ? (
+            <div className="flex-1 overflow-y-auto p-6">
+              <TeamTable projectId={id!} />
+            </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 8 ? (
+            <div className="flex-1 overflow-y-auto p-6">
+              <ChronogramTable projectId={id!} />
+            </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 10 ? (
+            <div className="flex-1 overflow-y-auto p-6">
+              <StepFundingPanel projectId={id!} />
+              <div className="mt-6 flex justify-end">
+                <Button onClick={() => {
+                  setFinalResponse("Aprovado");
+                  approveFinalResponse();
+                }}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Concluir Etapa
+                </Button>
+              </div>
+            </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 11 ? (
+            <div className="flex-1 overflow-y-auto">
+              <BudgetSpreadsheet projectId={id!} maxBudget={calculateMaxBudget()} editalType="fomento" />
+            </div>
+          ) : edital?.instrument_type === "fomento" && currentStep === 12 ? (
             <div className="flex-1 overflow-y-auto">
               <AnnexManager projectId={id!} editalType="fomento" />
             </div>
@@ -549,7 +635,7 @@ const ProjectWizard = () => {
                           </div>
                         )}
                         <div className="whitespace-pre-wrap">{msg.content}</div>
-                        {msg.role === "assistant" && currentStep >= 1 && currentStep <= 4 && !isStreaming && i === chatMessages.length - 1 && (
+                        {msg.role === "assistant" && [1, 2, 3, 4, 5, 9].includes(currentStep) && !isStreaming && i === chatMessages.length - 1 && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -576,7 +662,7 @@ const ProjectWizard = () => {
               </div>
 
               {/* Resposta Final Field */}
-              {currentStep >= 1 && currentStep <= 4 && !currentSection?.is_completed && (
+              {[1, 2, 3, 4, 5, 9].includes(currentStep) && !currentSection?.is_completed && (
                 <div className="px-6 py-4 border-t border-border bg-accent/30">
                   <div className="flex items-start gap-2 mb-2">
                     <AlertCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -608,8 +694,8 @@ const ProjectWizard = () => {
                 </div>
               )}
 
-
-
+              {edital?.instrument_type === "fomento" && currentStep === 4 && <div className="px-6 pb-6"><StepPublicPanel projectId={id!} /></div>}
+              {edital?.instrument_type === "fomento" && currentStep === 5 && <div className="px-6 pb-6"><StepAcessibilityPanel projectId={id!} /></div>}
 
               <div className="border-t border-border p-4">
                 <div className="flex gap-3">

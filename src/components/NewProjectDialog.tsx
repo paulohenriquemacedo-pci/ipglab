@@ -40,15 +40,20 @@ const EDITAL_STEPS: Record<string, { step_number: number; step_name: string }[]>
     { step_number: 5, step_name: "Upload de documentos" },
     { step_number: 6, step_name: "Revisão e Declarações" },
   ],
-  // Fomento edital (Octo Marques) - based on criteria and plan de trabalho
+  // Fomento edital (Octo Marques) - espelhamento do Anexo II
   fomento: [
-    { step_number: 1, step_name: "Descrição do Projeto" },
-    { step_number: 2, step_name: "Atuação Cultural e Integração" },
-    { step_number: 3, step_name: "Impacto Social e Comunitário" },
-    { step_number: 4, step_name: "Patrimônio e Acessibilidade" },
-    { step_number: 5, step_name: "Cronograma e Equipe" },
-    { step_number: 6, step_name: "Planilha Orçamentária" },
-    { step_number: 7, step_name: "Anexos e Declarações" },
+    { step_number: 1, step_name: "Descrição do projeto" },
+    { step_number: 2, step_name: "Objetivos do projeto" },
+    { step_number: 3, step_name: "Metas" },
+    { step_number: 4, step_name: "Perfil do público" },
+    { step_number: 5, step_name: "Acessibilidade" },
+    { step_number: 6, step_name: "Período de execução" },
+    { step_number: 7, step_name: "Equipe" },
+    { step_number: 8, step_name: "Cronograma de Execução" },
+    { step_number: 9, step_name: "Estratégia de divulgação" },
+    { step_number: 10, step_name: "Fontes de recurso e venda" },
+    { step_number: 11, step_name: "Planilha Orçamentária" },
+    { step_number: 12, step_name: "Anexos e Declarações" },
   ],
   // Default steps for other editals
   default: [
@@ -107,34 +112,67 @@ export const STEP_PROMPTS_DEFAULT: Record<number, { name: string; prompt: string
   7: { name: "Contrapartidas", prompt: "Quais são as contrapartidas do projeto? Que benefícios ele oferece à sociedade?" },
 };
 
-export const STEP_PROMPTS_FOMENTO: Record<number, { name: string; prompt: string }> = {
+// System instructions vs User-facing descriptions
+export const STEP_PROMPTS_FOMENTO: Record<number, { name: string; description?: string; prompt: string }> = {
   1: {
     name: "Descrição do Projeto",
-    prompt: "Ajude o agente cultural a descrever seu projeto cultural. Pergunte: qual é a ideia central do projeto? Em qual categoria pretende inscrever (Artes Visuais/Cênicas/Urbanas, Artesanato, Audiovisual, Cultura Popular, Educação Patrimonial, Gastronomia, Leitura/Escrita/Oralidade, ou Música)? Qual o objetivo principal?",
+    description: "Na descrição, você deve apresentar informações gerais sobre o seu projeto. Algumas perguntas orientadoras: O que você realizará com o projeto? Por que ele é importante para a sociedade? Conte sobre o contexto de realização.",
+    prompt: "Ajude o agente cultural a descrever seu projeto cultural. Pergunte: o que você realizará com o projeto? Por que ele é importante para a sociedade? Conte sobre o contexto de realização.",
   },
   2: {
-    name: "Atuação Cultural e Integração",
-    prompt: "Ajude a descrever a atuação cultural do proponente e como o projeto se integra com outras esferas. Critério A (20pts): Reconhecida atuação na categoria cultural inscrita. Critério B (30pts): Integração e inovação com educação, saúde, meio ambiente, assistência social.",
+    name: "Objetivos do projeto",
+    description: "Neste campo, você deve propor objetivos para o seu projeto, ou seja, deve informar o que você pretende alcançar com a realização do projeto. É importante que você seja breve e proponha entre três e cinco objetivos.",
+    prompt: "Apoie na escrita dos objetivos do projeto. O que pretende alcançar? Seja breve, sugerindo um objetivo geral e entre três a cinco objetivos específicos fáceis de visualizar.",
   },
   3: {
-    name: "Impacto Social e Comunitário",
-    prompt: "Ajude a descrever o impacto social e comunitário do projeto. Critério C (15pts): Contribuição a populações em vulnerabilidade social. Critério D (15pts): Contribuição à comunidade.",
+    name: "Metas",
+    description: "Neste espaço, é necessário detalhar os objetivos em pequenas ações e/ou resultados que sejam quantificáveis. Por exemplo: Realização de 02 oficinas de artes circenses; Confecção de 80 figurinos; 120 pessoas idosas beneficiadas.",
+    prompt: "Detalhe os objetivos em metas: pequenas ações e resultados quantificáveis (ex: 2 oficinas, confecção de 80 figurinos, 120 pessoas idosas beneficiadas). Peça os números das atividades e crie o texto-base.",
   },
   4: {
-    name: "Patrimônio e Acessibilidade",
-    prompt: "Ajude a descrever como o projeto dialoga com o patrimônio cultural e promove acessibilidade. Critério E (10pts): Patrimônio cultural e educação patrimonial. Critério F (10pts): Acessibilidade.",
+    name: "Perfil do público",
+    description: "Preencha aqui informações sobre as pessoas que serão beneficiadas ou participarão do seu projeto. Perguntas orientadoras: Quem vai ser o público do seu projeto? Essas pessoas são crianças, adultas e/ou idosas? Elas fazem parte de alguma comunidade? Qual a escolaridade delas? Elas moram em qual local, bairro e/ou região? No caso de públicos digitais, qual o perfil das pessoas a que seu projeto se direciona?",
+    prompt: "Ajude a descrever quem será o público atingido. Crianças, adultos, idosos? Qual comunidade, escolaridade, bairro? Se digital, qual o perfil? Sugira perguntas para formatar essa visão do público.",
   },
   5: {
-    name: "Cronograma e Equipe",
-    prompt: "Ajude a elaborar o cronograma de execução (até 31/03/2027) e descrever a equipe do projeto. Detalhe etapas, prazos, metas e profissionais envolvidos.",
+    name: "Acessibilidade",
+    description: "Informe como essas medidas de acessibilidade serão implementadas ou disponibilizadas de acordo com o projeto proposto.",
+    prompt: "Apoie o agente a pensar em como as medidas de Acessibilidade (Arquitetônica, Comunicacional e Atitudinal) obrigatórias em leis de incentivo serão garantidas ou disponibilizadas neste projeto na prática.",
   },
   6: {
-    name: "Planilha Orçamentária",
-    prompt: "Preencha a planilha orçamentária com os itens de despesa. Os valores devem ser compatíveis com o limite da categoria e condizentes com as práticas de mercado.",
+    name: "Período de execução do projeto",
+    description: "Informe abaixo a previsão do período de execução do projeto.",
+    prompt: "Formulário rápido para indicação estruturada da Data de Início e da Data Final do projeto (prazo limite março/2027).",
   },
   7: {
+    name: "Equipe",
+    description: "Informe quais são os profissionais que atuarão no projeto, preenchendo o quadro abaixo.",
+    prompt: "Formulário estruturado (tabela) com Nome, Identificação, Função e Currículo de todos os profissionais que atuarão no projeto.",
+  },
+  8: {
+    name: "Cronograma de Execução",
+    description: "Descreva os passos a serem seguidos para execução do projeto.",
+    prompt: "Grade contendo os passos lógicos, Atividades/Ações e Datas de início/fim divididas entre Pré-Produção, Produção e Pós-Produção.",
+  },
+  9: {
+    name: "Estratégia de divulgação",
+    description: "Apresente os meios que serão utilizados para divulgar o projeto. Ex.: impulsionamento em redes sociais.",
+    prompt: "Onde o projeto será divulgado? Impulsionamento nas redes sociais, panfletos, rádio? Ajude a descrever explicitamente os meios na resposta final.",
+  },
+  10: {
+    name: "Projeto possui outras fontes de recursos?",
+    description: "Informe se o projeto prevê apoio financeiro, tais como cobrança de ingressos, patrocínio e/ou outras fontes de financiamento. Caso positivo, informe a previsão de valores e onde serão empregados no projeto.",
+    prompt: "Painel de marcações e valores caso haja patrocínios privados/públicos complementares ou política de cobrança de ingressos com seus respectivos valores.",
+  },
+  11: {
+    name: "Planilha Orçamentária",
+    description: "Preencha as informações detalhadas de custos para o seu projeto com justificativas de preço.",
+    prompt: "Preencha a planilha orçamentária com os itens de despesa, acompanhados de suas devidas Justificativas e Referências de preço mercadológicas.",
+  },
+  12: {
     name: "Anexos e Declarações",
-    prompt: "Gere e baixe todos os documentos obrigatórios para inscrição: Formulário (Anexo II), declarações étnico-raciais, PcD, residência e representação de coletivo.",
+    description: "Gere e baixe a cópia final e assine os documentos de acordo com a exigência do edital.",
+    prompt: "Gere e assine o Anexo II final consolidado da proposta, e faça upload do restante da documentação exigida.",
   },
 };
 
