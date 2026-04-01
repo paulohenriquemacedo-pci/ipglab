@@ -212,7 +212,8 @@ const Dashboard = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map(p => {
               const isDefaultTitle = p.title.startsWith("Projeto - Edital");
-              const propName = p.project_registrations && p.project_registrations.length > 0 ? p.project_registrations[0].full_name : null;
+              const regs = p.project_registrations;
+              const propName = regs ? (Array.isArray(regs) ? regs[0]?.full_name : regs.full_name) : null;
               
               const displayTitle = !isDefaultTitle && p.title.trim() !== "" ? p.title : (propName || "Projeto Sem Título");
               const displaySubtitle = !isDefaultTitle ? (propName ? `Prop: ${propName}` : "Proponente pendente") : p.title;
