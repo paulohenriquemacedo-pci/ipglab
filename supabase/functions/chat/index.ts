@@ -289,8 +289,8 @@ serve(async (req) => {
 
   try {
     const { messages, step_name, step_number, edital_type, edital_briefing, auto_start } = await req.json();
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     let stepPrompts: Record<number, string>;
     if (edital_type === "premiacao") stepPrompts = STEP_PROMPTS_PREMIACAO;
