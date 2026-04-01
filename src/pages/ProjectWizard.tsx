@@ -98,7 +98,7 @@ const ProjectWizard = () => {
         .from("project_registrations")
         .select("*")
         .eq("project_id", id)
-        .single();
+        .maybeSingle();
       if (reg) {
         setRegData(reg);
         setProfileCompleted(true);
@@ -514,8 +514,10 @@ const ProjectWizard = () => {
             <div className="flex-1 overflow-y-auto p-6">
               {id && (
                 <ProjectRegistrationForm
+                  key={`${id}-${edital?.id ?? "pending"}`}
                   projectId={id}
                   editalType={edital?.instrument_type || "premiacao"}
+                  editalName={edital?.name}
                   onComplete={handleProfileComplete}
                 />
               )}

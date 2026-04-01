@@ -49,6 +49,7 @@ const Dashboard = () => {
   // Registration flow state
   const [regProjectId, setRegProjectId] = useState<string | null>(null);
   const [regEditalType, setRegEditalType] = useState<string>("premiacao");
+  const [regEditalName, setRegEditalName] = useState<string>("");
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -122,6 +123,7 @@ const Dashboard = () => {
       // Open registration form instead of navigating directly
       setDialogOpen(false);
       setRegEditalType(edital?.instrument_type || "premiacao");
+      setRegEditalName(editalName);
       setRegProjectId(data.id);
     } catch (err: any) {
       console.error("Unexpected error in createProject:", err);
@@ -134,6 +136,7 @@ const Dashboard = () => {
   const handleRegistrationComplete = () => {
     const projectId = regProjectId;
     setRegProjectId(null);
+    setRegEditalName("");
     if (projectId) navigate(`/project/${projectId}`);
   };
 
@@ -269,7 +272,12 @@ const Dashboard = () => {
       />
 
       {/* Registration Form Dialog */}
-      <Dialog open={!!regProjectId} onOpenChange={(open) => { if (!open) setRegProjectId(null); }}>
+      <Dialog open={!!regProjectId} onOpenChange={(open) => {
+        if (!open) {
+          setRegProjectId(null);
+          setRegEditalName("");
+        }
+      }}>
         <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl">Dados Cadastrais do Proponente</DialogTitle>
@@ -279,10 +287,15 @@ const Dashboard = () => {
           </DialogHeader>
           {regProjectId && (
             <ProjectRegistrationForm
+              key={regProjectId}
               projectId={regProjectId}
               editalType={regEditalType}
+              editalName={regEditalName}
               onComplete={handleRegistrationComplete}
-              onCancel={() => setRegProjectId(null)}
+              onCancel={() => {
+                setRegProjectId(null);
+                setRegEditalName("");
+              }}
             />
           )}
         </DialogContent>
