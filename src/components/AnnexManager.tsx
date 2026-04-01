@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, CheckCircle, Loader2 } from "lucide-react";
+import { Download, FileText, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -16,13 +16,15 @@ import {
   generateAnexoVI_OctoMarques, generateAnexoVII_OctoMarques,
   generateAnexoVIII_OctoMarques, generateAnexoIX_OctoMarques,
 } from "@/lib/generateAnexosOctoMarques";
+import type { ProjectDataForAnexo } from "@/lib/generateAnexosOctoMarques";
 
 interface AnnexDef {
   id: string;
   label: string;
   description: string;
-  generator: (profile: any) => Promise<void>;
+  generator: (profile: any, projectData?: ProjectDataForAnexo) => Promise<void>;
   required: boolean;
+  needsProjectData?: boolean;
 }
 
 const ANNEXES_PREMIACAO: AnnexDef[] = [
@@ -34,7 +36,7 @@ const ANNEXES_PREMIACAO: AnnexDef[] = [
 ];
 
 const ANNEXES_FOMENTO_PF: AnnexDef[] = [
-  { id: "anexo-iia", label: "Anexo II-A", description: "Inscrição PF/MEI/Coletivo", generator: generateAnexoIIA, required: true },
+  { id: "anexo-iia", label: "Anexo II-A", description: "Inscrição PF/MEI/Coletivo (com dados do projeto)", generator: generateAnexoIIA, required: true, needsProjectData: true },
   { id: "anexo-vi-om", label: "Anexo VI", description: "Declaração Coletivo sem CNPJ", generator: generateAnexoVI_OctoMarques, required: false },
   { id: "anexo-vii-om", label: "Anexo VII", description: "Declaração Étnico-Racial", generator: generateAnexoVII_OctoMarques, required: false },
   { id: "anexo-viii-om", label: "Anexo VIII", description: "Declaração PcD", generator: generateAnexoVIII_OctoMarques, required: false },
@@ -42,7 +44,7 @@ const ANNEXES_FOMENTO_PF: AnnexDef[] = [
 ];
 
 const ANNEXES_FOMENTO_PJ: AnnexDef[] = [
-  { id: "anexo-iib", label: "Anexo II-B", description: "Inscrição Pessoa Jurídica", generator: generateAnexoIIB, required: true },
+  { id: "anexo-iib", label: "Anexo II-B", description: "Inscrição Pessoa Jurídica (com dados do projeto)", generator: generateAnexoIIB, required: true, needsProjectData: true },
   { id: "anexo-vi-om", label: "Anexo VI", description: "Declaração Coletivo sem CNPJ", generator: generateAnexoVI_OctoMarques, required: false },
   { id: "anexo-vii-om", label: "Anexo VII", description: "Declaração Étnico-Racial", generator: generateAnexoVII_OctoMarques, required: false },
   { id: "anexo-viii-om", label: "Anexo VIII", description: "Declaração PcD", generator: generateAnexoVIII_OctoMarques, required: false },
@@ -83,14 +85,52 @@ const AnnexManager = ({ projectId, editalType }: AnnexManagerProps) => {
     return profile as any;
   };
 
+  // Fetch project data (sections + budget) for Anexo II integration
+  const getProjectData = async (): Promise<ProjectDataForAnexo> => {
+    const { data: project } = await supabase
+      .from("projects")
+      .select("title")
+      .eq("id", projectId)
+      .single();
+
+    const { data: sections } = await supabase
+      .from("project_sections")
+      .select("step_number, step_name, content")
+      .eq("project_id", projectId)
+      .order("step_number");
+
+    // Budget is stored in step 6 content as JSON
+    let budgetItems: any[] = [];
+    const budgetSection = sections?.find(s => s.step_number === 6);
+    if (budgetSection?.content) {
+      try {
+        const parsed = JSON.parse(budgetSection.content);
+        if (Array.isArray(parsed)) budgetItems = parsed;
+      } catch { /* ignore */ }
+    }
+
+    return {
+      title: project?.title || undefined,
+      sections: sections?.filter(s => s.step_number < 6 && s.content) || [],
+      budgetItems,
+    };
+  };
+
   const handleDownload = async (annex: AnnexDef) => {
     setDownloading(annex.id);
     try {
       const data = await getRegistrationData();
       if (!data) { toast.error("Dados cadastrais não encontrados"); return; }
-      await annex.generator(data);
+
+      if (annex.needsProjectData) {
+        const projectData = await getProjectData();
+        await annex.generator(data, projectData);
+      } else {
+        await annex.generator(data);
+      }
       toast.success(`${annex.label} gerado com sucesso!`);
-    } catch {
+    } catch (err) {
+      console.error("Annex generation error:", err);
       toast.error(`Erro ao gerar ${annex.label}`);
     } finally {
       setDownloading(null);
@@ -101,11 +141,19 @@ const AnnexManager = ({ projectId, editalType }: AnnexManagerProps) => {
     setDownloadingAll(true);
     const data = await getRegistrationData();
     if (!data) { toast.error("Dados cadastrais não encontrados"); setDownloadingAll(false); return; }
-    
+
+    const projectData = await getProjectData();
     const annexes = getAnnexes();
     let success = 0;
     for (const annex of annexes) {
-      try { await annex.generator(data); success++; } catch { toast.error(`Erro: ${annex.label}`); }
+      try {
+        if (annex.needsProjectData) {
+          await annex.generator(data, projectData);
+        } else {
+          await annex.generator(data);
+        }
+        success++;
+      } catch { toast.error(`Erro: ${annex.label}`); }
     }
     if (success > 0) toast.success(`${success} anexos gerados com sucesso!`);
     setDownloadingAll(false);
@@ -119,7 +167,7 @@ const AnnexManager = ({ projectId, editalType }: AnnexManagerProps) => {
         <div>
           <h3 className="text-lg font-semibold">Anexos e Declarações</h3>
           <p className="text-sm text-muted-foreground">
-            Gere e baixe os documentos obrigatórios preenchidos com seus dados cadastrais.
+            Gere e baixe os documentos obrigatórios preenchidos com seus dados cadastrais e do projeto.
           </p>
         </div>
         <Button onClick={handleDownloadAll} disabled={downloadingAll}>
