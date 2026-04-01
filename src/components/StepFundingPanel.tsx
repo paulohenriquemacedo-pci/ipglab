@@ -32,11 +32,12 @@ export default function StepFundingPanel({ projectId }: { projectId: string }) {
         .single();
       
       if (data) {
-        setPossuiFontes(data.possui_fontes_recurso || false);
-        setFontes((data.fontes_recurso_tipos as string[]) || []);
-        setFontesDetalhe(data.fontes_recurso_detalhe || "");
-        setPrevVenda(data.prev_venda_ingressos || false);
-        setVendaDetalhe(data.prev_venda_ingressos_detalhe || "");
+        const d = data as any;
+        setPossuiFontes(d.possui_fontes_recurso || false);
+        setFontes((d.fontes_recurso_tipos as string[]) || []);
+        setFontesDetalhe(d.fontes_recurso_detalhe || "");
+        setPrevVenda(d.prev_venda_ingressos || false);
+        setVendaDetalhe(d.prev_venda_ingressos_detalhe || "");
       }
       setLoading(false);
     };

@@ -203,7 +203,7 @@ const ProfileFormSteps = ({ onComplete, embedded = false }: ProfileFormStepsProp
           escolaridade: data.escolaridade || "",
           renda_mensal: data.renda_mensal || "",
           programa_social: data.programa_social || "",
-          programa_social_outro: data.programa_social_outro || "",
+          
           bio: data.bio || "",
           representa_coletivo: data.representa_coletivo || false,
           nome_grupo: data.nome_grupo || "",

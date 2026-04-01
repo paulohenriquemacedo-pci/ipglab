@@ -27,7 +27,7 @@ interface Project {
   created_at: string;
   updated_at: string;
   edital_id: string | null;
-  project_registrations?: { full_name: string }[];
+  project_registrations?: { full_name: string } | { full_name: string }[];
 }
 
 const statusLabels: Record<string, string> = {
