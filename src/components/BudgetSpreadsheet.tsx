@@ -24,6 +24,7 @@ interface BudgetSpreadsheetProps {
   projectId: string;
   maxBudget?: number | null;
   editalType?: string;
+  stepNumber?: number;
 }
 
 const CATEGORIAS_ORCAMENTO = [
