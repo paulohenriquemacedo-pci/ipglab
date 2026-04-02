@@ -62,8 +62,8 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
         .from("project_sections")
         .select("content")
         .eq("project_id", projectId)
-        .eq("step_number", 6)
-        .single();
+        .eq("step_number", stepNumber)
+        .maybeSingle();
       if (data?.content) {
         try {
           const parsed = JSON.parse(data.content);
