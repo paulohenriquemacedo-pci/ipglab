@@ -1,0 +1,2 @@
+ALTER TABLE public.project_sections DROP CONSTRAINT project_sections_step_number_check;
+ALTER TABLE public.project_sections ADD CONSTRAINT project_sections_step_number_check CHECK (step_number >= 0 AND step_number <= 20);

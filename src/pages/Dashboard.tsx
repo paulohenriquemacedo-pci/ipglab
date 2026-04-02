@@ -27,7 +27,7 @@ interface Project {
   created_at: string;
   updated_at: string;
   edital_id: string | null;
-  project_registrations?: { full_name: string }[];
+  project_registrations?: { full_name: string } | { full_name: string }[];
 }
 
 const statusLabels: Record<string, string> = {
@@ -49,6 +49,7 @@ const Dashboard = () => {
   // Registration flow state
   const [regProjectId, setRegProjectId] = useState<string | null>(null);
   const [regEditalType, setRegEditalType] = useState<string>("premiacao");
+  const [regEditalName, setRegEditalName] = useState<string>("");
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -122,6 +123,7 @@ const Dashboard = () => {
       // Open registration form instead of navigating directly
       setDialogOpen(false);
       setRegEditalType(edital?.instrument_type || "premiacao");
+      setRegEditalName(editalName);
       setRegProjectId(data.id);
     } catch (err: any) {
       console.error("Unexpected error in createProject:", err);
@@ -134,6 +136,7 @@ const Dashboard = () => {
   const handleRegistrationComplete = () => {
     const projectId = regProjectId;
     setRegProjectId(null);
+    setRegEditalName("");
     if (projectId) navigate(`/project/${projectId}`);
   };
 
@@ -212,7 +215,8 @@ const Dashboard = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map(p => {
               const isDefaultTitle = p.title.startsWith("Projeto - Edital");
-              const propName = p.project_registrations && p.project_registrations.length > 0 ? p.project_registrations[0].full_name : null;
+              const regs = p.project_registrations;
+              const propName = regs ? (Array.isArray(regs) ? regs[0]?.full_name : regs.full_name) : null;
               
               const displayTitle = !isDefaultTitle && p.title.trim() !== "" ? p.title : (propName || "Projeto Sem Título");
               const displaySubtitle = !isDefaultTitle ? (propName ? `Prop: ${propName}` : "Proponente pendente") : p.title;
@@ -268,7 +272,12 @@ const Dashboard = () => {
       />
 
       {/* Registration Form Dialog */}
-      <Dialog open={!!regProjectId} onOpenChange={(open) => { if (!open) setRegProjectId(null); }}>
+      <Dialog open={!!regProjectId} onOpenChange={(open) => {
+        if (!open) {
+          setRegProjectId(null);
+          setRegEditalName("");
+        }
+      }}>
         <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl">Dados Cadastrais do Proponente</DialogTitle>
@@ -278,10 +287,15 @@ const Dashboard = () => {
           </DialogHeader>
           {regProjectId && (
             <ProjectRegistrationForm
+              key={regProjectId}
               projectId={regProjectId}
               editalType={regEditalType}
+              editalName={regEditalName}
               onComplete={handleRegistrationComplete}
-              onCancel={() => setRegProjectId(null)}
+              onCancel={() => {
+                setRegProjectId(null);
+                setRegEditalName("");
+              }}
             />
           )}
         </DialogContent>

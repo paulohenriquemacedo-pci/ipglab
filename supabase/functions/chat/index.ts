@@ -105,6 +105,7 @@ Pergunte se o usuário gostaria de revisar alguma seção específica.`,
 };
 
 const STEP_PROMPTS_FOMENTO: Record<number, string> = {
+<<<<<<< HEAD
   1: `Você está ajudando o proponente a redigir a DESCRIÇÃO DO PROJETO para o Edital "Octo Marques 110 Anos" (Fomento PNAB - Município de Goiás/GO).
 
 O formulário oficial orienta: "Na descrição, você deve apresentar informações gerais sobre o seu projeto."
@@ -276,6 +277,185 @@ Verifique também os **bônus de pontuação** que podem ser aplicados:
 - Projeto em área periférica: +1 ponto
 
 Confirme se os bônus aplicáveis foram marcados nos dados cadastrais. Em caso de dúvida, ajude o proponente a identificar quais se aplicam ao seu caso.`,
+=======
+  1: `Você está ajudando o agente cultural a elaborar a DESCRIÇÃO DO PROJETO para o Edital "Octo Marques 110 Anos" (Fomento PNAB - Município de Goiás/GO).
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Na descrição, você deve apresentar informações gerais sobre o seu projeto. Algumas perguntas orientadoras: O que você realizará com o projeto? Por que ele é importante para a sociedade? Conte sobre o contexto de realização."
+
+IMPORTANTE: Faça perguntas ao usuário para coletar informações. Não invente dados.
+
+Comece perguntando:
+"Olá! Vamos construir a descrição do seu projeto. Me conte: o que você pretende realizar com este projeto? Descreva a ideia principal."
+
+Após a resposta, explore:
+- Por que esse projeto é importante para a sociedade e para a cultura local?
+- Qual é o contexto de realização? (onde, quando, como surgiu a ideia)
+- Em qual das 8 categorias pretende inscrever: I-Artes Visuais/Urbanas/Cênicas, II-Artesanato, III-Audiovisual, IV-Cultura Popular, V-Educação Patrimonial, VI-Gastronomia, VII-Leitura/Escrita/Oralidade, VIII-Música
+
+Quando tiver informações suficientes, gere um RASCUNHO de texto estruturado e peça aprovação do usuário.
+Critério A (20pts): Reconhecida atuação na categoria cultural inscrita.`,
+
+  2: `Você está ajudando a elaborar os OBJETIVOS DO PROJETO para o Edital "Octo Marques 110 Anos".
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Neste campo, você deve propor objetivos para o seu projeto, ou seja, deve informar o que você pretende alcançar com a realização do projeto. É importante que você seja breve e proponha entre três e cinco objetivos."
+
+IMPORTANTE: Faça perguntas ao usuário para coletar informações.
+
+Comece perguntando:
+"Agora vamos definir os objetivos do seu projeto. Me conte: qual é o principal resultado que você espera alcançar com este projeto?"
+
+Após a resposta, explore:
+- Quais mudanças ou impactos o projeto pretende gerar?
+- Existem objetivos de formação, difusão, preservação cultural?
+- Há metas de alcance de público ou território?
+
+Gere um RASCUNHO com 1 objetivo geral e 3 a 5 objetivos específicos claros e mensuráveis.`,
+
+  3: `Você está ajudando a elaborar as METAS do projeto para o Edital "Octo Marques 110 Anos".
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Neste espaço, é necessário detalhar os objetivos em pequenas ações e/ou resultados que sejam quantificáveis. Por exemplo: Realização de 02 oficinas de artes circenses; Confecção de 80 figurinos; 120 pessoas idosas beneficiadas."
+
+IMPORTANTE: Faça perguntas ao usuário para coletar informações.
+
+Comece perguntando:
+"Agora vamos detalhar as metas do projeto. Quantas atividades (oficinas, apresentações, etc.) você pretende realizar? Quantas pessoas serão beneficiadas?"
+
+Após a resposta, explore:
+- Quantidade exata de cada atividade (oficinas, shows, exposições, etc.)
+- Quantidade de produtos a serem criados (figurinos, vídeos, livros, etc.)
+- Número estimado de pessoas beneficiadas direta e indiretamente
+
+Gere um RASCUNHO com metas quantificáveis e peça aprovação.`,
+
+  4: `Você está ajudando a descrever o PERFIL DO PÚBLICO a ser atingido pelo projeto para o Edital "Octo Marques 110 Anos".
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Preencha aqui informações sobre as pessoas que serão beneficiadas ou participarão do seu projeto. Perguntas orientadoras: Quem vai ser o público do seu projeto? Essas pessoas são crianças, adultas e/ou idosas? Elas fazem parte de alguma comunidade? Qual a escolaridade delas? Elas moram em qual local, bairro e/ou região? No caso de públicos digitais, qual o perfil das pessoas a que seu projeto se direciona?"
+
+IMPORTANTE: Faça perguntas para coletar as informações.
+
+Comece perguntando:
+"Quem será o público do seu projeto? São crianças, jovens, adultos, idosos ou todos?"
+
+Após a resposta, explore:
+- Fazem parte de alguma comunidade específica?
+- Qual a faixa de escolaridade predominante?
+- Em qual bairro ou região moram?
+- Se for público digital, qual o perfil?
+- O projeto atende prioritariamente algum perfil vulnerável? (pessoas com deficiência, em situação de pobreza, mulheres, LGBTQIAPN+, povos tradicionais, negros, indígenas, área periférica)
+
+Critério C (15pts): Contribuição a populações em vulnerabilidade social.
+Critério D (15pts): Contribuição à comunidade.`,
+
+  5: `Você está ajudando a elaborar a seção de ACESSIBILIDADE para o Edital "Octo Marques 110 Anos".
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Marque quais medidas de acessibilidade serão implementadas ou estarão disponíveis para a participação de Pessoas com deficiência – PcDs, tais como, intérprete de libras, audiodescrição, entre outras medidas de acessibilidade a pessoas com deficiência, idosos e mobilidade reduzida, conforme Instrução Normativa MINC nº 10/2023."
+
+"Informe como essas medidas de acessibilidade serão implementadas ou disponibilizadas de acordo com o projeto proposto."
+
+IMPORTANTE: Faça perguntas para coletar as informações.
+
+Comece perguntando:
+"Vamos falar sobre acessibilidade. Seu projeto será realizado em espaço físico? Se sim, quais medidas de acessibilidade arquitetônica o local possui ou serão providenciadas?"
+
+Após a resposta, explore as 3 dimensões:
+- Acessibilidade Arquitetônica: rotas acessíveis, piso tátil, rampas, elevadores, corrimãos, banheiros adaptados, vagas PcD, assentos para obesos, iluminação
+- Acessibilidade Comunicacional: Libras, Braille, sinalização tátil, audiodescrição, legendas, linguagem simples, textos para leitores de tela
+- Acessibilidade Atitudinal: capacitação de equipes, contratação de profissionais PcD/especializados, formação e sensibilização, eliminação de atitudes capacitistas
+
+Peça que descreva como essas medidas serão implementadas na prática.
+Critério F (10pts): Acessibilidade.`,
+
+  6: `Você está ajudando com o PERÍODO DE EXECUÇÃO DO PROJETO para o Edital "Octo Marques 110 Anos".
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Previsão do período de execução do projeto - Data de início / Data final"
+
+Este é um campo rápido de preenchimento direto no formulário.
+O projeto deve ser executado até 31/03/2027.
+Ajude o usuário a definir datas realistas de início e fim.`,
+
+  7: `Você está ajudando a elaborar a seção de EQUIPE para o Edital "Octo Marques 110 Anos".
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Informe quais são os profissionais que atuarão no projeto, conforme quadro a seguir: Nome do profissional/empresa | Função no projeto | CPF/CNPJ | Mini currículo"
+
+IMPORTANTE: Faça perguntas para coletar as informações.
+
+Comece perguntando:
+"Quais profissionais farão parte da equipe do seu projeto? Me diga o nome e a função de cada um."
+
+Após a resposta, para cada profissional colete:
+- Nome completo
+- Função no projeto
+- CPF ou CNPJ
+- Breve descrição da trajetória/qualificação
+
+Valorize a contratação de profissionais da comunidade local.
+Critério D (15pts): Contribuição à comunidade (contratação de profissionais locais).`,
+
+  8: `Você está ajudando a elaborar o CRONOGRAMA DE EXECUÇÃO para o Edital "Octo Marques 110 Anos".
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Descreva os passos a serem seguidos para execução do projeto." 
+Formato: Atividade | Etapa | Descrição | Início | Fim
+
+IMPORTANTE: Faça perguntas para coletar as informações.
+
+Comece perguntando:
+"Vamos montar o cronograma. Quais são as principais atividades do projeto e em que ordem elas acontecerão?"
+
+Organize as atividades em etapas lógicas:
+- Pré-produção (planejamento, contratações, divulgação inicial)
+- Produção (execução das atividades culturais)
+- Pós-produção (relatórios, prestação de contas, registros)
+
+Para cada atividade, defina datas de início e fim realistas dentro do prazo até 31/03/2027.`,
+
+  9: `Você está ajudando a elaborar a ESTRATÉGIA DE DIVULGAÇÃO para o Edital "Octo Marques 110 Anos".
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Apresente os meios que serão utilizados para divulgar o projeto. Ex.: impulsionamento em redes sociais."
+
+IMPORTANTE: Faça perguntas para coletar as informações.
+
+Comece perguntando:
+"Como você pretende divulgar seu projeto? Quais canais de comunicação serão utilizados?"
+
+Após a resposta, explore:
+- Redes sociais (Instagram, Facebook, YouTube, TikTok)
+- Impulsionamento pago?
+- Materiais impressos (cartazes, panfletos, banners)
+- Rádio, TV ou jornais locais
+- Parcerias com escolas, associações, espaços culturais
+- E-mail marketing ou WhatsApp
+
+Gere um RASCUNHO descritivo e peça aprovação.`,
+
+  10: `Você está ajudando a preencher FONTES DE RECURSO E VENDA DE PRODUTOS/INGRESSOS para o Edital "Octo Marques 110 Anos".
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Informe se o projeto prevê apoio financeiro, tais como cobrança de ingressos, patrocínio e/ou outras fontes de financiamento. Caso positivo, informe a previsão de valores e onde serão empregados no projeto."
+
+"O projeto prevê a venda de produtos/ingressos? Informe a quantidade dos produtos a serem vendidos, o valor unitário por produto e o valor total a ser arrecadado. Detalhe onde os recursos arrecadados serão aplicados no projeto."
+
+Este é um painel de marcações preenchido diretamente no formulário. Ajude o usuário a entender as opções e decidir se há fontes complementares.`,
+
+  11: `Esta etapa é a PLANILHA ORÇAMENTÁRIA - preenchida diretamente no formulário interativo.
+
+INSTRUÇÃO OFICIAL DO FORMULÁRIO: "Preencha a tabela informando todas as despesas indicando as metas/etapas às quais elas estão relacionadas. Pode haver a indicação do parâmetro de preço (Exemplo: preço estabelecido no SALICNET, 3 orçamentos, etc) utilizado com a referência específica do item de despesa para auxiliar a análise técnica da comissão de seleção."
+
+Campos: Descrição do item | Justificativa | Unidade de medida | Valor unitário | Quantidade | Valor total | Referência de preço (opcional)
+
+O usuário pode pedir ajuda para definir itens e valores. Ajude a estimar custos condizentes com as práticas de mercado e a justificar cada item.`,
+
+  12: `Esta etapa é de ANEXOS E DECLARAÇÕES - gerados automaticamente com os dados cadastrais.
+
+Documentos gerados: Anexo II (Formulário de Inscrição consolidado), declarações complementares (Anexo VI a IX).
+
+Ajude o usuário a verificar se todos os documentos obrigatórios foram gerados e se os bônus de pontuação aplicáveis foram considerados:
+- Mulher: +0,5 ponto
+- LGBTQIAPN+: +0,5 ponto
+- Quilombola: +0,5 ponto
+- Comunidade rural/distrito: +1 ponto
+- Área periférica: +1 ponto
+
+Caso queira, o usuário pode anexar documentos complementares que auxiliem na análise do projeto e da equipe técnica.`,
+>>>>>>> 7b94c26e3eb8ef0b59a16da793b5299ec63b290b
 };
 
 serve(async (req) => {
@@ -283,8 +463,8 @@ serve(async (req) => {
 
   try {
     const { messages, step_name, step_number, edital_type, edital_briefing, auto_start } = await req.json();
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     let stepPrompts: Record<number, string>;
     if (edital_type === "premiacao") stepPrompts = STEP_PROMPTS_PREMIACAO;
@@ -319,14 +499,14 @@ DIRETRIZES:
 - Formate o texto de forma clara com parágrafos
 - Quando aplicável, mencione os critérios de seleção e como maximizar a pontuação`;
 
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GEMINI_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gemini-2.5-pro",
+        model: "google/gemini-3.1-pro-preview",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,

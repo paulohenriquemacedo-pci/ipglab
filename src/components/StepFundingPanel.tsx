@@ -27,16 +27,17 @@ export default function StepFundingPanel({ projectId }: { projectId: string }) {
     const fetch = async () => {
       const { data } = await supabase
         .from("project_registrations")
-        .select("possui_fontes_recurso, fontes_recurso_tipos, fontes_recurso_detalhe, prev_venda_ingressos, prev_venda_ingressos_detalhe")
+        .select("*")
         .eq("project_id", projectId)
         .single();
       
       if (data) {
-        setPossuiFontes(data.possui_fontes_recurso || false);
-        setFontes((data.fontes_recurso_tipos as string[]) || []);
-        setFontesDetalhe(data.fontes_recurso_detalhe || "");
-        setPrevVenda(data.prev_venda_ingressos || false);
-        setVendaDetalhe(data.prev_venda_ingressos_detalhe || "");
+        const d = data as any;
+        setPossuiFontes(d.possui_fontes_recurso || false);
+        setFontes((d.fontes_recurso_tipos as string[]) || []);
+        setFontesDetalhe(d.fontes_recurso_detalhe || "");
+        setPrevVenda(d.prev_venda_ingressos || false);
+        setVendaDetalhe(d.prev_venda_ingressos_detalhe || "");
       }
       setLoading(false);
     };
