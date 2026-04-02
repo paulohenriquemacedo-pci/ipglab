@@ -16,14 +16,20 @@ export default function StepAcessibilityPanel({ projectId }: { projectId: string
   const [ati, setAti] = useState<string[]>([]);
   const [locais, setLocais] = useState("");
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    const fetch = async () => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setUserId(user.id);
+
       const { data } = await supabase
         .from("project_registrations")
         .select("acessibilidade_arquitetonica, acessibilidade_comunicacional, acessibilidade_atitudinal, locais_execucao")
         .eq("project_id", projectId)
-        .single();
+        .maybeSingle();
       
       if (data) {
         setArq((data.acessibilidade_arquitetonica as string[]) || []);
@@ -33,10 +39,11 @@ export default function StepAcessibilityPanel({ projectId }: { projectId: string
       }
       setLoading(false);
     };
-    fetch();
+    init();
   }, [projectId]);
 
   const toggle = async (type: "arq"|"com"|"ati", item: string) => {
+    if (!userId) return;
     const isArq = type === "arq";
     const isCom = type === "com";
     
@@ -47,7 +54,7 @@ export default function StepAcessibilityPanel({ projectId }: { projectId: string
     if (isCom) setCom(newArr);
     if (!isArq && !isCom) setAti(newArr);
 
-    const payload: any = { project_id: projectId };
+    const payload: any = { project_id: projectId, user_id: userId };
     if (isArq) payload.acessibilidade_arquitetonica = newArr.length > 0 ? newArr : null;
     if (isCom) payload.acessibilidade_comunicacional = newArr.length > 0 ? newArr : null;
     if (!isArq && !isCom) payload.acessibilidade_atitudinal = newArr.length > 0 ? newArr : null;
@@ -57,9 +64,16 @@ export default function StepAcessibilityPanel({ projectId }: { projectId: string
   };
 
   const saveLocais = async (v: string) => {
+    if (!userId) return;
     setLocais(v);
-    const { error } = await supabase.from("project_registrations").upsert({ project_id: projectId, locais_execucao: v || null } as any, { onConflict: "project_id" });
-    if (error) toast.error("Erro ao salvar locais.");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const { error } = await supabase.from("project_registrations").upsert(
+        { project_id: projectId, user_id: userId, locais_execucao: v || null } as any,
+        { onConflict: "project_id" }
+      );
+      if (error) toast.error("Erro ao salvar locais.");
+    }, 500);
   }
 
   if (loading) return null;
