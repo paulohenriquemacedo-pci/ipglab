@@ -51,7 +51,7 @@ function generateId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadsheetProps) => {
+const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }: BudgetSpreadsheetProps) => {
   const [items, setItems] = useState<BudgetItem[]>([]);
   const [saving, setSaving] = useState(false);
 
