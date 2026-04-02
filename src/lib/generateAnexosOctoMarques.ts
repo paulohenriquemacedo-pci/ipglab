@@ -607,22 +607,18 @@ export async function generateAnexoIIA(profile: OctoMarquesProfileData, projectD
   // Header
   children.push(
     ...editalHeader(),
-    p("ANEXO II – A", { bold: true, size: 28, align: AlignmentType.CENTER, spacing: { after: 100 } }),
+    p("ANEXO II – a", { bold: true, size: 28, align: AlignmentType.CENTER, spacing: { after: 100 } }),
     p("FORMULÁRIO DE INSCRIÇÃO", { bold: true, size: 24, align: AlignmentType.CENTER, spacing: { after: 80 } }),
     p("PESSOA FÍSICA, MEI OU GRUPO E COLETIVO SEM PERSONALIDADE JURÍDICA (SEM CNPJ)", { size: 18, align: AlignmentType.CENTER, spacing: { after: 300 } }),
   );
 
-  // 1. Dados do Agente Cultural
+  // 1. DADOS DO(A) AGENTE CULTURAL
   children.push(sectionHeader("1. DADOS DO(A) AGENTE CULTURAL"));
   children.push(
     field("Nome Completo", val(profile.full_name)),
-    field("Nome artístico ou nome social", val(profile.nome_social)),
+    field("Nome artístico ou nome social (se houver)", val(profile.nome_social)),
     field("CPF", val(profile.cpf)),
-  );
-  if (profile.cnpj_mei) {
-    children.push(field("CNPJ (MEI)", val(profile.cnpj_mei)));
-  }
-  children.push(
+    field("CNPJ (Se a inscrição for realizada em nome do MEI)", val(profile.cnpj_mei)),
     field("RG", val(profile.rg)),
     field("Data de nascimento", val(profile.data_nascimento)),
     field("E-mail", val(profile.email_contato)),
@@ -633,23 +629,13 @@ export async function generateAnexoIIA(profile: OctoMarquesProfileData, projectD
     field("Estado", val(profile.state)),
   );
 
-  // Dados bancários
-  children.push(
-    p("Dados Bancários:", { bold: true, spacing: { before: 200 } }),
-    field("Banco", val(profile.banco)),
-    field("Agência", val(profile.agencia)),
-    field("Conta Bancária", val(profile.conta_bancaria)),
-    field("Tipo de Conta", val(profile.tipo_conta_bancaria)),
-  );
-
   // Mini currículo
   children.push(
-    p("Mini Currículo:", { bold: true, spacing: { before: 200 } }),
-    p("(Escreva aqui um resumo do seu currículo destacando as principais atuações culturais realizadas.)", { size: 18 }),
+    p("Mini Currículo: (Escreva aqui um resumo do seu currículo destacando as principais atuações culturais realizadas. Você deve encaminhar o currículo/portifólio em anexo).", { bold: true, spacing: { before: 200 } }),
     p(val(profile.bio)),
   );
 
-  // Comunidade, gênero, LGBTQIAPN+, raça, PcD
+  // Comunidade, gênero, LGBTQIAPN+, raça, PcD, escolaridade, renda, programa social, cotas, função, coletivo
   children.push(...buildComunidadeTradicional(profile));
   children.push(...buildGenero(profile));
   children.push(...buildLGBTQIAPN(profile));
@@ -662,35 +648,51 @@ export async function generateAnexoIIA(profile: OctoMarquesProfileData, projectD
   children.push(...buildFuncaoProfissao(profile));
   children.push(...buildColetivo(profile));
 
-  // 2. Dados do Projeto — NOW WITH CONTENT FROM AI SECTIONS
+  // 2. DADOS DO PROJETO
   children.push(sectionHeader("2. DADOS DO PROJETO"));
-  children.push(
-    field("Nome do Projeto", projectData?.title || "_______________"),
-  );
+  children.push(field("Nome do Projeto", projectData?.title || "_______________"));
   children.push(...buildCategoria(profile));
+
+  // Text sections: Descrição, Objetivos, Metas, Perfil do público
   children.push(...buildProjectSections(projectData));
 
-  children.push(
-    p("Perfil do público a ser atingido pelo projeto:", { bold: true, spacing: { before: 200 } }),
-    p(""),
-  );
-
+  // Público-alvo checkboxes
   children.push(...buildPublicoAlvo(profile));
+
+  // Acessibilidade
   children.push(...buildAcessibilidade(profile));
 
+  // Local de execução
   children.push(
-    p("Local onde o projeto será executado:", { bold: true, spacing: { before: 200 } }),
-    p(val(profile.locais_execucao)),
-    p("Previsão do período de execução do projeto:", { bold: true, spacing: { before: 200 } }),
-    field("Data de início", "_______________"),
-    field("Data final", "_______________"),
+    p("Local onde o projeto será executado (Informe os espaços culturais e outros ambientes, localizados no município de Goiás onde a sua proposta será realizada)", { bold: true, spacing: { before: 200 } }),
+    p(projectData?.locaisExecucao || val(profile.locais_execucao)),
   );
 
-  // 3. Planilha Orçamentária — NOW WITH BUDGET DATA
+  // Período de execução
+  children.push(
+    p("Previsão do período de execução do projeto", { bold: true, spacing: { before: 200 } }),
+    field("Data de início", projectData?.dataInicio || "_______________"),
+    field("Data final", projectData?.dataFinal || "_______________"),
+  );
+
+  // Equipe (table)
+  children.push(...buildTeamTable(projectData));
+
+  // Cronograma (table)
+  children.push(...buildChronogramTable(projectData));
+
+  // Estratégia de divulgação + Fontes de recurso + Venda de ingressos
+  children.push(...buildStrategyAndFunding(projectData));
+
+  // 3. PLANILHA ORÇAMENTÁRIA
   children.push(sectionHeader("3. PLANILHA ORÇAMENTÁRIA"));
+  children.push(
+    p("Preencha a tabela informando todas as despesas indicando as metas/etapas às quais elas estão relacionadas.", { size: 18, spacing: { after: 100 } }),
+    p("Pode haver a indicação do parâmetro de preço (Exemplo: preço estabelecido no SALICNET, 3 orçamentos, etc) utilizado com a referência específica do item de despesa para auxiliar a análise técnica da comissão de seleção.", { size: 18, spacing: { after: 150 } }),
+  );
   children.push(...buildBudgetTable(projectData));
 
-  // 4. Documentos Complementares
+  // 4. DOCUMENTOS COMPLEMENTARES
   children.push(sectionHeader("4. DOCUMENTOS COMPLEMENTARES"));
   children.push(
     p("Caso queira, junte documentos que auxiliam na análise do seu projeto e da sua equipe técnica."),
