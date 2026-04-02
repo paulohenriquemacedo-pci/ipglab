@@ -75,7 +75,7 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
       }
     };
     load();
-  }, [projectId]);
+  }, [projectId, stepNumber]);
 
   const addItem = () => {
     setItems(prev => [...prev, { id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0, justificativa: "", referencia_preco: "" }]);
