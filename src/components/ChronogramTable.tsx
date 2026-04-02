@@ -35,21 +35,23 @@ const ChronogramTable = ({ projectId }: ChronogramTableProps) => {
         .from("project_sections")
         .select("content")
         .eq("project_id", projectId)
-        .eq("step_number", 5) // Shared save for step 5
-        .single();
+        .eq("step_number", 8)
+        .maybeSingle();
       
+      let loaded = false;
       if (data?.content) {
         try {
           const parsed = JSON.parse(data.content);
-          if (parsed && Array.isArray(parsed.chronogram)) {
+          if (parsed && Array.isArray(parsed.chronogram) && parsed.chronogram.length > 0) {
             setItems(parsed.chronogram);
-          } else if (Array.isArray(parsed)) {
-            // Legacy/fallback
+            loaded = true;
+          } else if (Array.isArray(parsed) && parsed.length > 0) {
             setItems(parsed);
+            loaded = true;
           }
         } catch { /* not JSON */ }
       }
-      if (items.length === 0) {
+      if (!loaded) {
         setItems([{ id: generateId(), data_inicial: "", data_final: "", atividade: "", etapa: "Pré-Produção" }]);
       }
     };
