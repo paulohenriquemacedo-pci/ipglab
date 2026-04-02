@@ -55,29 +55,14 @@ const TeamTable = ({ projectId }: TeamTableProps) => {
   const saveTeam = useCallback(async () => {
     setSaving(true);
     try {
-      // Fetch existing content to merge with ChronogramTable data
-      const { data: existingData } = await supabase
-        .from("project_sections")
-        .select("content")
-        .eq("project_id", projectId)
-        .eq("step_number", 5)
-        .single();
-
-      let parsedContent: any = {};
-      try {
-        if (existingData?.content) parsedContent = JSON.parse(existingData.content);
-      } catch { }
-
-      parsedContent.team = items;
+      const content = JSON.stringify({ team: items });
+      const is_completed = items.length > 0 && items.some(i => i.nome.length > 0 && i.funcao.length > 0);
 
       await supabase
         .from("project_sections")
-        .update({
-          content: JSON.stringify(parsedContent),
-          is_completed: items.length > 0 && items.some(i => i.nome.length > 0 && i.funcao.length > 0),
-        })
+        .update({ content, is_completed })
         .eq("project_id", projectId)
-        .eq("step_number", 5);
+        .eq("step_number", 7);
       
       toast.success("Equipe salva com sucesso!");
     } catch {
