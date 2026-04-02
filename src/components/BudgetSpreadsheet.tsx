@@ -110,7 +110,7 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
     } finally {
       setSaving(false);
     }
-  }, [items, projectId]);
+  }, [items, projectId, stepNumber]);
 
   // Auto-save on changes (debounced)
   useEffect(() => {
