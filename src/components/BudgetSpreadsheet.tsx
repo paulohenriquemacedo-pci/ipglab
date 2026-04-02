@@ -103,7 +103,7 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
           is_completed: items.length > 0 && items.some(i => i.descricao && i.valor_unitario > 0),
         })
         .eq("project_id", projectId)
-        .eq("step_number", 6);
+        .eq("step_number", stepNumber);
       toast.success("Planilha orçamentária salva!");
     } catch {
       toast.error("Erro ao salvar planilha");
