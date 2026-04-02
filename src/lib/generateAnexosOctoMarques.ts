@@ -355,23 +355,21 @@ function buildProjectSections(projectData?: ProjectDataForAnexo): Paragraph[] {
 
   const result: Paragraph[] = [];
 
-  // Map step numbers to Anexo II fields
+  // Map step numbers to official Anexo II field names (matching current fomento steps)
   const STEP_TO_FIELD: Record<number, string> = {
-    1: "Descrição do Projeto",
-    2: "Atuação Cultural e Integração com outras esferas",
-    3: "Impacto Social e Comunitário",
-    4: "Patrimônio Cultural e Acessibilidade",
-    5: "Cronograma e Equipe",
+    1: "Descrição do projeto",
+    2: "Objetivos do projeto",
+    3: "Metas",
+    4: "Perfil do público a ser atingido pelo projeto",
   };
 
   for (const section of projectData.sections) {
-    if (section.step_number >= 6) continue; // skip budget/annex steps
-    const fieldName = STEP_TO_FIELD[section.step_number] || section.step_name;
+    const fieldName = STEP_TO_FIELD[section.step_number];
+    if (!fieldName) continue; // only text sections (1-4)
     result.push(
       p(`${fieldName}:`, { bold: true, spacing: { before: 200 } }),
     );
     if (section.content) {
-      // Split content by newlines for proper paragraph formatting
       const lines = section.content.split("\n").filter(l => l.trim());
       for (const line of lines) {
         result.push(p(line));
@@ -379,6 +377,152 @@ function buildProjectSections(projectData?: ProjectDataForAnexo): Paragraph[] {
     } else {
       result.push(p("(Não preenchido)"));
     }
+  }
+
+  return result;
+}
+
+// ===== Build team table for Anexo II =====
+function buildTeamTable(projectData?: ProjectDataForAnexo): (Paragraph | Table)[] {
+  const result: (Paragraph | Table)[] = [
+    p("Equipe", { bold: true, spacing: { before: 200 } }),
+    p("Informe quais são os profissionais que atuarão no projeto, conforme quadro a seguir:", { size: 18 }),
+  ];
+
+  const members = projectData?.teamMembers || [];
+  if (members.length === 0) {
+    // Empty template table
+    const headerCells = ["Nome do profissional / empresa", "Função no projeto", "CPF/CNPJ", "Mini currículo"].map(text =>
+      new TableCell({
+        borders,
+        shading: { fill: "D9E2F3", type: "clear" as any },
+        children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 18, font: FONT })] })],
+        width: { size: 2340, type: WidthType.DXA },
+      })
+    );
+    result.push(new Table({
+      width: { size: 9360, type: WidthType.DXA },
+      columnWidths: [2340, 2340, 2340, 2340],
+      rows: [new TableRow({ children: headerCells })],
+    }));
+    return result;
+  }
+
+  const headerCells = ["Nome do profissional / empresa", "Função no projeto", "CPF/CNPJ", "Mini currículo"].map(text =>
+    new TableCell({
+      borders,
+      shading: { fill: "D9E2F3", type: "clear" as any },
+      children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 18, font: FONT })] })],
+      width: { size: 2340, type: WidthType.DXA },
+    })
+  );
+
+  const dataRows = members.map(m =>
+    new TableRow({
+      children: [
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: m.nome || "-", size: 18, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: m.funcao || "-", size: 18, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: m.cpf_cnpj || "-", size: 18, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: m.mini_curriculo || "-", size: 18, font: FONT })] })] }),
+      ],
+    })
+  );
+
+  result.push(new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [2340, 2340, 2340, 2340],
+    rows: [new TableRow({ children: headerCells }), ...dataRows],
+  }));
+
+  return result;
+}
+
+// ===== Build chronogram table for Anexo II =====
+function buildChronogramTable(projectData?: ProjectDataForAnexo): (Paragraph | Table)[] {
+  const result: (Paragraph | Table)[] = [
+    p("Cronograma de Execução", { bold: true, spacing: { before: 200 } }),
+    p("Descreva os passos a serem seguidos para execução do projeto.", { size: 18 }),
+  ];
+
+  const items = projectData?.chronogramItems || [];
+  const colWidths = [1872, 1872, 1872, 1872, 1872];
+  const headers = ["Atividade", "Etapa", "Descrição", "Início", "Fim"];
+  const headerCells = headers.map((text, i) =>
+    new TableCell({
+      borders,
+      shading: { fill: "D9E2F3", type: "clear" as any },
+      children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 18, font: FONT })] })],
+      width: { size: colWidths[i], type: WidthType.DXA },
+    })
+  );
+
+  const dataRows = items.length > 0
+    ? items.map(item =>
+        new TableRow({
+          children: [
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.atividade || "-", size: 18, font: FONT })] })] }),
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.etapa || "-", size: 18, font: FONT })] })] }),
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.descricao || "-", size: 18, font: FONT })] })] }),
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.inicio || "-", size: 18, font: FONT })] })] }),
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.fim || "-", size: 18, font: FONT })] })] }),
+          ],
+        })
+      )
+    : [];
+
+  result.push(new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: colWidths,
+    rows: [new TableRow({ children: headerCells }), ...dataRows],
+  }));
+
+  return result;
+}
+
+// ===== Build strategy, funding, and ticket sales sections =====
+function buildStrategyAndFunding(projectData?: ProjectDataForAnexo): Paragraph[] {
+  const result: Paragraph[] = [];
+
+  // Estratégia de divulgação
+  result.push(
+    p("Estratégia de divulgação", { bold: true, spacing: { before: 200 } }),
+    p("Apresente os meios que serão utilizados para divulgar o projeto. ex.: impulsionamento em redes sociais.", { size: 18 }),
+    p(projectData?.estrategiaDivulgacao || "(Não preenchido)"),
+  );
+
+  // Fontes de recurso
+  result.push(
+    p("Projeto possui recursos financeiros de outras fontes? Se sim, quais?", { bold: true, spacing: { before: 200 } }),
+    p("(Informe se o projeto prevê apoio financeiro, tais como cobrança de ingressos, patrocínio e/ou outras fontes de financiamento.)", { size: 18 }),
+  );
+
+  const fontesOpcoes = [
+    "Não, o projeto não possui outras fontes de recursos financeiros",
+    "Apoio financeiro municipal", "Apoio financeiro estadual",
+    "Recursos de Lei de Incentivo Municipal", "Recursos de Lei de Incentivo Estadual",
+    "Recursos de Lei de Incentivo Federal", "Patrocínio privado direto",
+    "Patrocínio de instituição internacional", "Doações de Pessoas Físicas",
+    "Doações de Empresas", "Cobrança de ingressos", "Outros",
+  ];
+  const selectedFontes = projectData?.fontesRecursoTipos || [];
+  for (const f of fontesOpcoes) {
+    result.push(checkbox(f, selectedFontes.includes(f)));
+  }
+
+  if (projectData?.fontesRecursoDetalhe) {
+    result.push(
+      p("Se o projeto tem outras fontes de financiamento, detalhe:", { bold: true, spacing: { before: 100 } }),
+      p(projectData.fontesRecursoDetalhe),
+    );
+  }
+
+  // Venda de ingressos
+  result.push(
+    p("O projeto prevê a venda de produtos/ingressos?", { bold: true, spacing: { before: 200 } }),
+    p(`${projectData?.prevVendaIngressos ? "(X) Sim  ( ) Não" : "( ) Sim  (X) Não"}`),
+  );
+  if (projectData?.prevVendaIngressosDetalhe) {
+    result.push(p(projectData.prevVendaIngressosDetalhe));
   }
 
   return result;
