@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,16 @@ const ACESS_ARQ = ["Rampas", "Elevadores", "Piso Tátil", "Sanitários Adaptados
 const ACESS_COM = ["Linguagem Brasileira de Sinais -Libras", "Sistema Braille", "Audiodescrição", "Site Acessível", "Textos em Formatos Acessíveis", "Outros"];
 const ACESS_ATI = ["Atendimento Prioritário às Pessoas com Deficiência", "Não se Aplica", "Outros"];
 
+type RegistrationPatch = {
+  acessibilidade_arquitetonica?: string[] | null;
+  acessibilidade_comunicacional?: string[] | null;
+  acessibilidade_atitudinal?: string[] | null;
+  locais_execucao?: string | null;
+};
+
+const normalizeArray = (value: string[]) => (value.length > 0 ? value : null);
+const normalizeText = (value: string) => (value.trim() ? value : null);
+
 export default function StepAcessibilityPanel({ projectId }: { projectId: string }) {
   const [arq, setArq] = useState<string[]>([]);
   const [com, setCom] = useState<string[]>([]);
@@ -17,64 +27,141 @@ export default function StepAcessibilityPanel({ projectId }: { projectId: string
   const [locais, setLocais] = useState("");
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const [hasRegistration, setHasRegistration] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUserId(user.id);
+    let isMounted = true;
 
-      const { data } = await supabase
+    const init = async () => {
+      setLoading(true);
+
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const user = authData.user;
+
+      if (authError || !user) {
+        console.error("[StepAcessibilityPanel] auth.getUser failed", authError);
+        if (isMounted) setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
         .from("project_registrations")
-        .select("acessibilidade_arquitetonica, acessibilidade_comunicacional, acessibilidade_atitudinal, locais_execucao")
+        .select("project_id, acessibilidade_arquitetonica, acessibilidade_comunicacional, acessibilidade_atitudinal, locais_execucao")
         .eq("project_id", projectId)
         .maybeSingle();
-      
-      if (data) {
-        setArq((data.acessibilidade_arquitetonica as string[]) || []);
-        setCom((data.acessibilidade_comunicacional as string[]) || []);
-        setAti((data.acessibilidade_atitudinal as string[]) || []);
-        setLocais(data.locais_execucao || "");
+
+      if (!isMounted) return;
+
+      setUserId(user.id);
+
+      if (error) {
+        console.error("[StepAcessibilityPanel] failed to load registration", error);
+        toast.error("Não foi possível carregar os dados de acessibilidade.");
       }
+
+      setHasRegistration(!!data);
+      setArq((data?.acessibilidade_arquitetonica as string[]) || []);
+      setCom((data?.acessibilidade_comunicacional as string[]) || []);
+      setAti((data?.acessibilidade_atitudinal as string[]) || []);
+      setLocais(data?.locais_execucao || "");
       setLoading(false);
     };
+
     init();
+
+    return () => {
+      isMounted = false;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [projectId]);
 
-  const toggle = async (type: "arq"|"com"|"ati", item: string) => {
-    if (!userId) return;
-    const isArq = type === "arq";
-    const isCom = type === "com";
-    
-    let current = isArq ? arq : (isCom ? com : ati);
-    const newArr = current.includes(item) ? current.filter(i => i !== item) : [...current, item];
-    
-    if (isArq) setArq(newArr);
-    if (isCom) setCom(newArr);
-    if (!isArq && !isCom) setAti(newArr);
+  const persistRegistration = async (patch: RegistrationPatch) => {
+    if (!userId || !projectId) {
+      return { error: new Error("Missing user/project") };
+    }
 
-    const payload: any = { project_id: projectId, user_id: userId };
-    if (isArq) payload.acessibilidade_arquitetonica = newArr.length > 0 ? newArr : null;
-    if (isCom) payload.acessibilidade_comunicacional = newArr.length > 0 ? newArr : null;
-    if (!isArq && !isCom) payload.acessibilidade_atitudinal = newArr.length > 0 ? newArr : null;
+    const payload = {
+      ...("acessibilidade_arquitetonica" in patch ? { acessibilidade_arquitetonica: patch.acessibilidade_arquitetonica ?? null } : {}),
+      ...("acessibilidade_comunicacional" in patch ? { acessibilidade_comunicacional: patch.acessibilidade_comunicacional ?? null } : {}),
+      ...("acessibilidade_atitudinal" in patch ? { acessibilidade_atitudinal: patch.acessibilidade_atitudinal ?? null } : {}),
+      ...("locais_execucao" in patch ? { locais_execucao: patch.locais_execucao ?? null } : {}),
+    };
 
-    const { error } = await supabase.from("project_registrations").upsert(payload, { onConflict: "project_id" });
-    if (error) toast.error("Erro ao salvar acessibilidade.");
+    if (hasRegistration) {
+      const { error, data } = await supabase
+        .from("project_registrations")
+        .update({ ...payload, updated_at: new Date().toISOString() } as any)
+        .eq("project_id", projectId)
+        .eq("user_id", userId)
+        .select("project_id")
+        .maybeSingle();
+
+      if (error) return { error };
+      if (data) return { error: null };
+    }
+
+    const { error } = await supabase.from("project_registrations").insert({
+      project_id: projectId,
+      user_id: userId,
+      acessibilidade_arquitetonica: "acessibilidade_arquitetonica" in patch ? patch.acessibilidade_arquitetonica ?? null : normalizeArray(arq),
+      acessibilidade_comunicacional: "acessibilidade_comunicacional" in patch ? patch.acessibilidade_comunicacional ?? null : normalizeArray(com),
+      acessibilidade_atitudinal: "acessibilidade_atitudinal" in patch ? patch.acessibilidade_atitudinal ?? null : normalizeArray(ati),
+      locais_execucao: "locais_execucao" in patch ? patch.locais_execucao ?? null : normalizeText(locais),
+    } as any);
+
+    if (!error) setHasRegistration(true);
+    return { error };
   };
 
-  const saveLocais = async (v: string) => {
-    if (!userId) return;
-    setLocais(v);
+  const toggle = async (type: "arq" | "com" | "ati", item: string) => {
+    const isArq = type === "arq";
+    const isCom = type === "com";
+
+    const previousArq = arq;
+    const previousCom = com;
+    const previousAti = ati;
+
+    const current = isArq ? arq : isCom ? com : ati;
+    const newArr = current.includes(item) ? current.filter((i) => i !== item) : [...current, item];
+
+    const nextArq = isArq ? newArr : arq;
+    const nextCom = isCom ? newArr : com;
+    const nextAti = !isArq && !isCom ? newArr : ati;
+
+    setArq(nextArq);
+    setCom(nextCom);
+    setAti(nextAti);
+
+    const { error } = await persistRegistration({
+      acessibilidade_arquitetonica: normalizeArray(nextArq),
+      acessibilidade_comunicacional: normalizeArray(nextCom),
+      acessibilidade_atitudinal: normalizeArray(nextAti),
+    });
+
+    if (error) {
+      console.error("[StepAcessibilityPanel] failed to save accessibility", error);
+      setArq(previousArq);
+      setCom(previousCom);
+      setAti(previousAti);
+      toast.error("Erro ao salvar acessibilidade.");
+    }
+  };
+
+  const saveLocais = (value: string) => {
+    setLocais(value);
+
     if (debounceRef.current) clearTimeout(debounceRef.current);
+
     debounceRef.current = setTimeout(async () => {
-      const { error } = await supabase.from("project_registrations").upsert(
-        { project_id: projectId, user_id: userId, locais_execucao: v || null } as any,
-        { onConflict: "project_id" }
-      );
-      if (error) toast.error("Erro ao salvar locais.");
+      const { error } = await persistRegistration({ locais_execucao: normalizeText(value) });
+
+      if (error) {
+        console.error("[StepAcessibilityPanel] failed to save locais_execucao", error);
+        toast.error("Erro ao salvar locais.");
+      }
     }, 500);
-  }
+  };
 
   if (loading) return null;
 
@@ -87,11 +174,11 @@ export default function StepAcessibilityPanel({ projectId }: { projectId: string
             Além da descrição narrativa feita pela IA, marque os dados obrigatórios sobre que tipo de acessibilidade o projeto disporá.
           </p>
         </div>
-        
+
         <div className="space-y-2">
           <Label className="font-semibold">Acessibilidade Arquitetônica:</Label>
           <div className="grid grid-cols-2 gap-2">
-            {ACESS_ARQ.map(a => (
+            {ACESS_ARQ.map((a) => (
               <div key={a} className="flex items-center gap-2">
                 <Checkbox checked={arq.includes(a)} onCheckedChange={() => toggle("arq", a)} id={`arq-${a}`} />
                 <Label htmlFor={`arq-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
@@ -103,7 +190,7 @@ export default function StepAcessibilityPanel({ projectId }: { projectId: string
         <div className="space-y-2">
           <Label className="font-semibold">Acessibilidade Comunicacional:</Label>
           <div className="grid grid-cols-2 gap-2">
-            {ACESS_COM.map(a => (
+            {ACESS_COM.map((a) => (
               <div key={a} className="flex items-center gap-2">
                 <Checkbox checked={com.includes(a)} onCheckedChange={() => toggle("com", a)} id={`com-${a}`} />
                 <Label htmlFor={`com-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
@@ -115,7 +202,7 @@ export default function StepAcessibilityPanel({ projectId }: { projectId: string
         <div className="space-y-2">
           <Label className="font-semibold">Acessibilidade Atitudinal:</Label>
           <div className="grid grid-cols-2 gap-2">
-            {ACESS_ATI.map(a => (
+            {ACESS_ATI.map((a) => (
               <div key={a} className="flex items-center gap-2">
                 <Checkbox checked={ati.includes(a)} onCheckedChange={() => toggle("ati", a)} id={`ati-${a}`} />
                 <Label htmlFor={`ati-${a}`} className="font-normal text-sm cursor-pointer">{a}</Label>
@@ -126,7 +213,7 @@ export default function StepAcessibilityPanel({ projectId }: { projectId: string
 
         <div className="space-y-2 pt-4">
           <Label className="font-semibold">Quais serão os Locais de Execução (Endereços exatos)?</Label>
-          <Textarea 
+          <Textarea
             placeholder="Descreva aqui o(s) ambiente(s) do evento e verifique se eles atendem à acessibilidade informada."
             value={locais}
             onChange={(e) => saveLocais(e.target.value)}
