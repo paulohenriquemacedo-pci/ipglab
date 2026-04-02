@@ -710,8 +710,6 @@ const ProjectWizard = () => {
                 </div>
               )}
 
-              {edital?.instrument_type === "fomento" && currentStep === 4 && <div className="px-6 pb-6"><StepPublicPanel projectId={id!} /></div>}
-              {edital?.instrument_type === "fomento" && currentStep === 5 && <div className="px-6 pb-6"><StepAcessibilityPanel projectId={id!} /></div>}
 
               <div className="border-t border-border p-4">
                 <div className="flex gap-3">
