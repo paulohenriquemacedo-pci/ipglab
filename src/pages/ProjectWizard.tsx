@@ -49,7 +49,19 @@ const ProjectWizard = () => {
   const [edital, setEdital] = useState<any>(null);
   const [regData, setRegData] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStepRaw] = useState(() => {
+    if (!id) return 0;
+    const saved = sessionStorage.getItem(`project-step-${id}`);
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  const setCurrentStep: React.Dispatch<React.SetStateAction<number>> = useCallback((val) => {
+    setCurrentStepRaw(prev => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      if (id) sessionStorage.setItem(`project-step-${id}`, String(next));
+      return next;
+    });
+  }, [id]);
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
   const [userInput, setUserInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
