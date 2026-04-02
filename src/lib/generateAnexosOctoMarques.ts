@@ -16,7 +16,18 @@ export interface OctoMarquesProfileData extends ProfileData {
 export interface ProjectDataForAnexo {
   title?: string;
   sections?: { step_number: number; step_name: string; content: string | null }[];
-  budgetItems?: { categoria: string; descricao: string; unidade: string; quantidade: number; valor_unitario: number }[];
+  budgetItems?: { categoria: string; descricao: string; justificativa?: string; unidade: string; quantidade: number; valor_unitario: number; referencia?: string }[];
+  teamMembers?: { nome: string; funcao: string; cpf_cnpj: string; mini_curriculo: string }[];
+  chronogramItems?: { atividade: string; etapa: string; descricao: string; inicio: string; fim: string }[];
+  estrategiaDivulgacao?: string;
+  fontesRecursoTipos?: string[];
+  fontesRecursoDetalhe?: string;
+  possuiFontesRecurso?: boolean;
+  prevVendaIngressos?: boolean;
+  prevVendaIngressosDetalhe?: string;
+  dataInicio?: string;
+  dataFinal?: string;
+  locaisExecucao?: string;
 }
 
 const val = (v: string | null | undefined | boolean) => {
