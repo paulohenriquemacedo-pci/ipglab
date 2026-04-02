@@ -10,7 +10,19 @@ interface BudgetItem {
   referencia_preco: string;
 }
 
-export function generateBudgetXlsx(items: BudgetItem[]) {
+function normItem(item: Record<string, any>): BudgetItem {
+  return {
+    descricao: item.descricao || "",
+    justificativa: item.justificativa || "",
+    unidade: item.unidade || "",
+    valor_unitario: Number(item.valor_unitario) || 0,
+    quantidade: Number(item.quantidade) || 0,
+    referencia_preco: item.referencia_preco || item.referencia || "",
+  };
+}
+
+export function generateBudgetXlsx(rawItems: Record<string, any>[]) {
+  const items = rawItems.map(normItem);
   const header = [
     "DESCRIÇÃO DO ITEM",
     "JUSTIFICATIVA",
