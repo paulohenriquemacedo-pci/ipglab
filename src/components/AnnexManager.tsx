@@ -85,7 +85,7 @@ const AnnexManager = ({ projectId, editalType }: AnnexManagerProps) => {
     return profile as any;
   };
 
-  // Fetch project data (sections + budget) for Anexo II integration
+  // Fetch project data (all sections + budget + team + chronogram) for Anexo II integration
   const getProjectData = async (): Promise<ProjectDataForAnexo> => {
     const { data: project } = await supabase
       .from("projects")
@@ -99,9 +99,15 @@ const AnnexManager = ({ projectId, editalType }: AnnexManagerProps) => {
       .eq("project_id", projectId)
       .order("step_number");
 
-    // Budget is stored in step 6 content as JSON
+    const { data: regData } = await supabase
+      .from("project_registrations")
+      .select("locais_execucao, estrategia_divulgacao, fontes_recurso_tipos, fontes_recurso_detalhe, possui_fontes_recurso, prev_venda_ingressos, prev_venda_ingressos_detalhe")
+      .eq("project_id", projectId)
+      .single();
+
+    // Budget is stored in step 11 content as JSON array
     let budgetItems: any[] = [];
-    const budgetSection = sections?.find(s => s.step_number === 6);
+    const budgetSection = sections?.find(s => s.step_number === 11);
     if (budgetSection?.content) {
       try {
         const parsed = JSON.parse(budgetSection.content);
@@ -109,10 +115,56 @@ const AnnexManager = ({ projectId, editalType }: AnnexManagerProps) => {
       } catch { /* ignore */ }
     }
 
+    // Team is stored in step 7 content as JSON { team: [...] }
+    let teamMembers: any[] = [];
+    const teamSection = sections?.find(s => s.step_number === 7);
+    if (teamSection?.content) {
+      try {
+        const parsed = JSON.parse(teamSection.content);
+        teamMembers = parsed?.team || (Array.isArray(parsed) ? parsed : []);
+      } catch { /* ignore */ }
+    }
+
+    // Chronogram is stored in step 8 content as JSON { chronogram: [...] }
+    let chronogramItems: any[] = [];
+    const chronoSection = sections?.find(s => s.step_number === 8);
+    if (chronoSection?.content) {
+      try {
+        const parsed = JSON.parse(chronoSection.content);
+        chronogramItems = parsed?.chronogram || (Array.isArray(parsed) ? parsed : []);
+      } catch { /* ignore */ }
+    }
+
+    // Period is stored in step 6 content as JSON { dataInicio, dataFinal }
+    let dataInicio = "";
+    let dataFinal = "";
+    const periodSection = sections?.find(s => s.step_number === 6);
+    if (periodSection?.content) {
+      try {
+        const parsed = JSON.parse(periodSection.content);
+        dataInicio = parsed?.dataInicio || "";
+        dataFinal = parsed?.dataFinal || "";
+      } catch { /* ignore */ }
+    }
+
+    // Strategy is stored in step 9 content as plain text
+    const strategySection = sections?.find(s => s.step_number === 9);
+
     return {
       title: project?.title || undefined,
-      sections: sections?.filter(s => s.step_number < 6 && s.content) || [],
+      sections: sections?.filter(s => s.step_number <= 4 && s.content) || [],
       budgetItems,
+      teamMembers,
+      chronogramItems,
+      estrategiaDivulgacao: strategySection?.content || (regData as any)?.estrategia_divulgacao || "",
+      fontesRecursoTipos: (regData as any)?.fontes_recurso_tipos || [],
+      fontesRecursoDetalhe: (regData as any)?.fontes_recurso_detalhe || "",
+      possuiFontesRecurso: (regData as any)?.possui_fontes_recurso || false,
+      prevVendaIngressos: (regData as any)?.prev_venda_ingressos || false,
+      prevVendaIngressosDetalhe: (regData as any)?.prev_venda_ingressos_detalhe || "",
+      dataInicio,
+      dataFinal,
+      locaisExecucao: (regData as any)?.locais_execucao || "",
     };
   };
 
