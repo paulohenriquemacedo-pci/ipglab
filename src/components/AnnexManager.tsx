@@ -17,6 +17,7 @@ import {
   generateAnexoVIII_OctoMarques, generateAnexoIX_OctoMarques,
 } from "@/lib/generateAnexosOctoMarques";
 import type { ProjectDataForAnexo } from "@/lib/generateAnexosOctoMarques";
+import { generateBudgetXlsx } from "@/lib/generateBudgetXlsx";
 
 interface AnnexDef {
   id: string;
@@ -37,6 +38,7 @@ const ANNEXES_PREMIACAO: AnnexDef[] = [
 
 const ANNEXES_FOMENTO_PF: AnnexDef[] = [
   { id: "anexo-iia", label: "Anexo II-A", description: "Inscrição PF/MEI/Coletivo (com dados do projeto)", generator: generateAnexoIIA, required: true, needsProjectData: true },
+  { id: "planilha-orc", label: "Planilha Orçamentária", description: "Planilha de custos do projeto (.xlsx)", generator: async () => {}, required: true, needsProjectData: true },
   { id: "anexo-vi-om", label: "Anexo VI", description: "Declaração Coletivo sem CNPJ", generator: generateAnexoVI_OctoMarques, required: false },
   { id: "anexo-vii-om", label: "Anexo VII", description: "Declaração Étnico-Racial", generator: generateAnexoVII_OctoMarques, required: false },
   { id: "anexo-viii-om", label: "Anexo VIII", description: "Declaração PcD", generator: generateAnexoVIII_OctoMarques, required: false },
@@ -45,6 +47,7 @@ const ANNEXES_FOMENTO_PF: AnnexDef[] = [
 
 const ANNEXES_FOMENTO_PJ: AnnexDef[] = [
   { id: "anexo-iib", label: "Anexo II-B", description: "Inscrição Pessoa Jurídica (com dados do projeto)", generator: generateAnexoIIB, required: true, needsProjectData: true },
+  { id: "planilha-orc", label: "Planilha Orçamentária", description: "Planilha de custos do projeto (.xlsx)", generator: async () => {}, required: true, needsProjectData: true },
   { id: "anexo-vi-om", label: "Anexo VI", description: "Declaração Coletivo sem CNPJ", generator: generateAnexoVI_OctoMarques, required: false },
   { id: "anexo-vii-om", label: "Anexo VII", description: "Declaração Étnico-Racial", generator: generateAnexoVII_OctoMarques, required: false },
   { id: "anexo-viii-om", label: "Anexo VIII", description: "Declaração PcD", generator: generateAnexoVIII_OctoMarques, required: false },
@@ -171,6 +174,15 @@ const AnnexManager = ({ projectId, editalType }: AnnexManagerProps) => {
   const handleDownload = async (annex: AnnexDef) => {
     setDownloading(annex.id);
     try {
+      // Special handling for budget spreadsheet
+      if (annex.id === "planilha-orc") {
+        const projectData = await getProjectData();
+        generateBudgetXlsx(projectData.budgetItems || []);
+        toast.success("Planilha Orçamentária gerada com sucesso!");
+        setDownloading(null);
+        return;
+      }
+
       const data = await getRegistrationData();
       if (!data) { toast.error("Dados cadastrais não encontrados"); return; }
 

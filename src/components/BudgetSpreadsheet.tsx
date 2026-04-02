@@ -1,21 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Save, AlertTriangle, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Save, AlertTriangle, CheckCircle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { generateBudgetXlsx } from "@/lib/generateBudgetXlsx";
 
 interface BudgetItem {
   id: string;
-  categoria: string;
   descricao: string;
-  unidade: string;
-  quantidade: number;
-  valor_unitario: number;
   justificativa: string;
+  unidade: string;
+  valor_unitario: number;
+  quantidade: number;
   referencia_preco: string;
 }
 
@@ -26,26 +24,6 @@ interface BudgetSpreadsheetProps {
   stepNumber?: number;
 }
 
-const CATEGORIAS_ORCAMENTO = [
-  "Cachê artístico",
-  "Serviços técnicos",
-  "Material de consumo",
-  "Transporte",
-  "Alimentação",
-  "Hospedagem",
-  "Divulgação",
-  "Locação de equipamentos",
-  "Locação de espaço",
-  "Figurino/Adereços",
-  "Cenografia",
-  "Produção audiovisual",
-  "Impressão/Gráfica",
-  "Encargos/Impostos",
-  "Outros",
-];
-
-const UNIDADES = ["Unidade", "Hora", "Diária", "Mês", "Serviço", "Kit", "Lote", "Pessoa"];
-
 function generateId() {
   return Math.random().toString(36).slice(2, 10);
 }
@@ -53,12 +31,11 @@ function generateId() {
 function createEmptyBudgetItem(): BudgetItem {
   return {
     id: generateId(),
-    categoria: "",
     descricao: "",
-    unidade: "Unidade",
-    quantidade: 1,
-    valor_unitario: 0,
     justificativa: "",
+    unidade: "",
+    valor_unitario: 0,
+    quantidade: 1,
     referencia_preco: "",
   };
 }
@@ -66,12 +43,11 @@ function createEmptyBudgetItem(): BudgetItem {
 function normalizeBudgetItem(item: Partial<BudgetItem>): BudgetItem {
   return {
     id: item.id || generateId(),
-    categoria: item.categoria || "",
     descricao: item.descricao || "",
-    unidade: item.unidade || "Unidade",
-    quantidade: typeof item.quantidade === "number" && Number.isFinite(item.quantidade) ? item.quantidade : 1,
-    valor_unitario: typeof item.valor_unitario === "number" && Number.isFinite(item.valor_unitario) ? item.valor_unitario : 0,
     justificativa: item.justificativa || "",
+    unidade: item.unidade || "",
+    valor_unitario: typeof item.valor_unitario === "number" && Number.isFinite(item.valor_unitario) ? item.valor_unitario : 0,
+    quantidade: typeof item.quantidade === "number" && Number.isFinite(item.quantidade) ? item.quantidade : 1,
     referencia_preco: item.referencia_preco || "",
   };
 }
@@ -93,7 +69,6 @@ function parseBudgetItems(content: string | null): BudgetItem[] {
 
 function hasBudgetDraft(items: BudgetItem[]) {
   return items.some((item) =>
-    item.categoria.trim().length > 0 ||
     item.descricao.trim().length > 0 ||
     item.justificativa.trim().length > 0 ||
     item.referencia_preco.trim().length > 0 ||
@@ -233,15 +208,7 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
   const total = items.reduce((sum, item) => sum + (item.quantidade * item.valor_unitario), 0);
   const isOverBudget = maxBudget ? total > maxBudget : false;
   const budgetPercent = maxBudget ? (total / maxBudget) * 100 : 0;
-
   const formatCurrency = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-  const categoryTotals = items.reduce<Record<string, number>>((acc, item) => {
-    if (item.categoria) {
-      acc[item.categoria] = (acc[item.categoria] || 0) + item.quantidade * item.valor_unitario;
-    }
-    return acc;
-  }, {});
 
   return (
     <div className="space-y-6 p-6">
@@ -249,12 +216,17 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
         <div>
           <h3 className="text-lg font-semibold">Planilha Orçamentária</h3>
           <p className="text-sm text-muted-foreground">
-            Adicione os itens de despesa do projeto. Os valores devem ser condizentes com as práticas de mercado.
+            Preencha os itens conforme o modelo oficial. A planilha possui autossoma.
           </p>
         </div>
-        <Button onClick={() => void saveBudget()} disabled={saving || !hasLoaded} size="sm" variant="outline">
-          <Save className="mr-1 h-4 w-4" /> Salvar
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => generateBudgetXlsx(items)} size="sm" variant="ghost" disabled={!hasLoaded || items.length === 0}>
+            <Download className="mr-1 h-4 w-4" /> Baixar .xlsx
+          </Button>
+          <Button onClick={() => void saveBudget()} disabled={saving || !hasLoaded} size="sm" variant="outline">
+            <Save className="mr-1 h-4 w-4" /> Salvar
+          </Button>
+        </div>
       </div>
 
       {maxBudget && (
@@ -293,52 +265,38 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
       )}
 
       <div className="space-y-3">
-        <div className="hidden gap-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground md:grid md:grid-cols-[180px_1fr_100px_80px_120px_40px]">
-          <span>Categoria</span>
-          <span>Descrição</span>
-          <span>Unidade</span>
-          <span>Qtd.</span>
+        <div className="hidden gap-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground md:grid md:grid-cols-[1fr_1fr_100px_100px_80px_100px_100px_40px]">
+          <span>Descrição do Item</span>
+          <span>Justificativa</span>
+          <span>Unid. Medida</span>
           <span>Valor Unit.</span>
+          <span>Qtd.</span>
+          <span>Valor Total</span>
+          <span>Referência</span>
           <span></span>
         </div>
 
         {items.map((item) => (
           <Card key={item.id} className="p-3">
-            <div className="grid grid-cols-1 items-center gap-2 md:grid-cols-[180px_1fr_100px_80px_120px_40px]">
-              <Select value={item.categoria} onValueChange={(value) => updateItem(item.id, "categoria", value)}>
-                <SelectTrigger className="h-9 text-xs">
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIAS_ORCAMENTO.map((categoria) => (
-                    <SelectItem key={categoria} value={categoria}>{categoria}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
+            <div className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1fr_1fr_100px_100px_80px_100px_100px_40px]">
               <Input
                 value={item.descricao}
                 onChange={(event) => updateItem(item.id, "descricao", event.target.value)}
-                placeholder="Descrição do item"
+                placeholder="Ex: Fotógrafo"
                 className="h-9 text-sm"
               />
 
-              <Select value={item.unidade} onValueChange={(value) => updateItem(item.id, "unidade", value)}>
-                <SelectTrigger className="h-9 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {UNIDADES.map((unidade) => (
-                    <SelectItem key={unidade} value={unidade}>{unidade}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                value={item.justificativa}
+                onChange={(event) => updateItem(item.id, "justificativa", event.target.value)}
+                placeholder="Justificativa do item"
+                className="h-9 text-sm"
+              />
 
               <Input
-                type="number"
-                min={1}
-                value={item.quantidade}
-                onChange={(event) => updateItem(item.id, "quantidade", parseInt(event.target.value, 10) || 0)}
+                value={item.unidade}
+                onChange={(event) => updateItem(item.id, "unidade", event.target.value)}
+                placeholder="Serviço"
                 className="h-9 text-sm"
               />
 
@@ -352,6 +310,25 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
                 className="h-9 text-sm"
               />
 
+              <Input
+                type="number"
+                min={1}
+                value={item.quantidade}
+                onChange={(event) => updateItem(item.id, "quantidade", parseInt(event.target.value, 10) || 0)}
+                className="h-9 text-sm"
+              />
+
+              <div className="flex items-center h-9 px-2 text-sm font-medium bg-muted rounded-md">
+                {formatCurrency(item.quantidade * item.valor_unitario)}
+              </div>
+
+              <Input
+                value={item.referencia_preco}
+                onChange={(event) => updateItem(item.id, "referencia_preco", event.target.value)}
+                placeholder="(opcional)"
+                className="h-9 text-sm"
+              />
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -362,32 +339,6 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-
-            <div className="mt-1 text-right md:hidden">
-              <span className="text-xs text-muted-foreground">Subtotal: </span>
-              <span className="text-sm font-medium">{formatCurrency(item.quantidade * item.valor_unitario)}</span>
-            </div>
-
-            <div className="mt-3 grid grid-cols-1 gap-3 border-t pt-3 md:grid-cols-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold text-muted-foreground">Justificativa e Especificidade</Label>
-                <Input
-                  className="h-8 text-xs"
-                  placeholder="Por que este item é essencial para o projeto?"
-                  value={item.justificativa}
-                  onChange={(event) => updateItem(item.id, "justificativa", event.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold text-muted-foreground">Referência de Preço</Label>
-                <Input
-                  className="h-8 text-xs"
-                  placeholder="Ex: Tabela SATED, Pesquisa de Mercado, Link..."
-                  value={item.referencia_preco}
-                  onChange={(event) => updateItem(item.id, "referencia_preco", event.target.value)}
-                />
-              </div>
-            </div>
           </Card>
         ))}
       </div>
@@ -396,27 +347,14 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
         <Plus className="mr-2 h-4 w-4" /> Adicionar Item
       </Button>
 
-      {Object.keys(categoryTotals).length > 0 && (
-        <Card>
-          <CardHeader className="px-4 py-3">
-            <CardTitle className="text-sm">Resumo por Categoria</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-3">
-            <div className="space-y-2">
-              {Object.entries(categoryTotals).map(([categoria, valor]) => (
-                <div key={categoria} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{categoria}</span>
-                  <span className="font-medium">{formatCurrency(valor)}</span>
-                </div>
-              ))}
-              <div className="flex justify-between border-t pt-2 text-sm font-semibold">
-                <span>TOTAL GERAL</span>
-                <span className={isOverBudget ? "text-destructive" : ""}>{formatCurrency(total)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardContent className="px-4 py-3">
+          <div className="flex justify-between text-sm font-semibold">
+            <span>TOTAL</span>
+            <span className={isOverBudget ? "text-destructive" : ""}>{formatCurrency(total)}</span>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
