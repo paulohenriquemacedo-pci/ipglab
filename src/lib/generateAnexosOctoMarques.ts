@@ -540,56 +540,55 @@ function buildBudgetTable(projectData?: ProjectDataForAnexo): (Paragraph | Table
   const result: (Paragraph | Table)[] = [];
   const formatCurrency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  // Header row
-  const headerCells = ["Categoria", "Descrição", "Unidade", "Qtd.", "Valor Unit.", "Subtotal"].map(text =>
+  // Official columns: Descrição do item, Justificativa, Unidade de medida, Valor unitário, Quantidade, Valor total, Referência de preço (opcional)
+  const headers = ["Descrição do item", "Justificativa", "Unidade de medida", "Valor unitário", "Qntd.", "Valor total", "Referência (opcional)"];
+  const colWidths = [1500, 1500, 1100, 1100, 700, 1100, 1360];
+  const headerCells = headers.map((text, i) =>
     new TableCell({
       borders,
       shading: { fill: "D9E2F3", type: "clear" as any },
-      children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 18, font: FONT })] })],
-      width: { size: 1500, type: WidthType.DXA },
+      children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 16, font: FONT })] })],
+      width: { size: colWidths[i], type: WidthType.DXA },
     })
   );
 
   const dataRows = projectData.budgetItems.filter(i => i.descricao).map(item =>
     new TableRow({
       children: [
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.categoria || "-", size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.descricao, size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.unidade, size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: String(item.quantidade), size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.valor_unitario), size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.quantidade * item.valor_unitario), size: 18, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.descricao, size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: (item as any).justificativa || "-", size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.unidade, size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.valor_unitario), size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: String(item.quantidade), size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.quantidade * item.valor_unitario), size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: (item as any).referencia || "-", size: 16, font: FONT })] })] }),
       ],
     })
   );
 
   const total = projectData.budgetItems.reduce((sum, i) => sum + (i.quantidade * i.valor_unitario), 0);
 
-  // Total row
   const totalRow = new TableRow({
     children: [
       new TableCell({
-        borders,
-        columnSpan: 5,
+        borders, columnSpan: 5,
         shading: { fill: "D9E2F3", type: "clear" as any },
-        children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "TOTAL GERAL", bold: true, size: 18, font: FONT })] })],
+        children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "TOTAL", bold: true, size: 16, font: FONT })] })],
       }),
       new TableCell({
         borders,
         shading: { fill: "D9E2F3", type: "clear" as any },
-        children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(total), bold: true, size: 18, font: FONT })] })],
+        children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(total), bold: true, size: 16, font: FONT })] })],
       }),
+      new TableCell({ borders, children: [new Paragraph({ children: [] })] }),
     ],
   });
 
   result.push(
     new Table({
       width: { size: 9360, type: WidthType.DXA },
-      rows: [
-        new TableRow({ children: headerCells }),
-        ...dataRows,
-        totalRow,
-      ],
+      columnWidths: colWidths,
+      rows: [new TableRow({ children: headerCells }), ...dataRows, totalRow],
     }),
   );
 
