@@ -32,18 +32,20 @@ const TeamTable = ({ projectId }: TeamTableProps) => {
         .from("project_sections")
         .select("content")
         .eq("project_id", projectId)
-        .eq("step_number", 5) // Shared save for step 5
-        .single();
+        .eq("step_number", 7)
+        .maybeSingle();
       
+      let loaded = false;
       if (data?.content) {
         try {
           const parsed = JSON.parse(data.content);
-          if (parsed && Array.isArray(parsed.team)) {
+          if (parsed && Array.isArray(parsed.team) && parsed.team.length > 0) {
             setItems(parsed.team);
+            loaded = true;
           }
         } catch { /* not JSON */ }
       }
-      if (items.length === 0) {
+      if (!loaded) {
         setItems([{ id: generateId(), nome: "", identificacao: "", funcao: "", curriculo: "" }]);
       }
     };
