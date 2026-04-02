@@ -24,6 +24,7 @@ interface BudgetSpreadsheetProps {
   projectId: string;
   maxBudget?: number | null;
   editalType?: string;
+  stepNumber?: number;
 }
 
 const CATEGORIAS_ORCAMENTO = [
@@ -50,7 +51,7 @@ function generateId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadsheetProps) => {
+const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }: BudgetSpreadsheetProps) => {
   const [items, setItems] = useState<BudgetItem[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -61,8 +62,8 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadshe
         .from("project_sections")
         .select("content")
         .eq("project_id", projectId)
-        .eq("step_number", 6)
-        .single();
+        .eq("step_number", stepNumber)
+        .maybeSingle();
       if (data?.content) {
         try {
           const parsed = JSON.parse(data.content);
@@ -74,7 +75,7 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadshe
       }
     };
     load();
-  }, [projectId]);
+  }, [projectId, stepNumber]);
 
   const addItem = () => {
     setItems(prev => [...prev, { id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0, justificativa: "", referencia_preco: "" }]);
@@ -102,14 +103,14 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType }: BudgetSpreadshe
           is_completed: items.length > 0 && items.some(i => i.descricao && i.valor_unitario > 0),
         })
         .eq("project_id", projectId)
-        .eq("step_number", 6);
+        .eq("step_number", stepNumber);
       toast.success("Planilha orçamentária salva!");
     } catch {
       toast.error("Erro ao salvar planilha");
     } finally {
       setSaving(false);
     }
-  }, [items, projectId]);
+  }, [items, projectId, stepNumber]);
 
   // Auto-save on changes (debounced)
   useEffect(() => {
