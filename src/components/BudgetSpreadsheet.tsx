@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Save, AlertTriangle, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -51,80 +50,192 @@ function generateId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }: BudgetSpreadsheetProps) => {
-  const [items, setItems] = useState<BudgetItem[]>([]);
-  const [saving, setSaving] = useState(false);
+function createEmptyBudgetItem(): BudgetItem {
+  return {
+    id: generateId(),
+    categoria: "",
+    descricao: "",
+    unidade: "Unidade",
+    quantidade: 1,
+    valor_unitario: 0,
+    justificativa: "",
+    referencia_preco: "",
+  };
+}
 
-  // Load saved budget from project_sections
+function normalizeBudgetItem(item: Partial<BudgetItem>): BudgetItem {
+  return {
+    id: item.id || generateId(),
+    categoria: item.categoria || "",
+    descricao: item.descricao || "",
+    unidade: item.unidade || "Unidade",
+    quantidade: typeof item.quantidade === "number" && Number.isFinite(item.quantidade) ? item.quantidade : 1,
+    valor_unitario: typeof item.valor_unitario === "number" && Number.isFinite(item.valor_unitario) ? item.valor_unitario : 0,
+    justificativa: item.justificativa || "",
+    referencia_preco: item.referencia_preco || "",
+  };
+}
+
+function parseBudgetItems(content: string | null): BudgetItem[] {
+  if (!content) return [createEmptyBudgetItem()];
+
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map((item) => normalizeBudgetItem(item));
+    }
+  } catch {
+    // Ignore invalid JSON and start with an empty row.
+  }
+
+  return [createEmptyBudgetItem()];
+}
+
+function hasBudgetDraft(items: BudgetItem[]) {
+  return items.some((item) =>
+    item.categoria.trim().length > 0 ||
+    item.descricao.trim().length > 0 ||
+    item.justificativa.trim().length > 0 ||
+    item.referencia_preco.trim().length > 0 ||
+    item.valor_unitario > 0
+  );
+}
+
+const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }: BudgetSpreadsheetProps) => {
+  const [items, setItems] = useState<BudgetItem[]>(() => [createEmptyBudgetItem()]);
+  const [saving, setSaving] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const skipNextAutoSaveRef = useRef(true);
+
+  void editalType;
+
   useEffect(() => {
+    let isMounted = true;
+    skipNextAutoSaveRef.current = true;
+    setHasLoaded(false);
+
     const load = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("project_sections")
         .select("content")
         .eq("project_id", projectId)
         .eq("step_number", stepNumber)
         .maybeSingle();
-      if (data?.content) {
-        try {
-          const parsed = JSON.parse(data.content);
-          if (Array.isArray(parsed)) setItems(parsed);
-        } catch { /* not JSON, ignore */ }
+
+      if (!isMounted) return;
+
+      if (error) {
+        console.error("BudgetSpreadsheet load error:", error);
+        setItems([createEmptyBudgetItem()]);
+        setHasLoaded(true);
+        return;
       }
-      if (items.length === 0) {
-        setItems([{ id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0, justificativa: "", referencia_preco: "" }]);
-      }
+
+      setItems(parseBudgetItems(data?.content ?? null));
+      setHasLoaded(true);
     };
-    load();
+
+    void load();
+
+    return () => {
+      isMounted = false;
+    };
   }, [projectId, stepNumber]);
 
   const addItem = () => {
-    setItems(prev => [...prev, { id: generateId(), categoria: "", descricao: "", unidade: "Unidade", quantidade: 1, valor_unitario: 0, justificativa: "", referencia_preco: "" }]);
+    setItems((prev) => [...prev, createEmptyBudgetItem()]);
   };
 
   const removeItem = (id: string) => {
-    setItems(prev => prev.filter(i => i.id !== id));
+    setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const updateItem = (id: string, field: keyof BudgetItem, value: any) => {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i));
+  const updateItem = (id: string, field: keyof BudgetItem, value: string | number) => {
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
   };
 
-  const total = items.reduce((sum, i) => sum + (i.quantidade * i.valor_unitario), 0);
-  const isOverBudget = maxBudget ? total > maxBudget : false;
-  const budgetPercent = maxBudget ? (total / maxBudget) * 100 : 0;
+  const saveBudget = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (!hasLoaded) return false;
 
-  const saveBudget = useCallback(async () => {
     setSaving(true);
+
     try {
-      await supabase
+      const content = JSON.stringify(items);
+      const is_completed = items.some((item) => item.descricao.trim().length > 0 && item.valor_unitario > 0);
+
+      const { data: existingSection, error: selectError } = await supabase
         .from("project_sections")
-        .update({
-          content: JSON.stringify(items),
-          is_completed: items.length > 0 && items.some(i => i.descricao && i.valor_unitario > 0),
-        })
+        .select("id")
         .eq("project_id", projectId)
-        .eq("step_number", stepNumber);
-      toast.success("Planilha orçamentária salva!");
-    } catch {
+        .eq("step_number", stepNumber)
+        .maybeSingle();
+
+      if (selectError) throw selectError;
+
+      if (existingSection?.id) {
+        const { data: updatedSection, error: updateError } = await supabase
+          .from("project_sections")
+          .update({ content, is_completed })
+          .eq("id", existingSection.id)
+          .select("id")
+          .maybeSingle();
+
+        if (updateError) throw updateError;
+        if (!updatedSection) throw new Error("Nenhum registro foi atualizado na planilha orçamentária.");
+      } else {
+        const { data: insertedSection, error: insertError } = await supabase
+          .from("project_sections")
+          .insert({
+            project_id: projectId,
+            step_number: stepNumber,
+            step_name: "Planilha Orçamentária",
+            content,
+            is_completed,
+          })
+          .select("id")
+          .maybeSingle();
+
+        if (insertError) throw insertError;
+        if (!insertedSection) throw new Error("Nenhum registro foi criado para a planilha orçamentária.");
+      }
+
+      if (!silent) {
+        toast.success("Planilha orçamentária salva!");
+      }
+
+      return true;
+    } catch (error) {
+      console.error("BudgetSpreadsheet save error:", error);
       toast.error("Erro ao salvar planilha");
+      return false;
     } finally {
       setSaving(false);
     }
-  }, [items, projectId, stepNumber]);
+  }, [hasLoaded, items, projectId, stepNumber]);
 
-  // Auto-save on changes (debounced)
   useEffect(() => {
+    if (!hasLoaded) return;
+
+    if (skipNextAutoSaveRef.current) {
+      skipNextAutoSaveRef.current = false;
+      return;
+    }
+
+    if (!hasBudgetDraft(items)) return;
+
     const timer = setTimeout(() => {
-      if (items.length > 0 && items.some(i => i.descricao)) {
-        saveBudget();
-      }
+      void saveBudget({ silent: true });
     }, 2000);
+
     return () => clearTimeout(timer);
-  }, [items]);
+  }, [hasLoaded, items, saveBudget]);
 
-  const formatCurrency = (val: number) => val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const total = items.reduce((sum, item) => sum + (item.quantidade * item.valor_unitario), 0);
+  const isOverBudget = maxBudget ? total > maxBudget : false;
+  const budgetPercent = maxBudget ? (total / maxBudget) * 100 : 0;
 
-  // Group items by category for summary
+  const formatCurrency = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
   const categoryTotals = items.reduce<Record<string, number>>((acc, item) => {
     if (item.categoria) {
       acc[item.categoria] = (acc[item.categoria] || 0) + item.quantidade * item.valor_unitario;
@@ -134,7 +245,6 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
 
   return (
     <div className="space-y-6 p-6">
-      {/* Budget summary header */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Planilha Orçamentária</h3>
@@ -142,31 +252,36 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
             Adicione os itens de despesa do projeto. Os valores devem ser condizentes com as práticas de mercado.
           </p>
         </div>
-        <Button onClick={saveBudget} disabled={saving} size="sm" variant="outline">
-          <Save className="h-4 w-4 mr-1" /> Salvar
+        <Button onClick={() => void saveBudget()} disabled={saving || !hasLoaded} size="sm" variant="outline">
+          <Save className="mr-1 h-4 w-4" /> Salvar
         </Button>
       </div>
 
-      {/* Budget limit indicator */}
       {maxBudget && (
         <Card className={isOverBudget ? "border-destructive" : ""}>
-          <CardContent className="py-3 px-4">
-            <div className="flex items-center justify-between mb-2">
+          <CardContent className="px-4 py-3">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium">Limite do edital</span>
               <span className="text-sm">{formatCurrency(maxBudget)}</span>
             </div>
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className={`h-full rounded-full transition-all ${isOverBudget ? "bg-destructive" : budgetPercent > 80 ? "bg-amber-500" : "bg-primary"}`}
                 style={{ width: `${Math.min(budgetPercent, 100)}%` }}
               />
             </div>
-            <div className="flex items-center justify-between mt-2">
+            <div className="mt-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isOverBudget ? (
-                  <><AlertTriangle className="h-4 w-4 text-destructive" /><span className="text-sm text-destructive font-medium">Acima do limite!</span></>
+                  <>
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <span className="text-sm font-medium text-destructive">Acima do limite!</span>
+                  </>
                 ) : (
-                  <><CheckCircle className="h-4 w-4 text-primary" /><span className="text-sm text-muted-foreground">Dentro do limite</span></>
+                  <>
+                    <CheckCircle className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-muted-foreground">Dentro do limite</span>
+                  </>
                 )}
               </div>
               <span className={`text-sm font-semibold ${isOverBudget ? "text-destructive" : ""}`}>
@@ -177,10 +292,8 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
         </Card>
       )}
 
-      {/* Items table */}
       <div className="space-y-3">
-        {/* Header */}
-        <div className="hidden md:grid md:grid-cols-[180px_1fr_100px_80px_120px_40px] gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
+        <div className="hidden gap-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground md:grid md:grid-cols-[180px_1fr_100px_80px_120px_40px]">
           <span>Categoria</span>
           <span>Descrição</span>
           <span>Unidade</span>
@@ -189,31 +302,35 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
           <span></span>
         </div>
 
-        {items.map((item, idx) => (
+        {items.map((item) => (
           <Card key={item.id} className="p-3">
-            <div className="grid grid-cols-1 md:grid-cols-[180px_1fr_100px_80px_120px_40px] gap-2 items-center">
-              <Select value={item.categoria} onValueChange={v => updateItem(item.id, "categoria", v)}>
-                <SelectTrigger className="text-xs h-9">
+            <div className="grid grid-cols-1 items-center gap-2 md:grid-cols-[180px_1fr_100px_80px_120px_40px]">
+              <Select value={item.categoria} onValueChange={(value) => updateItem(item.id, "categoria", value)}>
+                <SelectTrigger className="h-9 text-xs">
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIAS_ORCAMENTO.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {CATEGORIAS_ORCAMENTO.map((categoria) => (
+                    <SelectItem key={categoria} value={categoria}>{categoria}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
               <Input
                 value={item.descricao}
-                onChange={e => updateItem(item.id, "descricao", e.target.value)}
+                onChange={(event) => updateItem(item.id, "descricao", event.target.value)}
                 placeholder="Descrição do item"
-                className="text-sm h-9"
+                className="h-9 text-sm"
               />
 
-              <Select value={item.unidade} onValueChange={v => updateItem(item.id, "unidade", v)}>
-                <SelectTrigger className="text-xs h-9">
+              <Select value={item.unidade} onValueChange={(value) => updateItem(item.id, "unidade", value)}>
+                <SelectTrigger className="h-9 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {UNIDADES.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                  {UNIDADES.map((unidade) => (
+                    <SelectItem key={unidade} value={unidade}>{unidade}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -221,8 +338,8 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
                 type="number"
                 min={1}
                 value={item.quantidade}
-                onChange={e => updateItem(item.id, "quantidade", parseInt(e.target.value) || 0)}
-                className="text-sm h-9"
+                onChange={(event) => updateItem(item.id, "quantidade", parseInt(event.target.value, 10) || 0)}
+                className="h-9 text-sm"
               />
 
               <Input
@@ -230,9 +347,9 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
                 min={0}
                 step={0.01}
                 value={item.valor_unitario || ""}
-                onChange={e => updateItem(item.id, "valor_unitario", parseFloat(e.target.value) || 0)}
+                onChange={(event) => updateItem(item.id, "valor_unitario", parseFloat(event.target.value) || 0)}
                 placeholder="R$ 0,00"
-                className="text-sm h-9"
+                className="h-9 text-sm"
               />
 
               <Button
@@ -245,28 +362,29 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-            <div className="text-right mt-1 md:hidden">
+
+            <div className="mt-1 text-right md:hidden">
               <span className="text-xs text-muted-foreground">Subtotal: </span>
               <span className="text-sm font-medium">{formatCurrency(item.quantidade * item.valor_unitario)}</span>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 pt-3 border-t">
+
+            <div className="mt-3 grid grid-cols-1 gap-3 border-t pt-3 md:grid-cols-2">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground font-semibold">Justificativa e Especificidade</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">Justificativa e Especificidade</Label>
                 <Input
                   className="h-8 text-xs"
                   placeholder="Por que este item é essencial para o projeto?"
-                  value={item.justificativa || ""}
-                  onChange={e => updateItem(item.id, "justificativa", e.target.value)}
+                  value={item.justificativa}
+                  onChange={(event) => updateItem(item.id, "justificativa", event.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground font-semibold">Referência de Preço</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">Referência de Preço</Label>
                 <Input
                   className="h-8 text-xs"
                   placeholder="Ex: Tabela SATED, Pesquisa de Mercado, Link..."
-                  value={item.referencia_preco || ""}
-                  onChange={e => updateItem(item.id, "referencia_preco", e.target.value)}
+                  value={item.referencia_preco}
+                  onChange={(event) => updateItem(item.id, "referencia_preco", event.target.value)}
                 />
               </div>
             </div>
@@ -275,24 +393,23 @@ const BudgetSpreadsheet = ({ projectId, maxBudget, editalType, stepNumber = 11 }
       </div>
 
       <Button variant="outline" onClick={addItem} className="w-full">
-        <Plus className="h-4 w-4 mr-2" /> Adicionar Item
+        <Plus className="mr-2 h-4 w-4" /> Adicionar Item
       </Button>
 
-      {/* Category summary */}
       {Object.keys(categoryTotals).length > 0 && (
         <Card>
-          <CardHeader className="py-3 px-4">
+          <CardHeader className="px-4 py-3">
             <CardTitle className="text-sm">Resumo por Categoria</CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-3">
             <div className="space-y-2">
-              {Object.entries(categoryTotals).map(([cat, val]) => (
-                <div key={cat} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{cat}</span>
-                  <span className="font-medium">{formatCurrency(val)}</span>
+              {Object.entries(categoryTotals).map(([categoria, valor]) => (
+                <div key={categoria} className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{categoria}</span>
+                  <span className="font-medium">{formatCurrency(valor)}</span>
                 </div>
               ))}
-              <div className="border-t pt-2 flex justify-between text-sm font-semibold">
+              <div className="flex justify-between border-t pt-2 text-sm font-semibold">
                 <span>TOTAL GERAL</span>
                 <span className={isOverBudget ? "text-destructive" : ""}>{formatCurrency(total)}</span>
               </div>
