@@ -725,7 +725,7 @@ export async function generateAnexoIIB(profile: OctoMarquesProfileData, projectD
     p("PESSOA JURÍDICA (COM OU SEM FINS LUCRATIVOS)", { size: 18, align: AlignmentType.CENTER, spacing: { after: 300 } }),
   );
 
-  // 1. Dados do Agente Cultural (PJ)
+  // 1. DADOS DO(A) AGENTE CULTURAL (PJ)
   children.push(sectionHeader("1. DADOS DO(A) AGENTE CULTURAL"));
   children.push(
     field("Razão Social", val(profile.razao_social)),
@@ -740,15 +740,6 @@ export async function generateAnexoIIB(profile: OctoMarquesProfileData, projectD
     field("CPF do representante legal", val(profile.cpf)),
     field("E-mail do representante legal", val(profile.email_contato)),
     field("Telefone/Whatsapp/Telegram do representante legal", val(profile.telefone)),
-  );
-
-  // Dados bancários
-  children.push(
-    p("Dados Bancários:", { bold: true, spacing: { before: 200 } }),
-    field("Banco", val(profile.banco)),
-    field("Agência", val(profile.agencia)),
-    field("Conta Bancária", val(profile.conta_bancaria)),
-    field("Tipo de Conta", val(profile.tipo_conta_bancaria)),
   );
 
   // Mini currículo
@@ -767,30 +758,36 @@ export async function generateAnexoIIB(profile: OctoMarquesProfileData, projectD
   children.push(...buildCotas(profile, true));
   children.push(...buildFuncaoProfissao(profile));
 
-  // 2. Dados do Projeto — WITH CONTENT
+  // 2. DADOS DO PROJETO
   children.push(sectionHeader("2. DADOS DO PROJETO"));
   children.push(field("Nome do Projeto", projectData?.title || "_______________"));
   children.push(...buildCategoria(profile));
   children.push(...buildProjectSections(projectData));
-
-  children.push(
-    p("Perfil do público a ser atingido pelo projeto:", { bold: true, spacing: { before: 200 } }),
-    p(""),
-  );
   children.push(...buildPublicoAlvo(profile));
   children.push(...buildAcessibilidade(profile));
+
   children.push(
-    p("Local onde o projeto será executado:", { bold: true, spacing: { before: 200 } }),
-    p(val(profile.locais_execucao)),
-    field("Data de início", "_______________"),
-    field("Data final", "_______________"),
+    p("Local onde o projeto será executado (Informe os espaços culturais e outros ambientes, localizados no município de Goiás onde a sua proposta será realizada)", { bold: true, spacing: { before: 200 } }),
+    p(projectData?.locaisExecucao || val(profile.locais_execucao)),
+  );
+  children.push(
+    p("Previsão do período de execução do projeto", { bold: true, spacing: { before: 200 } }),
+    field("Data de início", projectData?.dataInicio || "_______________"),
+    field("Data final", projectData?.dataFinal || "_______________"),
   );
 
-  // 3. Planilha Orçamentária — WITH DATA
+  children.push(...buildTeamTable(projectData));
+  children.push(...buildChronogramTable(projectData));
+  children.push(...buildStrategyAndFunding(projectData));
+
+  // 3. PLANILHA ORÇAMENTÁRIA
   children.push(sectionHeader("3. PLANILHA ORÇAMENTÁRIA"));
+  children.push(
+    p("Preencha a tabela informando todas as despesas indicando as metas/etapas às quais elas estão relacionadas.", { size: 18, spacing: { after: 150 } }),
+  );
   children.push(...buildBudgetTable(projectData));
 
-  // 4. Documentos Complementares
+  // 4. DOCUMENTOS COMPLEMENTARES
   children.push(sectionHeader("4. DOCUMENTOS COMPLEMENTARES"));
   children.push(p("Caso queira, junte documentos que auxiliem na análise do seu projeto e da sua equipe técnica."));
 
