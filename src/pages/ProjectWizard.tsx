@@ -42,6 +42,42 @@ interface ChatMsg {
   content: string;
 }
 
+const getProjectStepStorageKey = (projectId: string) => `project-step-${projectId}`;
+
+const readStoredProjectStep = (projectId?: string) => {
+  if (!projectId || typeof window === "undefined") return null;
+
+  const savedStep = window.sessionStorage.getItem(getProjectStepStorageKey(projectId));
+  if (!savedStep) return null;
+
+  const parsedStep = Number.parseInt(savedStep, 10);
+  return Number.isNaN(parsedStep) ? null : parsedStep;
+};
+
+const persistProjectStep = (projectId: string | undefined, step: number) => {
+  if (!projectId || typeof window === "undefined") return;
+  window.sessionStorage.setItem(getProjectStepStorageKey(projectId), String(step));
+};
+
+const getRestoredProjectStep = ({
+  projectId,
+  instrumentType,
+  hasRegistration,
+}: {
+  projectId?: string;
+  instrumentType?: string | null;
+  hasRegistration: boolean;
+}) => {
+  if (!hasRegistration) return 0;
+
+  const savedStep = readStoredProjectStep(projectId);
+  const availableSteps = getStepsForEdital(instrumentType).map((step) => step.step_number);
+  const maxStep = availableSteps.length > 0 ? Math.max(...availableSteps) : 1;
+  const nextStep = savedStep ?? 1;
+
+  return Math.min(Math.max(nextStep, 1), maxStep);
+};
+
 const ProjectWizard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -49,16 +85,12 @@ const ProjectWizard = () => {
   const [edital, setEdital] = useState<any>(null);
   const [regData, setRegData] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
-  const [currentStep, setCurrentStepRaw] = useState(() => {
-    if (!id) return 0;
-    const saved = sessionStorage.getItem(`project-step-${id}`);
-    return saved ? parseInt(saved, 10) : 0;
-  });
+  const [currentStep, setCurrentStepRaw] = useState(() => readStoredProjectStep(id) ?? 0);
 
   const setCurrentStep: React.Dispatch<React.SetStateAction<number>> = useCallback((val) => {
     setCurrentStepRaw(prev => {
       const next = typeof val === 'function' ? val(prev) : val;
-      if (id) sessionStorage.setItem(`project-step-${id}`, String(next));
+      persistProjectStep(id, next);
       return next;
     });
   }, [id]);
@@ -96,7 +128,7 @@ const ProjectWizard = () => {
       setEdital(null);
       setRegData(null);
       setSections([]);
-      setCurrentStep(0);
+      setCurrentStepRaw(readStoredProjectStep(id) ?? 0);
       setProfileCompleted(false);
       setChatMessages([]);
       setFinalResponse("");
@@ -112,6 +144,10 @@ const ProjectWizard = () => {
         if (ed) setEdital(ed);
       }
 
+      const instrumentType = proj.edital_id
+        ? (await supabase.from("editais").select("instrument_type").eq("id", proj.edital_id).single()).data?.instrument_type
+        : null;
+
       const { data: secs } = await supabase.from("project_sections").select("*").eq("project_id", id).order("step_number");
       if (secs) setSections(secs);
 
@@ -124,15 +160,22 @@ const ProjectWizard = () => {
       if (reg) {
         setRegData(reg);
         setProfileCompleted(true);
-        setCurrentStep(1);
+        const restoredStep = getRestoredProjectStep({
+          projectId: id,
+          instrumentType,
+          hasRegistration: true,
+        });
+        setCurrentStepRaw(restoredStep);
+        persistProjectStep(id, restoredStep);
       } else {
         setRegData(null);
         setProfileCompleted(false);
-        setCurrentStep(0);
+        setCurrentStepRaw(0);
+        persistProjectStep(id, 0);
       }
     };
     load();
-  }, [id]);
+  }, [id, navigate]);
 
   // Load chat messages when step changes
   useEffect(() => {
