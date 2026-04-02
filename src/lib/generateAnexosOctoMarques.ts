@@ -16,7 +16,18 @@ export interface OctoMarquesProfileData extends ProfileData {
 export interface ProjectDataForAnexo {
   title?: string;
   sections?: { step_number: number; step_name: string; content: string | null }[];
-  budgetItems?: { categoria: string; descricao: string; unidade: string; quantidade: number; valor_unitario: number }[];
+  budgetItems?: { categoria: string; descricao: string; justificativa?: string; unidade: string; quantidade: number; valor_unitario: number; referencia?: string }[];
+  teamMembers?: { nome: string; funcao: string; cpf_cnpj: string; mini_curriculo: string }[];
+  chronogramItems?: { atividade: string; etapa: string; descricao: string; inicio: string; fim: string }[];
+  estrategiaDivulgacao?: string;
+  fontesRecursoTipos?: string[];
+  fontesRecursoDetalhe?: string;
+  possuiFontesRecurso?: boolean;
+  prevVendaIngressos?: boolean;
+  prevVendaIngressosDetalhe?: string;
+  dataInicio?: string;
+  dataFinal?: string;
+  locaisExecucao?: string;
 }
 
 const val = (v: string | null | undefined | boolean) => {
@@ -344,23 +355,21 @@ function buildProjectSections(projectData?: ProjectDataForAnexo): Paragraph[] {
 
   const result: Paragraph[] = [];
 
-  // Map step numbers to Anexo II fields
+  // Map step numbers to official Anexo II field names (matching current fomento steps)
   const STEP_TO_FIELD: Record<number, string> = {
-    1: "Descrição do Projeto",
-    2: "Atuação Cultural e Integração com outras esferas",
-    3: "Impacto Social e Comunitário",
-    4: "Patrimônio Cultural e Acessibilidade",
-    5: "Cronograma e Equipe",
+    1: "Descrição do projeto",
+    2: "Objetivos do projeto",
+    3: "Metas",
+    4: "Perfil do público a ser atingido pelo projeto",
   };
 
   for (const section of projectData.sections) {
-    if (section.step_number >= 6) continue; // skip budget/annex steps
-    const fieldName = STEP_TO_FIELD[section.step_number] || section.step_name;
+    const fieldName = STEP_TO_FIELD[section.step_number];
+    if (!fieldName) continue; // only text sections (1-4)
     result.push(
       p(`${fieldName}:`, { bold: true, spacing: { before: 200 } }),
     );
     if (section.content) {
-      // Split content by newlines for proper paragraph formatting
       const lines = section.content.split("\n").filter(l => l.trim());
       for (const line of lines) {
         result.push(p(line));
@@ -368,6 +377,152 @@ function buildProjectSections(projectData?: ProjectDataForAnexo): Paragraph[] {
     } else {
       result.push(p("(Não preenchido)"));
     }
+  }
+
+  return result;
+}
+
+// ===== Build team table for Anexo II =====
+function buildTeamTable(projectData?: ProjectDataForAnexo): (Paragraph | Table)[] {
+  const result: (Paragraph | Table)[] = [
+    p("Equipe", { bold: true, spacing: { before: 200 } }),
+    p("Informe quais são os profissionais que atuarão no projeto, conforme quadro a seguir:", { size: 18 }),
+  ];
+
+  const members = projectData?.teamMembers || [];
+  if (members.length === 0) {
+    // Empty template table
+    const headerCells = ["Nome do profissional / empresa", "Função no projeto", "CPF/CNPJ", "Mini currículo"].map(text =>
+      new TableCell({
+        borders,
+        shading: { fill: "D9E2F3", type: "clear" as any },
+        children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 18, font: FONT })] })],
+        width: { size: 2340, type: WidthType.DXA },
+      })
+    );
+    result.push(new Table({
+      width: { size: 9360, type: WidthType.DXA },
+      columnWidths: [2340, 2340, 2340, 2340],
+      rows: [new TableRow({ children: headerCells })],
+    }));
+    return result;
+  }
+
+  const headerCells = ["Nome do profissional / empresa", "Função no projeto", "CPF/CNPJ", "Mini currículo"].map(text =>
+    new TableCell({
+      borders,
+      shading: { fill: "D9E2F3", type: "clear" as any },
+      children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 18, font: FONT })] })],
+      width: { size: 2340, type: WidthType.DXA },
+    })
+  );
+
+  const dataRows = members.map(m =>
+    new TableRow({
+      children: [
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: m.nome || "-", size: 18, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: m.funcao || "-", size: 18, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: m.cpf_cnpj || "-", size: 18, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: m.mini_curriculo || "-", size: 18, font: FONT })] })] }),
+      ],
+    })
+  );
+
+  result.push(new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [2340, 2340, 2340, 2340],
+    rows: [new TableRow({ children: headerCells }), ...dataRows],
+  }));
+
+  return result;
+}
+
+// ===== Build chronogram table for Anexo II =====
+function buildChronogramTable(projectData?: ProjectDataForAnexo): (Paragraph | Table)[] {
+  const result: (Paragraph | Table)[] = [
+    p("Cronograma de Execução", { bold: true, spacing: { before: 200 } }),
+    p("Descreva os passos a serem seguidos para execução do projeto.", { size: 18 }),
+  ];
+
+  const items = projectData?.chronogramItems || [];
+  const colWidths = [1872, 1872, 1872, 1872, 1872];
+  const headers = ["Atividade", "Etapa", "Descrição", "Início", "Fim"];
+  const headerCells = headers.map((text, i) =>
+    new TableCell({
+      borders,
+      shading: { fill: "D9E2F3", type: "clear" as any },
+      children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 18, font: FONT })] })],
+      width: { size: colWidths[i], type: WidthType.DXA },
+    })
+  );
+
+  const dataRows = items.length > 0
+    ? items.map(item =>
+        new TableRow({
+          children: [
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.atividade || "-", size: 18, font: FONT })] })] }),
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.etapa || "-", size: 18, font: FONT })] })] }),
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.descricao || "-", size: 18, font: FONT })] })] }),
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.inicio || "-", size: 18, font: FONT })] })] }),
+            new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.fim || "-", size: 18, font: FONT })] })] }),
+          ],
+        })
+      )
+    : [];
+
+  result.push(new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: colWidths,
+    rows: [new TableRow({ children: headerCells }), ...dataRows],
+  }));
+
+  return result;
+}
+
+// ===== Build strategy, funding, and ticket sales sections =====
+function buildStrategyAndFunding(projectData?: ProjectDataForAnexo): Paragraph[] {
+  const result: Paragraph[] = [];
+
+  // Estratégia de divulgação
+  result.push(
+    p("Estratégia de divulgação", { bold: true, spacing: { before: 200 } }),
+    p("Apresente os meios que serão utilizados para divulgar o projeto. ex.: impulsionamento em redes sociais.", { size: 18 }),
+    p(projectData?.estrategiaDivulgacao || "(Não preenchido)"),
+  );
+
+  // Fontes de recurso
+  result.push(
+    p("Projeto possui recursos financeiros de outras fontes? Se sim, quais?", { bold: true, spacing: { before: 200 } }),
+    p("(Informe se o projeto prevê apoio financeiro, tais como cobrança de ingressos, patrocínio e/ou outras fontes de financiamento.)", { size: 18 }),
+  );
+
+  const fontesOpcoes = [
+    "Não, o projeto não possui outras fontes de recursos financeiros",
+    "Apoio financeiro municipal", "Apoio financeiro estadual",
+    "Recursos de Lei de Incentivo Municipal", "Recursos de Lei de Incentivo Estadual",
+    "Recursos de Lei de Incentivo Federal", "Patrocínio privado direto",
+    "Patrocínio de instituição internacional", "Doações de Pessoas Físicas",
+    "Doações de Empresas", "Cobrança de ingressos", "Outros",
+  ];
+  const selectedFontes = projectData?.fontesRecursoTipos || [];
+  for (const f of fontesOpcoes) {
+    result.push(checkbox(f, selectedFontes.includes(f)));
+  }
+
+  if (projectData?.fontesRecursoDetalhe) {
+    result.push(
+      p("Se o projeto tem outras fontes de financiamento, detalhe:", { bold: true, spacing: { before: 100 } }),
+      p(projectData.fontesRecursoDetalhe),
+    );
+  }
+
+  // Venda de ingressos
+  result.push(
+    p("O projeto prevê a venda de produtos/ingressos?", { bold: true, spacing: { before: 200 } }),
+    p(`${projectData?.prevVendaIngressos ? "(X) Sim  ( ) Não" : "( ) Sim  (X) Não"}`),
+  );
+  if (projectData?.prevVendaIngressosDetalhe) {
+    result.push(p(projectData.prevVendaIngressosDetalhe));
   }
 
   return result;
@@ -385,56 +540,55 @@ function buildBudgetTable(projectData?: ProjectDataForAnexo): (Paragraph | Table
   const result: (Paragraph | Table)[] = [];
   const formatCurrency = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  // Header row
-  const headerCells = ["Categoria", "Descrição", "Unidade", "Qtd.", "Valor Unit.", "Subtotal"].map(text =>
+  // Official columns: Descrição do item, Justificativa, Unidade de medida, Valor unitário, Quantidade, Valor total, Referência de preço (opcional)
+  const headers = ["Descrição do item", "Justificativa", "Unidade de medida", "Valor unitário", "Qntd.", "Valor total", "Referência (opcional)"];
+  const colWidths = [1500, 1500, 1100, 1100, 700, 1100, 1360];
+  const headerCells = headers.map((text, i) =>
     new TableCell({
       borders,
       shading: { fill: "D9E2F3", type: "clear" as any },
-      children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 18, font: FONT })] })],
-      width: { size: 1500, type: WidthType.DXA },
+      children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 16, font: FONT })] })],
+      width: { size: colWidths[i], type: WidthType.DXA },
     })
   );
 
   const dataRows = projectData.budgetItems.filter(i => i.descricao).map(item =>
     new TableRow({
       children: [
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.categoria || "-", size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.descricao, size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.unidade, size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: String(item.quantidade), size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.valor_unitario), size: 18, font: FONT })] })] }),
-        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.quantidade * item.valor_unitario), size: 18, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.descricao, size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: (item as any).justificativa || "-", size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: item.unidade, size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.valor_unitario), size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: String(item.quantidade), size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(item.quantidade * item.valor_unitario), size: 16, font: FONT })] })] }),
+        new TableCell({ borders, children: [new Paragraph({ children: [new TextRun({ text: (item as any).referencia || "-", size: 16, font: FONT })] })] }),
       ],
     })
   );
 
   const total = projectData.budgetItems.reduce((sum, i) => sum + (i.quantidade * i.valor_unitario), 0);
 
-  // Total row
   const totalRow = new TableRow({
     children: [
       new TableCell({
-        borders,
-        columnSpan: 5,
+        borders, columnSpan: 5,
         shading: { fill: "D9E2F3", type: "clear" as any },
-        children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "TOTAL GERAL", bold: true, size: 18, font: FONT })] })],
+        children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "TOTAL", bold: true, size: 16, font: FONT })] })],
       }),
       new TableCell({
         borders,
         shading: { fill: "D9E2F3", type: "clear" as any },
-        children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(total), bold: true, size: 18, font: FONT })] })],
+        children: [new Paragraph({ children: [new TextRun({ text: formatCurrency(total), bold: true, size: 16, font: FONT })] })],
       }),
+      new TableCell({ borders, children: [new Paragraph({ children: [] })] }),
     ],
   });
 
   result.push(
     new Table({
       width: { size: 9360, type: WidthType.DXA },
-      rows: [
-        new TableRow({ children: headerCells }),
-        ...dataRows,
-        totalRow,
-      ],
+      columnWidths: colWidths,
+      rows: [new TableRow({ children: headerCells }), ...dataRows, totalRow],
     }),
   );
 
@@ -453,22 +607,18 @@ export async function generateAnexoIIA(profile: OctoMarquesProfileData, projectD
   // Header
   children.push(
     ...editalHeader(),
-    p("ANEXO II – A", { bold: true, size: 28, align: AlignmentType.CENTER, spacing: { after: 100 } }),
+    p("ANEXO II – a", { bold: true, size: 28, align: AlignmentType.CENTER, spacing: { after: 100 } }),
     p("FORMULÁRIO DE INSCRIÇÃO", { bold: true, size: 24, align: AlignmentType.CENTER, spacing: { after: 80 } }),
     p("PESSOA FÍSICA, MEI OU GRUPO E COLETIVO SEM PERSONALIDADE JURÍDICA (SEM CNPJ)", { size: 18, align: AlignmentType.CENTER, spacing: { after: 300 } }),
   );
 
-  // 1. Dados do Agente Cultural
+  // 1. DADOS DO(A) AGENTE CULTURAL
   children.push(sectionHeader("1. DADOS DO(A) AGENTE CULTURAL"));
   children.push(
     field("Nome Completo", val(profile.full_name)),
-    field("Nome artístico ou nome social", val(profile.nome_social)),
+    field("Nome artístico ou nome social (se houver)", val(profile.nome_social)),
     field("CPF", val(profile.cpf)),
-  );
-  if (profile.cnpj_mei) {
-    children.push(field("CNPJ (MEI)", val(profile.cnpj_mei)));
-  }
-  children.push(
+    field("CNPJ (Se a inscrição for realizada em nome do MEI)", val(profile.cnpj_mei)),
     field("RG", val(profile.rg)),
     field("Data de nascimento", val(profile.data_nascimento)),
     field("E-mail", val(profile.email_contato)),
@@ -479,23 +629,13 @@ export async function generateAnexoIIA(profile: OctoMarquesProfileData, projectD
     field("Estado", val(profile.state)),
   );
 
-  // Dados bancários
-  children.push(
-    p("Dados Bancários:", { bold: true, spacing: { before: 200 } }),
-    field("Banco", val(profile.banco)),
-    field("Agência", val(profile.agencia)),
-    field("Conta Bancária", val(profile.conta_bancaria)),
-    field("Tipo de Conta", val(profile.tipo_conta_bancaria)),
-  );
-
   // Mini currículo
   children.push(
-    p("Mini Currículo:", { bold: true, spacing: { before: 200 } }),
-    p("(Escreva aqui um resumo do seu currículo destacando as principais atuações culturais realizadas.)", { size: 18 }),
+    p("Mini Currículo: (Escreva aqui um resumo do seu currículo destacando as principais atuações culturais realizadas. Você deve encaminhar o currículo/portifólio em anexo).", { bold: true, spacing: { before: 200 } }),
     p(val(profile.bio)),
   );
 
-  // Comunidade, gênero, LGBTQIAPN+, raça, PcD
+  // Comunidade, gênero, LGBTQIAPN+, raça, PcD, escolaridade, renda, programa social, cotas, função, coletivo
   children.push(...buildComunidadeTradicional(profile));
   children.push(...buildGenero(profile));
   children.push(...buildLGBTQIAPN(profile));
@@ -508,35 +648,51 @@ export async function generateAnexoIIA(profile: OctoMarquesProfileData, projectD
   children.push(...buildFuncaoProfissao(profile));
   children.push(...buildColetivo(profile));
 
-  // 2. Dados do Projeto — NOW WITH CONTENT FROM AI SECTIONS
+  // 2. DADOS DO PROJETO
   children.push(sectionHeader("2. DADOS DO PROJETO"));
-  children.push(
-    field("Nome do Projeto", projectData?.title || "_______________"),
-  );
+  children.push(field("Nome do Projeto", projectData?.title || "_______________"));
   children.push(...buildCategoria(profile));
+
+  // Text sections: Descrição, Objetivos, Metas, Perfil do público
   children.push(...buildProjectSections(projectData));
 
-  children.push(
-    p("Perfil do público a ser atingido pelo projeto:", { bold: true, spacing: { before: 200 } }),
-    p(""),
-  );
-
+  // Público-alvo checkboxes
   children.push(...buildPublicoAlvo(profile));
+
+  // Acessibilidade
   children.push(...buildAcessibilidade(profile));
 
+  // Local de execução
   children.push(
-    p("Local onde o projeto será executado:", { bold: true, spacing: { before: 200 } }),
-    p(val(profile.locais_execucao)),
-    p("Previsão do período de execução do projeto:", { bold: true, spacing: { before: 200 } }),
-    field("Data de início", "_______________"),
-    field("Data final", "_______________"),
+    p("Local onde o projeto será executado (Informe os espaços culturais e outros ambientes, localizados no município de Goiás onde a sua proposta será realizada)", { bold: true, spacing: { before: 200 } }),
+    p(projectData?.locaisExecucao || val(profile.locais_execucao)),
   );
 
-  // 3. Planilha Orçamentária — NOW WITH BUDGET DATA
+  // Período de execução
+  children.push(
+    p("Previsão do período de execução do projeto", { bold: true, spacing: { before: 200 } }),
+    field("Data de início", projectData?.dataInicio || "_______________"),
+    field("Data final", projectData?.dataFinal || "_______________"),
+  );
+
+  // Equipe (table)
+  children.push(...buildTeamTable(projectData));
+
+  // Cronograma (table)
+  children.push(...buildChronogramTable(projectData));
+
+  // Estratégia de divulgação + Fontes de recurso + Venda de ingressos
+  children.push(...buildStrategyAndFunding(projectData));
+
+  // 3. PLANILHA ORÇAMENTÁRIA
   children.push(sectionHeader("3. PLANILHA ORÇAMENTÁRIA"));
+  children.push(
+    p("Preencha a tabela informando todas as despesas indicando as metas/etapas às quais elas estão relacionadas.", { size: 18, spacing: { after: 100 } }),
+    p("Pode haver a indicação do parâmetro de preço (Exemplo: preço estabelecido no SALICNET, 3 orçamentos, etc) utilizado com a referência específica do item de despesa para auxiliar a análise técnica da comissão de seleção.", { size: 18, spacing: { after: 150 } }),
+  );
   children.push(...buildBudgetTable(projectData));
 
-  // 4. Documentos Complementares
+  // 4. DOCUMENTOS COMPLEMENTARES
   children.push(sectionHeader("4. DOCUMENTOS COMPLEMENTARES"));
   children.push(
     p("Caso queira, junte documentos que auxiliam na análise do seu projeto e da sua equipe técnica."),
@@ -569,7 +725,7 @@ export async function generateAnexoIIB(profile: OctoMarquesProfileData, projectD
     p("PESSOA JURÍDICA (COM OU SEM FINS LUCRATIVOS)", { size: 18, align: AlignmentType.CENTER, spacing: { after: 300 } }),
   );
 
-  // 1. Dados do Agente Cultural (PJ)
+  // 1. DADOS DO(A) AGENTE CULTURAL (PJ)
   children.push(sectionHeader("1. DADOS DO(A) AGENTE CULTURAL"));
   children.push(
     field("Razão Social", val(profile.razao_social)),
@@ -584,15 +740,6 @@ export async function generateAnexoIIB(profile: OctoMarquesProfileData, projectD
     field("CPF do representante legal", val(profile.cpf)),
     field("E-mail do representante legal", val(profile.email_contato)),
     field("Telefone/Whatsapp/Telegram do representante legal", val(profile.telefone)),
-  );
-
-  // Dados bancários
-  children.push(
-    p("Dados Bancários:", { bold: true, spacing: { before: 200 } }),
-    field("Banco", val(profile.banco)),
-    field("Agência", val(profile.agencia)),
-    field("Conta Bancária", val(profile.conta_bancaria)),
-    field("Tipo de Conta", val(profile.tipo_conta_bancaria)),
   );
 
   // Mini currículo
@@ -611,30 +758,36 @@ export async function generateAnexoIIB(profile: OctoMarquesProfileData, projectD
   children.push(...buildCotas(profile, true));
   children.push(...buildFuncaoProfissao(profile));
 
-  // 2. Dados do Projeto — WITH CONTENT
+  // 2. DADOS DO PROJETO
   children.push(sectionHeader("2. DADOS DO PROJETO"));
   children.push(field("Nome do Projeto", projectData?.title || "_______________"));
   children.push(...buildCategoria(profile));
   children.push(...buildProjectSections(projectData));
-
-  children.push(
-    p("Perfil do público a ser atingido pelo projeto:", { bold: true, spacing: { before: 200 } }),
-    p(""),
-  );
   children.push(...buildPublicoAlvo(profile));
   children.push(...buildAcessibilidade(profile));
+
   children.push(
-    p("Local onde o projeto será executado:", { bold: true, spacing: { before: 200 } }),
-    p(val(profile.locais_execucao)),
-    field("Data de início", "_______________"),
-    field("Data final", "_______________"),
+    p("Local onde o projeto será executado (Informe os espaços culturais e outros ambientes, localizados no município de Goiás onde a sua proposta será realizada)", { bold: true, spacing: { before: 200 } }),
+    p(projectData?.locaisExecucao || val(profile.locais_execucao)),
+  );
+  children.push(
+    p("Previsão do período de execução do projeto", { bold: true, spacing: { before: 200 } }),
+    field("Data de início", projectData?.dataInicio || "_______________"),
+    field("Data final", projectData?.dataFinal || "_______________"),
   );
 
-  // 3. Planilha Orçamentária — WITH DATA
+  children.push(...buildTeamTable(projectData));
+  children.push(...buildChronogramTable(projectData));
+  children.push(...buildStrategyAndFunding(projectData));
+
+  // 3. PLANILHA ORÇAMENTÁRIA
   children.push(sectionHeader("3. PLANILHA ORÇAMENTÁRIA"));
+  children.push(
+    p("Preencha a tabela informando todas as despesas indicando as metas/etapas às quais elas estão relacionadas.", { size: 18, spacing: { after: 150 } }),
+  );
   children.push(...buildBudgetTable(projectData));
 
-  // 4. Documentos Complementares
+  // 4. DOCUMENTOS COMPLEMENTARES
   children.push(sectionHeader("4. DOCUMENTOS COMPLEMENTARES"));
   children.push(p("Caso queira, junte documentos que auxiliem na análise do seu projeto e da sua equipe técnica."));
 
